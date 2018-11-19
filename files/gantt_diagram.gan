@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="TFG" company="" webLink="http://" view-date="2019-01-03" view-index="0" gantt-divider-location="420" resource-divider-location="300" version="2.8.9" locale="es">
+    <description/>
+    <view zooming-state="default:3" id="gantt-chart">
+        <field id="tpd3" name="Nombre" width="416" order="0"/>
+        <timeline><![CDATA[10]]></timeline>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Nombre" width="210" order="0"/>
+        <field id="1" name="Función" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars>
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="false"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="0" name="Preparar el entorno de desarrollo" color="#8cb6ce" meeting="false" start="2019-01-07" duration="3" complete="0" thirdDate="2018-11-14" thirdDate-constraint="0" expand="true"/>
+        <task id="1" name="Diseñar las interfaces del Sistema" color="#8cb6ce" meeting="false" start="2019-01-10" duration="4" complete="0" thirdDate="2018-11-14" thirdDate-constraint="0" expand="true"/>
+        <task id="9" name="Implementar el distribuidor de código fuente" color="#8cb6ce" meeting="false" start="2019-01-16" duration="7" complete="0" thirdDate="2019-01-04" thirdDate-constraint="0" expand="true"/>
+        <task id="10" name="Implementar el algoritmo de distribución de pruebas unitarias" color="#8cb6ce" meeting="false" start="2019-01-25" duration="7" complete="0" thirdDate="2019-01-25" thirdDate-constraint="0" expand="true"/>
+        <task id="11" name="Implementar la aplicación que ejecutará las pruebas unitarias" color="#8cb6ce" meeting="false" start="2019-02-05" duration="14" complete="0" thirdDate="2019-02-05" thirdDate-constraint="0" expand="true"/>
+        <task id="13" name="Implementar la aplicación web coordinadora" meeting="false" start="2019-02-25" duration="9" complete="0" expand="true"/>
+        <task id="23" name="Reporte parcial Nº 1" color="#8cb6ce" meeting="false" start="2019-03-08" duration="1" complete="0" thirdDate="2019-03-12" thirdDate-constraint="0" expand="true"/>
+        <task id="14" name="Realizar todas las configuraciones necesarias en la red del Laboratorio de Informática para probar el Sistema desarrollado." color="#8cb6ce" meeting="false" start="2019-03-11" duration="2" complete="0" thirdDate="2019-03-08" thirdDate-constraint="0" expand="true"/>
+        <task id="21" name="Instalar el Sistema desarrollado en N computadoras de Laboratorio de Informática." meeting="false" start="2019-03-14" duration="1" complete="0" expand="true"/>
+        <task id="16" name="Ejecutar las pruebas en una sola computadora y comparar con los resultados obtenidos del Sistema desarrollado." color="#8cb6ce" meeting="false" start="2019-03-14" duration="1" complete="0" thirdDate="2019-03-12" thirdDate-constraint="0" expand="true"/>
+        <task id="22" name="Ejecutar las pruebas usando alguna herramienta de integración continua que soporte la ejecución distribuida de pruebas y comparar con los resultados obtenidos del Sistema desarrollado." color="#8cb6ce" meeting="false" start="2019-03-15" duration="1" complete="0" thirdDate="2019-03-12" thirdDate-constraint="0" expand="true"/>
+        <task id="27" name="Probar con variaciones de cantidades de pruebas para detectar a partir de qué cantidad el Sistema desarrollado se diferencia de las otras opciones." meeting="false" start="2019-03-18" duration="1" complete="0" expand="true"/>
+        <task id="28" name="Reporte Parcial Nº 2" color="#8cb6ce" meeting="false" start="2019-03-19" duration="1" complete="0" thirdDate="2019-03-12" thirdDate-constraint="0" expand="true"/>
+        <task id="32" name="Redacción de TFG" meeting="false" start="2019-03-20" duration="19" complete="0" expand="true"/>
+    </tasks>
+    <resources>
+        <resource id="0" name="Rodrigo Fernández" function="SoftwareDevelopment:2" contacts="" phone=""/>
+        <resource id="1" name="Leslie López" function="SoftwareDevelopment:2" contacts="" phone=""/>
+    </resources>
+    <allocations/>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+    <roles roleset-name="SoftwareDevelopment"/>
+    <roles>
+        <role id="1" name=""/>
+    </roles>
+</project>
