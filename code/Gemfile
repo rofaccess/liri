@@ -1,3 +1,7 @@
 source 'https://rubygems.org'
+# Ruby debugger. https://github.com/denofevil/debase
+gem 'debase'
+# Debuggin protocol to communicate with ruby debug
 gem 'ruby-debug-ide'
-gem 'byebug'
+# Ruby static code analyzer and formatter, based on the community Ruby style guide. https://docs.rubocop.org
+gem 'rubocop', require: false
