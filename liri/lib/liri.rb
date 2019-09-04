@@ -2,5 +2,10 @@ require "liri/version"
 
 module Liri
   class Error < StandardError; end
-  # Your code goes here...
+
+  class Greet
+    def self.hello
+      return "Hello!!!"
+    end
+  end
 end
