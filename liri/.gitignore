@@ -9,6 +9,6 @@
 /.idea/
 liri-0.1.0.gem
 Gemfile.lock
-# rspec failure trackin
+# rspec failure tracking
 .rspec_status
 rspec_result
