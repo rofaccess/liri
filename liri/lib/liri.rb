@@ -1,11 +1,19 @@
-require "liri/version"
-
 module Liri
-  class Error < StandardError; end
+  class << self
+    def run
+      load_conf
+      #run_tests
+    end
 
-  class Greet
-    def self.hello
-      return "Hello!!!"
+    private
+
+    def load_conf
+      Liri::Config.load
+    end
+
+    def run_tests
+      Liri::Runner.load(Liri::Config.get(:runner))
+      Liri::Runner.run
     end
   end
 end
