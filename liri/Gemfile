@@ -5,7 +5,7 @@ gemspec
 
 gem "rake", "~> 12.0"
 gem "rspec", "~> 3.0"
-
+gem 'rubyzip'
 # Fast and easy syntax highlighting for selected languages, written in Ruby. http://coderay.rubychan.de/
 # Used by rspec to show results highlighting when save result in html file
 gem "coderay"
