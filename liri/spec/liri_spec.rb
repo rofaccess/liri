@@ -1,5 +1,5 @@
-RSpec.describe Liri, '#start' do
+RSpec.describe Liri, '#run' do
   it 'return true' do
-    Liri.start
+    Liri.run
   end
 end

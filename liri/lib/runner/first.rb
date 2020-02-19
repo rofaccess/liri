@@ -1,7 +1,7 @@
 require 'bundler/setup'
 require 'open3'
 
-module Runner
+class Runner
   class First
     def run
       app_root_path = '/home/suc/bin/alchemy_cms/'
