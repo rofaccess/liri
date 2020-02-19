@@ -4,7 +4,7 @@ require 'benchmark'
 RSpec.describe "Test" do
   context 'run' do
     it "return true" do
-      app_root_path = '/home/suc/bin/alchemy_cms/'
+      app_root_path = '/home/lesliie/Documentos/TFG/AlchemiTest/alchemy_cms/'
       command = 'bundle exec rspec'
       arg = 'spec/models'
 
@@ -19,4 +19,4 @@ RSpec.describe "Test" do
       expect(result).to eq true
     end
   end
-end
+endc
