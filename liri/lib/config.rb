@@ -2,7 +2,7 @@ require 'yaml'
 require 'mixin/singleton'
 
 class Config
-    extend Mixin::Singleton
+  extend Mixin::Singleton
 
   CONFIG_FOLDER_NAME = '.liri'
   CONFIG_FILE_NAME = 'config.yml'
