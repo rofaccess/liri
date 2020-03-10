@@ -1,15 +1,5 @@
 require 'zip'
 
-# This is a simple example which uses rubyzip to
-# recursively generate a zip file from the contents of
-# a specified directory. The directory itself is not
-# included in the archive, rather just its contents.
-#
-# Usage:
-#   directory_to_zip = "/tmp/input"
-#   output_file = "/tmp/out.zip"
-#   zf = ZipFileGenerator.new(directory_to_zip, output_file)
-#   zf.write()
 class Compressor
   class First
     # Initialize with the directory to zip and the location of the output archive.
@@ -17,13 +7,6 @@ class Compressor
       @input_dir = input_dir
       @output_file = output_file
     end
-
-=begin
-    def initialize(args)
-      config_file_path = args.first || default_config_file_path
-      @conf_data = YAML.load(File.read(config_file_path))
-    end
-=end
 
     # Zip the input directory.
     def write
