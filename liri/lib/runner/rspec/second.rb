@@ -1,7 +1,9 @@
 class Runner
-  class Second
-    def run
-      true
+  class Rspec
+    class Second
+      def run
+        true
+      end
     end
   end
 end

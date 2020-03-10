@@ -1,10 +1,11 @@
 require 'config'
 require 'mixin/singleton'
-require 'runner/first'
-require 'runner/second'
+require 'runner/rspec/first'
+require 'runner/rspec/second'
 
 class Runner
   extend Mixin::Singleton
+  init_singleton
 
   class << self
     def run
@@ -12,11 +13,9 @@ class Runner
     end
   end
 
-  def initialize(args)
-    @runner_class_name = "#{self.class}::#{args.first || Config.get(:runner)}"
-  end
-
   def load_instance
-    Object.const_get(@runner_class_name).new
+    runner = @runner || Config.get(:runner, :class)
+    type = @type || Config.get(:runner, :type)
+    Object.const_get("#{self.class}::#{type}::#{runner}").new
   end
 end

@@ -3,30 +3,35 @@ require 'mixin/singleton'
 
 class Config
   extend Mixin::Singleton
+  init_singleton
 
   CONFIG_FOLDER_NAME = '.liri'
   CONFIG_FILE_NAME = 'config.yml'
 
   class << self
-    def get(class_type)
-      current.get(class_type)
+    def get(*config)
+      current.get(config)
     end
-  end
-
-  def initialize(args)
-    config_file_path = args.first || default_config_file_path
-    @conf_data = YAML.load(File.read(config_file_path))
   end
 
   def load_instance
     self
   end
 
-  def get(class_type)
-    @conf_data[class_type.to_s]
+  def get(*config)
+    conf = config.flatten
+    conf_data[conf[0].to_s][conf[1].to_s]
   end
 
   private
+
+  def conf_data
+    @_conf_data ||= YAML.load(File.read(config_file_path))
+  end
+
+  def config_file_path
+    @file_path || default_config_file_path
+  end
 
   def default_config_file_path
     File.join(default_config_folder_path, CONFIG_FILE_NAME)

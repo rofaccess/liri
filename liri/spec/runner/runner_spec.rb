@@ -9,7 +9,13 @@ RSpec.describe Runner, '#run' do
 
   context 'with custom runner' do
     it 'return true' do
-      expect(Runner.current(:Second).run).to be true
+      expect(Runner.current(runner: :Second).run).to be true
+    end
+  end
+
+  context 'with custom test framework' do
+    it 'return true' do
+      expect(Runner.current(type: :Rspec).run).to be true
     end
   end
 end

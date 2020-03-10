@@ -1,9 +1,10 @@
 require 'config'
 require 'mixin/singleton'
-require 'compressor/first'
+require 'compressor/zip/first'
 
 class Compressor
   extend Mixin::Singleton
+  init_singleton
 
   class << self
     def compress
@@ -11,13 +12,9 @@ class Compressor
     end
   end
 
-  def initialize(args)
-    @compressor_class_name = "#{self.class}::#{args.first || Config.get(:compressor)}"
-    @input_dir = args[1]
-    @output_file = args[2]
-  end
-
   def load_instance
-    Object.const_get(@compressor_class_name).new(@input_dir, @output_file)
+    compressor = @compressor || Config.get(:compressor, :class)
+    type = @type || Config.get(:compressor, :type)
+    Object.const_get("#{self.class}::#{type}::#{compressor}").new(@input_dir, @output_file)
   end
 end
