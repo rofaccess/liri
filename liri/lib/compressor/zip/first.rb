@@ -14,7 +14,7 @@ class Compressor
         entries = Dir.entries(@input_dir) - %w[. ..]
 
         ::Zip::File.open(@output_file, ::Zip::File::CREATE) do |zipfile|
-          write_entries entries, '', zipfile
+          write_entries(entries, '', zipfile)
         end
       end
 
@@ -35,9 +35,9 @@ class Compressor
       end
 
       def recursively_deflate_directory(disk_file_path, zipfile, zipfile_path)
-        zipfile.mkdir zipfile_path
+        zipfile.mkdir(zipfile_path)
         subdir = Dir.entries(disk_file_path) - %w[. ..]
-        write_entries subdir, zipfile_path, zipfile
+        write_entries(subdir, zipfile_path, zipfile)
       end
 
       def put_into_archive(disk_file_path, zipfile, zipfile_path)

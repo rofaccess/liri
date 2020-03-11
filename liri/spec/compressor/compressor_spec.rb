@@ -2,8 +2,8 @@ require 'compressor/compressor'
 
 RSpec.describe Compressor, '#compress' do
   it 'return true' do
-    directory_to_zip = "/home/lesliie/Documentos/TecnicoLopez"
-    output_file = "/home/lesliie/Documentos/TecnicoLopez.zip"
-    expect(Compressor.current(compressor: :First, input_file: directory_to_zip, output_file: output_file).write).to be true
+    root_code_folder = File.dirname(File.dirname(File.dirname(__FILE__)))
+    output_file = File.join(root_code_folder, '/', Config::CONFIG_FOLDER_NAME)
+    expect(Compressor.current(input_dir: root_code_folder, output_file: output_file).write).to be true
   end
 end

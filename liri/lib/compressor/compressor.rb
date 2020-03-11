@@ -15,6 +15,8 @@ class Compressor
   def load_instance
     compressor = @compressor || Config.get(:compressor, :class)
     type = @type || Config.get(:compressor, :type)
-    Object.const_get("#{self.class}::#{type}::#{compressor}").new(@input_dir, @output_file)
+    input_dir = @input_dir || Config.get(:compressor, :input_dir)
+    output_file = @output_file || Config.get(:compressor, :output_file)
+    Object.const_get("#{self.class}::#{type}::#{compressor}").new(input_dir, output_file)
   end
 end
