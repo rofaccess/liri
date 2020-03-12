@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Build gem
+gem build liri.gemspec
+
+# Install gem locally
+gem install ./liri-0.1.0.gem
