@@ -27,8 +27,3 @@ require "rubygems"
 require "bundler/setup"
 
 load Gem.bin_path("liri", "liri")
-
-Liri.run
-
-# How to use in termminal
-# ruby -Ilib ./bin/liri
