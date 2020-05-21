@@ -1,7 +1,0 @@
-compressor:
-  type: Zip
-  class: First
-  input_dir:
-runner:
-  type: Rspec
-  class: Second
