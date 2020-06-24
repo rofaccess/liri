@@ -1,4 +1,5 @@
 #!/bin/bash
+# This file is a bash script to compile code and reinstall locally.
 
 # Build gem
 gem build liri.gemspec

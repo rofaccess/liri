@@ -1,11 +1,19 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 # Specify your gem's dependencies in liri.gemspec
 gemspec
 
-gem "rake", "~> 13.0"
-gem "rspec", "~> 3.0"
-gem 'rubyzip'
+gem 'rake', '~> 13.0'
+gem 'rspec', '~> 3.0'
+
+# Rubyzip is a ruby library for reading and writing zip files. https://github.com/rubyzip/rubyzip
+gem 'rubyzip', '~>2.2'
+
 # Fast and easy syntax highlighting for selected languages, written in Ruby. http://coderay.rubychan.de/
 # Used by rspec to show results highlighting when save result in html file
-gem "coderay"
+gem 'coderay', '~>1.1'
+
+group :development do
+  # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://docs.rubocop.org
+  gem 'rubocop', '~>0.86', require: false
+end
