@@ -4,8 +4,8 @@ module Liri
   class << self
     def run
       puts "Starting Testing Process"
-      compressor = Compressor::Zip.new(input_dir, output_file)
-      compressor.compress
+      #compressor = Compressor::Zip.new(input_dir, output_file)
+      #compressor.compress
 
       # sender = Sender::Ftp.new
       # sender.send

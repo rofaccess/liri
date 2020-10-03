@@ -1,3 +1,10 @@
 #!/usr/bin/env ruby
-
+# This ruby script permit run liri command in CLI (command line interface)
+# From:
+# - https://robdodson.me/how-to-write-a-command-line-ruby-gem/
+# - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
+# - https://www.sitepoint.com/ruby-command-line-interface-gems/
 require "liri"
+
+# Call main method when 'run liri' command in CLI
+Liri.run

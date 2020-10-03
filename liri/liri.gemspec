@@ -1,13 +1,13 @@
-require_relative 'lib/liri/version'
+require_relative 'lib/liri/spec'
 
 Gem::Specification.new do |spec|
-  spec.name          = "liri"
+  spec.name          = Liri::NAME
   spec.version       = Liri::VERSION
   spec.authors       = ["Rodrigo Fernández", "Leslie López"]
   spec.email         = ["rofaccess@gmail.com", "leslyee.05@gmail.com"]
 
-  spec.summary     = "TFG Project"
-  spec.description = "Test distributor executor"
+  spec.summary       = "TFG Project"
+  spec.description   = "Test distributor executor"
   spec.homepage      = "https://github.com/rofaccess/tfg"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
