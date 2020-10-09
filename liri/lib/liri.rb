@@ -1,11 +1,15 @@
 require 'compressor/zip'
+require 'config'
 
 module Liri
   class << self
     def run
       puts "Starting Testing Process"
-      #compressor = Compressor::Zip.new(input_dir, output_file)
-      #compressor.compress
+      # TODO Warning: The source code can be contains logs files and temporal files that
+      # are unnecessary for testing process and will increase the compressed file size
+      # In future will be necessary ignore some folders before compress source file
+      compressor = Compressor::Zip.new(source_code_dir, compressed_file)
+      compressor.compress
 
       # sender = Sender::Ftp.new
       # sender.send
@@ -16,12 +20,12 @@ module Liri
     end
 
     private
-    def input_dir
-      File.dirname(__dir__)
+    def source_code_dir
+      Config::SOURCE_CODE_DIR
     end
 
-    def output_file
-      File.join(input_dir, '.liri', "#{input_dir.split('/').last}.zip")
+    def compressed_file
+      Config::COMPRESSED_FILE
     end
   end
 end
