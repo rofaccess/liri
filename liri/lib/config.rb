@@ -6,6 +6,7 @@ module Config
   CONFIG_DIR_NAME = '.liri'
   CONFIG_DIR = File.join(SOURCE_CODE_DIR, '/', CONFIG_DIR_NAME)
   COMPRESSED_FILE_NAME = "#{SOURCE_CODE_DIR_NAME}_source_code.zip"
+  AGENT_ADDRESS = ['255.255.255.255', 33333]
 
   def self.config_dir
     Dir.mkdir(CONFIG_DIR) unless Dir.exist?(CONFIG_DIR)
