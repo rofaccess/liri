@@ -4,7 +4,7 @@
 # - https://robdodson.me/how-to-write-a-command-line-ruby-gem/
 # - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
 # - https://www.sitepoint.com/ruby-command-line-interface-gems/
-require "liri"
+require 'manager/manager'
 
-# Call main method when 'run liri' command in CLI
-Liri.run
+# Call main method when run 'liri' command in CLI
+Liri::Manager.run

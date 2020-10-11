@@ -1,4 +1,4 @@
-require_relative 'lib/liri/spec'
+require_relative 'lib/liri.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = Liri::NAME
