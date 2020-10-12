@@ -1,19 +1,31 @@
+# Obs.: When add gems in this file, the format to manage version must be like this
+# gem 'rake', '~> 13'
+# In prev format, the version installed is equal or greater than 13.0.0 but less than 14.0.0
+# Use this format because when version change from 13 to 14, in theory the compatibility is lost
+# More Info: https://blog.makeitreal.camp/manejo-de-dependencias-en-ruby-con-bundler/
+
 source 'https://rubygems.org'
 
 # Specify your gem's dependencies in liri.gemspec
 gemspec
 
-gem 'rake', '~> 13.0'
-gem 'rspec', '~> 3.0'
+# Rake is a Make-like program implemented in Ruby. Tasks and dependencies are specified in standard Ruby syntax. https://github.com/ruby/rake
+gem 'rake', '~> 13'
+
+# Behaviour Driven Development for Ruby. https://github.com/rspec/rspec
+gem 'rspec', '~> 3'
 
 # Rubyzip is a ruby library for reading and writing zip files. https://github.com/rubyzip/rubyzip
-gem 'rubyzip', '~>2.2'
+gem 'rubyzip', '~>2'
 
-# Fast and easy syntax highlighting for selected languages, written in Ruby. http://coderay.rubychan.de/
+# The complete solution for Ruby command-line executables. https://github.com/commander-rb/commander
+gem 'commander', '~>4'
+
+# Fast and easy syntax highlighting for selected languages, written in Ruby. https://github.com/rubychan/coderay
 # Used by rspec to show results highlighting when save result in html file
-gem 'coderay', '~>1.1'
+gem 'coderay', '~>1'
 
 group :development do
-  # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://docs.rubocop.org
-  gem 'rubocop', '~>0.86', require: false
+  # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
+  gem 'rubocop', '~>0', require: false
 end

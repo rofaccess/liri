@@ -4,7 +4,46 @@
 # - https://robdodson.me/how-to-write-a-command-line-ruby-gem/
 # - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
 # - https://www.sitepoint.com/ruby-command-line-interface-gems/
+require 'rubygems'
+require 'commander/import'
 require 'manager/manager'
+require 'agent/agent'
 
-# Call main method when run 'liri' command in CLI
-Liri::Manager.run
+require_relative '../lib/liri.rb'
+
+program :name, Liri::NAME
+program :version, Liri::VERSION
+program :description, 'Run Rspec tests using distributed system'
+
+command :manager do |c|
+  c.syntax = 'Liri manager [options]'
+  c.summary = 'Run tests'
+  c.description = 'Run manager client to connect with agents to manage test execution'
+  c.example 'Run tests with defaults (-r terminal)', 'liri'
+  c.example 'Run tests with defaults using alias (-r terminal)', 'liri m'
+  c.example 'Run tests with defaults using full command name (-r terminal)', 'liri manager'
+  c.example 'Run tests showing output results in web', 'liri m -o web'
+  c.option '-o', '--output [terminal|web|desktop]', String, 'Specify how to show results'
+  c.action do |args, options|
+    # Call main method when run 'liri' command in CLI
+    Liri::Manager.run
+  end
+end
+
+alias_command :m, :manager
+alias_command '', :manager
+
+command :agent do |c|
+  c.syntax = 'Liri agent [options]'
+  c.summary = 'Run agent service'
+  c.description = 'Wait Liri manager orders to run tests'
+  c.example 'Run agent with defaults using alias', 'liri a'
+  c.example 'Run agent with defaults using full command', 'liri agent'
+  c.action do |args, options|
+    # Call main method when run 'liri' command in CLI
+    Liri::Agent.run
+  end
+end
+
+alias_command :a, :agent
+
