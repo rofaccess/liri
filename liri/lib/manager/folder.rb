@@ -12,7 +12,7 @@ module Liri
         end
 
         def delete
-          FileUtils.rm_rf(dir) if Dir.exist?(DIR)
+          FileUtils.rm_rf(DIR) if Dir.exist?(DIR)
         end
       end
     end

@@ -16,7 +16,7 @@ program :version, Liri::VERSION
 program :description, 'Run Rspec tests using distributed system'
 
 command :manager do |c|
-  c.syntax = 'Liri manager [options]'
+  c.syntax = 'liri manager [options]'
   c.summary = 'Run tests'
   c.description = 'Run manager client to connect with agents to manage test execution'
   c.example 'Run tests with defaults (-r terminal)', 'liri'
@@ -31,7 +31,7 @@ command :manager do |c|
 end
 
 alias_command :m, :manager
-alias_command '', :manager
+#alias_command '', :manager
 
 command :agent do |c|
   c.syntax = 'Liri agent [options]'

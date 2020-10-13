@@ -30,20 +30,6 @@ module Liri
 =end
         puts "Finished Testing Process"
       end
-
-      private
-
-      def source_code_dir
-        Config::SOURCE_CODE_DIR
-      end
-
-      def compressed_file
-        Config::COMPRESSED_FILE
-      end
-
-      def agent_address
-        Config::AGENT_ADDRESS
-      end
     end
   end
 end
