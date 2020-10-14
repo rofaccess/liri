@@ -23,6 +23,10 @@ module Liri
         def delete
           File.delete(COMPRESSED_FILE) if File.exist?(COMPRESSED_FILE)
         end
+
+        def all_tests
+          Liri::Manager::UnitTest::Rspec.all
+        end
       end
     end
   end

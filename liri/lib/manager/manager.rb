@@ -7,8 +7,10 @@ module Liri
     class << self
       def run
         puts "Starting Testing Process"
-        Liri::Manager::Folder.create
+        configure
+
         Liri::Manager::SourceCode.compress
+        all_tests = Liri::Manager::SourceCode.all_tests
 
 =begin
         sender = Common::Connection::Client::Udp.new(agent_address)
@@ -29,6 +31,11 @@ module Liri
         # runner.run
 =end
         puts "Finished Testing Process"
+      end
+
+      def configure
+        Liri::Manager::Folder.create
+
       end
     end
   end
