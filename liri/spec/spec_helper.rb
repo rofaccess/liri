@@ -1,5 +1,6 @@
 require "bundler/setup"
-require "liri"
+require 'manager/setup/folder'
+require 'manager/setup/file'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

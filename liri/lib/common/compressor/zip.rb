@@ -18,6 +18,7 @@ module Liri
           ::Zip::File.open(@output_file, ::Zip::File::CREATE) do |zipfile|
             write_entries(entries, '', zipfile)
           end
+          true
         end
 
         def decompress

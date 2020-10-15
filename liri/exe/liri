@@ -6,7 +6,7 @@
 # - https://www.sitepoint.com/ruby-command-line-interface-gems/
 require 'rubygems'
 require 'commander/import'
-require 'liri/liri'
+require 'liri'
 require 'manager/manager'
 require 'agent/agent'
 
@@ -24,7 +24,6 @@ command :manager do |c|
   c.example 'Run tests showing output results in web', 'liri m -o web'
   c.option '-o', '--output [terminal|web|desktop]', String, 'Specify how to show results'
   c.action do |args, options|
-    Liri.load_default_configuration
     Liri::Manager.run
   end
 end

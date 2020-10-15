@@ -1,4 +1,5 @@
-require 'manager/source_code'
+require 'manager/setup/folder'
+require 'manager/source_code/compressed_file'
 
 module Liri
   module Manager
@@ -7,11 +8,15 @@ module Liri
     class << self
       def run
         puts "Starting Testing Process"
-        configure
+        setup_folder = Liri::Manager::Setup::Folder.new
+        setup_folder.create unless Dir.exist?(setup_folder.path)
 
-        Liri::Manager::SourceCode.compress
-        all_tests = Liri::Manager::SourceCode.all_tests
+        source_code_folder = Liri::Manager::SourceCode::Folder.new
 
+        compressed_file = Liri::Manager::SourceCode::CompressedFile.new(source_code_folder.path, setup_folder.path)
+        compressed_file.create
+
+        all_tests = source_code_folder.all_tests
 =begin
         sender = Common::Connection::Client::Udp.new(agent_address)
         sender.open
@@ -30,12 +35,11 @@ module Liri
         # runner = Runner::Rspec.new
         # runner.run
 =end
+
+        #compressed_file.delete
+        #setup_folder.delete
+        #Liri.delete_config
         puts "Finished Testing Process"
-      end
-
-      def configure
-        Liri::Manager::Folder.create
-
       end
     end
   end
