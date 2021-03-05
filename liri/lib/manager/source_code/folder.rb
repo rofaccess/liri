@@ -12,7 +12,8 @@ module Liri
       end
 
       def all_tests
-        Liri::Manager::UnitTest::Rspec.all
+        unit_test = Liri::Manager::UnitTest::Rspec.new(@path)
+        unit_test.all_test
       end
     end
   end
