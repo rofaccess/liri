@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# This ruby script permit run liri command in CLI (command line interface)
+# Este script de ruby permite ejecutar el comando liri en CLI (interface de línea de comandos)
 # From:
 # - https://robdodson.me/how-to-write-a-command-line-ruby-gem/
 # - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
@@ -12,36 +12,42 @@ require 'agent/agent'
 
 program :name, Liri::NAME
 program :version, Liri::VERSION
-program :description, 'Run Rspec tests using distributed system'
+program :description, 'Ejecuta pruebas unitarias usando un sistema distribuido'
 
+# Define el comando y los parámetros para el programa principal
 command :manager do |c|
   c.syntax = 'liri manager [options]'
-  c.summary = 'Run tests'
-  c.description = 'Run manager client to connect with agents to manage test execution'
-  c.example 'Run tests with defaults (-r terminal)', 'liri'
-  c.example 'Run tests with defaults using alias (-r terminal)', 'liri m'
-  c.example 'Run tests with defaults using full command name (-r terminal)', 'liri manager'
-  c.example 'Run tests showing output results in web', 'liri m -o web'
-  c.option '-o', '--output [terminal|web|desktop]', String, 'Specify how to show results'
+  c.summary = 'Ejecuta pruebas unitarias'
+  c.description = 'Ejecuta el programa principal que se conecta con uno o más programas agentes para organizar la ejecución de pruebas unitarias'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri m'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri manager'
+  c.example 'Ejecuta el programa principal guardando los resultados en un archivo .html', 'liri -o result.html'
+  c.option '-o', '--output [filename]', String, 'Especifica donde guardar los resultados de la ejecución de pruebas unitarias'
   c.action do |args, options|
+    # Metodo que se ejecuta al llamar al comando manager
     Liri::Manager.run
   end
 end
 
+# Define el alias m para el comando manager
 alias_command :m, :manager
+# Define un texto vacío como alias lo que permite ejecutar el programa principal solamente usando el comando liri
 #alias_command '', :manager
 
+# Define el comando y los parámetros para el programa agente
 command :agent do |c|
   c.syntax = 'Liri agent [options]'
-  c.summary = 'Run agent service'
-  c.description = 'Wait Liri manager orders to run tests'
-  c.example 'Run agent with defaults using alias', 'liri a'
-  c.example 'Run agent with defaults using full command', 'liri agent'
+  c.summary = 'Ejecuta el programa agente'
+  c.description = 'Espera las ordenes del programa principal para ejecutar pruebas unitarias'
+  c.example 'Ejecuta el programa agente', 'liri a'
+  c.example 'Ejecuta el programa agente', 'liri agent'
   c.action do |args, options|
-    # Call main method when run 'liri' command in CLI
+    # Método que se ejecuta al llamar al comando agent
     Liri::Agent.run
   end
 end
 
+# Define el alias m para el comando agent
 alias_command :a, :agent
 

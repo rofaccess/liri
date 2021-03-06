@@ -4,13 +4,13 @@ module Liri
   module Common
     module Compressor
       class Zip
-        # Initialize with the directory to zip and the location of the output archive.
+        # Inicializa la carpeta a comprimir y la ubicación en donde se guardará el archivo comprimido
         def initialize(input_dir, output_file)
           @input_dir = input_dir
           @output_file = output_file
         end
 
-        # Zip the input directory.
+        # Comprime el directorio de entrada @input_dir en un archivo con extensión zip.
         def compress
           clear_output_file
           entries = Dir.entries(@input_dir) - %w[. ..]
@@ -31,7 +31,7 @@ module Liri
           File.delete(@output_file) if File.exist?(@output_file)
         end
 
-        # A helper method to make the recursion work.
+        # Un método de ayuda que hace que la recursión funcione
         def write_entries(entries, path, zipfile)
           entries.each do |e|
             zipfile_path = path == '' ? e : File.join(path, e)

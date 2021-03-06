@@ -24,7 +24,7 @@ Or install it yourself as:
 
 TODO: Write usage instructions here
 
-## Development
+## Desarrollo
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
@@ -43,6 +43,13 @@ I don't know yet what is the difference between compile script and rake tasks.
 Test code itself running next command in terminal:
 
     $ Liri run
+
+#### Testing
+Consultar las siguientes fuentes para la implementación de pruebas unitarias
+- https://code.tutsplus.com/es/articles/rspec-testing-for-beginners-part-1--cms-26716
+- https://code.tutsplus.com/es/articles/rspec-testing-for-beginners-02--cms-26720
+- https://code.tutsplus.com/articles/rspec-testing-for-beginners-03--cms-26728
+- https://www.betterspecs.org/
 
 ###### Dependence Management
 All gems added in Gemfile must be set the version in next format:

@@ -7,16 +7,14 @@ module Liri
 
     class << self
       def run
-        puts "Starting Testing Process"
-        setup_folder = Liri::Manager::Setup::Folder.new
-        setup_folder.create unless Dir.exist?(setup_folder.path)
+        puts "Iniciando proceso de Testing"
 
-        source_code_folder = Liri::Manager::SourceCode::Folder.new
+        source_code = Liri::Manager::SourceCode.new(compressor_class)
+        source_code.compress_folder
 
-        compressed_file = Liri::Manager::SourceCode::CompressedFile.new(source_code_folder.path, setup_folder.path)
-        compressed_file.create
+        all_tests = source_code.all_tests
 
-        all_tests = source_code_folder.all_tests
+        source_code.delete_compressed_folder
 =begin
         sender = Common::Connection::Client::Udp.new(agent_address)
         sender.open
@@ -35,11 +33,12 @@ module Liri
         # runner = Runner::Rspec.new
         # runner.run
 =end
+        puts "Proceso de Testing Finalizado"
+      end
 
-        #compressed_file.delete
-        #setup_folder.delete
-        #Liri.delete_config
-        puts "Finished Testing Process"
+      private
+      def compressor_class
+        "Liri::Common::Compressor::#{Liri.setup.implementation.compressor}"
       end
     end
   end

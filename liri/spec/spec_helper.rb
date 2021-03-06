@@ -1,6 +1,4 @@
 require "bundler/setup"
-require 'manager/setup/folder'
-require 'manager/setup/file'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

@@ -1,7 +1,5 @@
 implementation:
   compressor: Zip
   runner: Rspec
-setup:
-  folder_name: .liri
 source_code:
   compressed_file_name: compressed_source_code
