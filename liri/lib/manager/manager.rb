@@ -1,5 +1,5 @@
-require 'manager/setup/folder'
-require 'manager/source_code/compressed_file'
+require 'manager/source_code'
+require 'manager/setup'
 
 module Liri
   module Manager

@@ -1,0 +1,5 @@
+implementation:
+  compressor: Zip
+  runner: Rspec
+source_code:
+  compressed_file_name: compressed_source_code

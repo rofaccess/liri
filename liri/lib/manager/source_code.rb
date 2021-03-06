@@ -1,4 +1,8 @@
 # Use this file to use SourceCode::CompressedFile and SourceCode::Folder format in CompressedFile and Folder module definition
+require 'manager/setup'
+require 'common/compressor/zip'
+require 'manager/unit_test/rspec'
+
 module Liri
   module Manager
     class SourceCode
