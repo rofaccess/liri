@@ -1,7 +1,7 @@
 require 'common/compressor/zip'
 
 RSpec.describe Zip, '#compress' do
-  it 'Create compressed file' do
+  it 'crea el archivo comprimido' do
     compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file)
     compressor.compress
     expect(File.exist?(output_file)).to be true

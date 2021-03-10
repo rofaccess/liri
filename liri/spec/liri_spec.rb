@@ -2,10 +2,6 @@ require 'manager/setup'
 
 RSpec.describe Liri do
   context 'cuando el archivo de configuración no existe' do
-    before(:all) do
-      Liri.delete_setup
-    end
-
     describe '#setup' do
       it 'carga los datos del archivo de configuración' do
         expect(Liri.setup).to be_an_instance_of(OpenStruct)
@@ -56,6 +52,11 @@ RSpec.describe Liri do
       it 'nulifica los datos de configuración' do
         expect(Liri.reset_setup).to be true
       end
+    end
+
+    after(:all) do
+      Liri.delete_setup
+      Liri.reset_setup
     end
   end
 end

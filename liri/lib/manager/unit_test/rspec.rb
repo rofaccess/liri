@@ -1,3 +1,6 @@
+# Es necesario usar el siguiente require para que el formato class UnitTest::Rspec funcione
+require 'manager/unit_test/unit_test'
+
 module Liri
   module Manager
     class UnitTest::Rspec

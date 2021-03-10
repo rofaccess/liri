@@ -1,3 +1,6 @@
+=begin
+  Esta clase se encarga de comprimir y descomprimir archivos
+=end
 require 'zip'
 
 module Liri

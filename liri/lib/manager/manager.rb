@@ -1,3 +1,6 @@
+=begin
+  Este modulo es el punto de entrada del programa principal
+=end
 require 'manager/source_code'
 require 'manager/setup'
 
