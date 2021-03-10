@@ -1,46 +1,47 @@
 # Liri
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/liri`. To experiment with that code, run `bin/console` for an interactive prompt.
+Gema que permite la ejecución de pruebas unitarias de manera distribuida a find de aumentar la velocidad de ejecución.
 
-TODO: Delete this and the text above, and describe your gem
+## Instalación
 
-## Installation
-
-Add this line to your application's Gemfile:
+Agregar la siguiente línea al Gemfile de su aplicación:
 
 ```ruby
 gem 'liri'
 ```
 
-And then execute:
+y ejecute:
 
     $ bundle install
 
-Or install it yourself as:
+o instale la gema:
 
     $ gem install liri
 
-## Usage
+## Uso
 
-TODO: Write usage instructions here
+Para ver todos los comandos disponibles, ejecutar en línea de comandos:
+
+    $ liri --help
 
 ## Desarrollo
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Usar `rake spec` para ejecutar las pruebas unitarias.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Para instalar la gema localmente, usar `bundle exec rake install`. Para lanzar una nueva versión, actualizar el número de versión en `version.rb`, y ejecutar `bundle exec rake release`, que crea un tag de git para la version, realiza los commits, y sube el archivo `.gem` a [rubygems.org](https://rubygems.org).
 
+Después de actualizar el código, usar el siguiente comando para ver los comandos para compilar e instalar la gema
 Build the gem in terminal after code update, with next command:
     
-    $ sh compile
- 
-Show alternative commands to build with:
-
     $ rake -T  
     
-I don't know yet what is the difference between compile script and rake tasks.    
     
-Test code itself running next command in terminal:
+También se puede usar el siguiente comando en línea de comandos para compilar en instalar la gema pero se recomienda usar las tareas rake
+    
+    $ sh compile
+  
+    
+Para probar la gema instalada usar el siguiente comando
 
     $ Liri run
 
@@ -52,21 +53,21 @@ Consultar las siguientes fuentes para la implementación de pruebas unitarias
 - https://www.betterspecs.org/
 
 ###### Dependence Management
-All gems added in Gemfile must be set the version in next format:
+Todas las gemas agregadas al Gemfile deben tener el siguiente formato para la versión:
 
     $ gem 'rubyzip', '~>2.2'    
     
-With the version format specified, the version of rubyzip installed will be equal or greater than 2.2.0 and less 
-than 3.0.0, because when change the first digit from 2 to 3 the changes between version are incompatible. More info 
-in: https://blog.makeitreal.camp/manejo-de-dependencias-en-ruby-con-bundler/   
+Con el formato especificado, la versión de rubyzip instalada será igual o mayor a 2.2.0 y menor a 3.0.0, porque
+cuando el primer dígito se cambia de 2 a 3, los cambios entre versiones son incompatibles. 
+Más información en  https://blog.makeitreal.camp/manejo-de-dependencias-en-ruby-con-bundler/   
         
 ##### Rubocop
-Rubocop is a static code analyser to use best practices for write code.
-To use Rubocop, run next command in terminal:
+Rubocop es un analizador de código estáticos para user las mejores prácticas al escribir el código.
+Para usar Rubocop, ejecutar el siguiente comando en la terminal:
     
     $ rubocop
     
-More info about Rubocop in: https://danielcastanera.com/anadir-rubocop-proyecto-rails/    
+Más información sobre Rubocop en: https://danielcastanera.com/anadir-rubocop-proyecto-rails/    
         
         
 ## Contributing

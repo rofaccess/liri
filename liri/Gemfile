@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Obs.: When add gems in this file, the format to manage version must be like this
 # gem 'rake', '~> 13'
 # In prev format, the version installed is equal or greater than 13.0.0 but less than 14.0.0

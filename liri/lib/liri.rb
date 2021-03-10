@@ -1,11 +1,9 @@
-=begin
-  Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicación, como ser el nombre y la
-  versión
-=end
+# frozen_string_literal: true
 
+# Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicacion
 module Liri
-  NAME = 'liri' # El nombre debe estar en minúsculas porque algunas partes de la aplicación lo utilizan como ser el gemspec
-  VERSION = "0.1.0"
+  NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
+  VERSION = '0.1.0'
 
   class << self
     def setup
@@ -22,16 +20,17 @@ module Liri
     end
 
     def delete_setup
-      _setup = Liri::Manager::Setup.new
-      _setup.delete
+      liri_setup = Liri::Manager::Setup.new
+      liri_setup.delete
     end
 
     private
-    # Carga las configuraciones en memoria desde un archivo de configuración
+
+    # Carga las configuraciones en memoria desde un archivo de configuracion
     def load_setup
-      _setup = Liri::Manager::Setup.new
-      _setup.create unless File.exist?(_setup.path)
-      _setup.load
+      liri_setup = Liri::Manager::Setup.new
+      liri_setup.create unless File.exist?(liri_setup.path)
+      liri_setup.load
     end
   end
 
