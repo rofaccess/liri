@@ -10,9 +10,20 @@ module Liri
         end
 
         def all_tests
+          tests_count = 1
+          tests_hash = {}
           test_files.each do |test_file|
-            puts test_file
+            File.open(test_file) do |file|
+              file.each_with_index do |line, index|
+                if line.strip.start_with?('it')
+                  test_line = file.to_path + ":#{index + 1}"
+                  tests_hash[tests_count] = test_line
+                  tests_count += 1
+                end
+              end
+            end
           end
+          tests_hash
         end
 
         private

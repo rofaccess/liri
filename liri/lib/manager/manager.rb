@@ -3,6 +3,7 @@
 =end
 require 'manager/source_code'
 require 'manager/setup'
+require 'hash_extend'
 
 module Liri
   module Manager
@@ -16,6 +17,7 @@ module Liri
         source_code.compress_folder
 
         all_tests = source_code.all_tests
+        print all_tests.sample
 
         source_code.delete_compressed_folder
 =begin
@@ -36,7 +38,7 @@ module Liri
         # runner = Runner::Rspec.new
         # runner.run
 =end
-        puts "Proceso de Testing Finalizado"
+        puts "\nProceso de Testing Finalizado"
       end
 
       private
