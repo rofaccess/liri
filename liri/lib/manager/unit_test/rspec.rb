@@ -1,17 +1,24 @@
-# Es necesario usar el siguiente require para que el formato class UnitTest::Rspec funcione
-require 'manager/unit_test/unit_test'
-
 module Liri
   module Manager
-    class UnitTest::Rspec
-      TEST_FOLDER_NAME = 'spec'
+    module UnitTest
+      class Rspec
+        TESTS_FOLDER_NAME = 'spec'
+        attr_reader :tests_folder_path
 
-      def initialize(source_code_folder_path)
-        @path = File.join(source_code_folder_path, TEST_FOLDER_NAME)
-      end
+        def initialize(source_code_folder_path)
+          @tests_folder_path = File.join(source_code_folder_path, TESTS_FOLDER_NAME)
+        end
 
-      def all_tests
+        def all_tests
+          test_files.each do |test_file|
+            puts test_file
+          end
+        end
 
+        private
+        def test_files
+          Dir[@tests_folder_path + "/**/*spec.rb"]
+        end
       end
     end
   end

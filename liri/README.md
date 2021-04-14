@@ -30,11 +30,15 @@ Usar `rake spec` para ejecutar las pruebas unitarias.
 
 Para instalar la gema localmente, usar `bundle exec rake install`. Para lanzar una nueva versión, actualizar el número de versión en `version.rb`, y ejecutar `bundle exec rake release`, que crea un tag de git para la version, realiza los commits, y sube el archivo `.gem` a [rubygems.org](https://rubygems.org).
 
-Después de actualizar el código, usar el siguiente comando para ver los comandos para compilar e instalar la gema
-Build the gem in terminal after code update, with next command:
+Después de actualizar el código, usar el siguiente comando para ver las tareas disponibles: 
     
     $ rake -T  
     
+Ejecutar para compilar e instalar la gema
+    
+    $ rake
+
+La configuración de las tareas para manejar la gema están dentro del archivo Rakefile. 
     
 También se puede usar el siguiente comando en línea de comandos para compilar en instalar la gema pero se recomienda usar las tareas rake
     
@@ -43,7 +47,10 @@ También se puede usar el siguiente comando en línea de comandos para compilar 
     
 Para probar la gema instalada usar el siguiente comando
 
-    $ Liri run
+    $ liri
+    
+La configuración de los comandos disponibles de la gema están dentro del archivo /exe/liri. 
+Las clases main o clases principales son lib/manager/manager y lib/manager/agent
 
 #### Testing
 Consultar las siguientes fuentes para la implementación de pruebas unitarias
