@@ -1,8 +1,6 @@
 =begin
   Este clase se encarga de manejar todo lo relativo al código fuente
 =end
-require 'common/compressor/zip'
-require 'manager/unit_test/rspec'
 
 module Liri
   module Manager

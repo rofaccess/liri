@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'manager/setup'
-
 RSpec.describe Liri do
   context 'cuando el archivo de configuración no existe' do
     describe '#setup' do

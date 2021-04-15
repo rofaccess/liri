@@ -1,9 +1,7 @@
 =begin
   Este modulo es el punto de entrada del programa principal
 =end
-require 'manager/source_code'
-require 'manager/setup'
-require 'hash_extend'
+require 'all_libraries'
 
 module Liri
   module Manager
@@ -17,7 +15,7 @@ module Liri
         source_code.compress_folder
 
         all_tests = source_code.all_tests
-        print all_tests.sample
+        print all_tests.sample(3)
 
         source_code.delete_compressed_folder
 =begin

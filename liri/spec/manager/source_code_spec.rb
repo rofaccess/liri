@@ -1,6 +1,3 @@
-require 'manager/setup'
-require 'manager/source_code'
-
 RSpec.describe Liri::Manager::SourceCode do
   context 'cuando el codigo fuente comprimido no existe' do
     before(:all) do

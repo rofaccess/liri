@@ -1,5 +1,3 @@
-require 'manager/setup'
-
 RSpec.describe Liri::Manager::Setup do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do

@@ -3,30 +3,30 @@ require "rspec/core/rake_task"
 
 RSpec::Core::RakeTask.new(:spec)
 
-# Set default rake task, run 'rake install' command in CLI when run 'rake' command in CLI
+# Define la tarea por defecto, esto hace que se ejecute el comando 'rake install' cuando se ejecuta 'rake' en linea de comandos
 # From:
 # - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
 task :default => :install
 
-# build gem
+# Compila la gema
 # > rake build
 task :build do
   system "gem build " + Liri::NAME + ".gemspec"
 end
 
-# install gem after build
+# Instala la gema después de compilar
 # > rake install
 task :install => :build do
   system "gem install " + Liri::NAME + "-" + Liri::VERSION + ".gem"
 end
 
-# publish gem after build
+# Publica la gema después de compilar
 # > rake publish
 task :publish => :build do
   system 'gem push ' + Liri::NAME + "-" + Liri::VERSION + ".gem"
 end
 
-# Clean compiled gem
+# Borra la gema compilada
 # > rake clean
 task :clean do
   system "rm *.gem"
