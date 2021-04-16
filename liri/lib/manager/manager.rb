@@ -5,8 +5,6 @@ require 'all_libraries'
 
 module Liri
   module Manager
-    AGENT_ADDRESS = ['255.255.255.255', 33333]
-
     class << self
       def run
         puts "Iniciando proceso de Testing"
@@ -15,7 +13,11 @@ module Liri
         source_code.compress_folder
 
         all_tests = source_code.all_tests
-        print all_tests.sample(3)
+        samples = all_tests.sample(3)
+
+        sender = Liri::Manager::Sender.new(udp_port, tcp_port)
+        sender.load_agents_addresses
+
 
         source_code.delete_compressed_folder
 =begin
@@ -42,6 +44,14 @@ module Liri
       private
       def compressor_class
         "Liri::Common::Compressor::#{Liri.setup.implementation.compressor}"
+      end
+
+      def udp_port
+        Liri.setup.ports.udp
+      end
+
+      def tcp_port
+        Liri.setup.ports.tcp
       end
     end
   end

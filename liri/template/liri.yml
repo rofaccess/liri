@@ -3,3 +3,6 @@ implementation:
   runner: Rspec
 source_code:
   compressed_file_name: compressed_source_code
+ports:
+  udp: 33333
+  tcp: 2000
