@@ -21,7 +21,6 @@ module Liri
 
         @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
         @udp_socket.send(request_msg, 0, '<broadcast>', @udp_port)
-          #@udp_socket.close
       end
 
       def wait_agents_connection_responses
@@ -29,7 +28,7 @@ module Liri
         # tambien hay que parar el hilo
         loop {
           Thread.start(@tcp_socket.accept) do |agent|
-            request_msg = "LiriAgent(#{agent_ip_address(agent)}): #{agent_message(agent)}?"
+            request_msg = "LiriAgent(#{agent_ip_address(agent)}): #{agent_message(agent)}"
             puts request_msg
             response_msg = "En breve te informo LiriAgent(#{agent_ip_address(agent)})"
             puts "LiriManager(#{Liri::Common.current_host_ip_address}): #{response_msg}"
@@ -41,7 +40,7 @@ module Liri
       end
 
       def agent_ip_address(agent)
-        agent.addr.last
+        agent.remote_address.ip_address
       end
 
       def agent_message(agent)
