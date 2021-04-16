@@ -1,0 +1,11 @@
+
+Liri
+[32m  has a version number[0m
+
+Test
+  run
+[32m    return true[0m
+
+Finished in 7.93 seconds (files took 0.63787 seconds to load)
+[32m2 examples, 0 failures[0m
+

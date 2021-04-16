@@ -1,0 +1,5 @@
+[32m.[0m
+
+Finished in 0.03255 seconds (files took 1.39 seconds to load)
+[32m1 example, 0 failures[0m
+

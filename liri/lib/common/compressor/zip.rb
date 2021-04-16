@@ -24,8 +24,15 @@ module Liri
           true
         end
 
-        def decompress
-
+        def decompress(zip_dir, dir_destination)
+          FileUtils.mkdir_p(dir_destination)
+          ::Zip::File.open(File.expand_path(zip_dir)) do |zip_file|
+            zip_file.each do |f|
+              fpath = File.join(dir_destination, f.name)
+              FileUtils.mkdir_p(File.dirname(fpath))
+              zip_file.extract(f, fpath) unless File.exist?(fpath)
+            end
+          end
         end
 
         private
