@@ -1,0 +1,3 @@
+test_framework: RSpec
+compressor: First
+runner: Second
