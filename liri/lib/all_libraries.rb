@@ -2,6 +2,7 @@ require 'hash_extend'
 
 require 'agent/agent'
 require 'agent/receiver'
+require 'agent/runner/rspec'
 
 require 'common/compressor/zip'
 require 'common/common'

@@ -41,6 +41,7 @@ RSpec.describe Liri::Manager::Setup do
       it 'no crea el archivo de configuración' do
         expect(@setup.create).to be false
         expect(File.exist?(@setup.path)).to be true
+        expect(true).to be false
       end
     end
 

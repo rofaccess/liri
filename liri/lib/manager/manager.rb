@@ -14,30 +14,16 @@ module Liri
 
         all_tests = source_code.all_tests
         samples = all_tests.sample(3)
+        puts samples
+
+        runner = Liri::Agent::Runner::Rspec.new
+        runner.run_tests(samples.values)
 
         sender = Liri::Manager::Sender.new(udp_port, tcp_port)
-        sender.load_agents_addresses
-
+        #sender.load_agents_addresses
 
         source_code.delete_compressed_folder
-=begin
-        sender = Common::Connection::Client::Udp.new(agent_address)
-        sender.open
-        puts "Enviando Hola..."
-        response = sender.send("Hola")
-        if response == "Hola"
-          puts "Recibiendo Hola..."
-          puts "Enviando Chau..."
-          response = sender.send("Chau")
-          if response == "Chau"
-            puts "Recibiendo Chau..."
-            sender.close
-          end
-        end
 
-        # runner = Runner::Rspec.new
-        # runner.run
-=end
         puts "\nProceso de Testing Finalizado"
       end
 
