@@ -22,7 +22,46 @@ module Liri
         # Ejemplo del hash retornado:
         # {result: '.F', failures: '', example_quantity: 2, failure_quantity: 1, passed_quantity: 0, failed_examples: ''}
         def process_tests_result(raw_test_results)
+          result_hash = {result: '', failures: '', example_quantity: 0, failure_quantity: 0, passed_quantity: 0, failed_examples: ''}
+          flag = ''
+          raw_test_results.each_line do |line|
+            if flag == '' && line.strip.start_with?('Randomized')
+              flag = 'Randomized'
+              next
+            end
 
+            if flag == 'Randomized' && line.strip.start_with?('Failures')
+              flag = 'Failures'
+              next
+            end
+
+            if ['Randomized', 'Failures'].include?(flag) && line.strip.start_with?('Finished')
+              flag = 'Finished'
+              next
+            end
+
+            if ['Finished', ''].include?(flag) && line.strip.start_with?('Failed')
+              flag = 'Failed'
+              next
+            end
+
+            case flag
+            when 'Randomized'
+              result_hash[:result] << line.strip
+            when 'Failures'
+              result_hash[:failures] << line
+            when 'Finished'
+              values = line.to_s.match(/([\d]+) example.?, ([\d]+) failure.?/)
+              result_hash[:example_quantity] = values[1].to_i
+              result_hash[:failure_quantity] = values[2].to_i
+              result_hash[:passed_quantity] = result_hash[:example_quantity] - result_hash[:failure_quantity]
+              flag = ''
+            when 'Failed'
+              result_hash[:failed_examples] << line
+            end
+          end
+
+          result_hash
         end
       end
     end

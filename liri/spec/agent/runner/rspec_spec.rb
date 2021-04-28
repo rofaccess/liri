@@ -5,12 +5,14 @@ RSpec.describe Liri::Agent::Runner::Rspec, '#run_tests' do
 
   it 'ejecuta 1 prueba unitaria' do
     unit_test = Liri::Agent::Runner::Rspec.new
-    unit_test.run_tests(@unit_test.all_tests.sample(1).values)
+    tests_result = unit_test.run_tests(@unit_test.all_tests.sample(1).values)
+    expect(tests_result).to be_a(Hash)
   end
 
   it 'ejecuta 2 pruebas unitarias' do
     unit_test = Liri::Agent::Runner::Rspec.new
-    unit_test.run_tests(@unit_test.all_tests.sample(2).values)
+    tests_result = unit_test.run_tests(@unit_test.all_tests.sample(2).values)
+    expect(tests_result).to be_a(Hash)
   end
 end
 
