@@ -1,6 +1,6 @@
 module Liri
   module Agent
-    module Runner
+    module UnitTest
       class Rspec
         # Recibe un arreglo de rutas a las pruebas unitarias
         # Ejecuta las pruebas unitarias y retorna el resultado como un hash

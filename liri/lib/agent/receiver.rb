@@ -32,6 +32,14 @@ module Liri
         @tcp_socket.close
       end
 
+      def tests_received
+
+      end
+
+      def send_tests_results(tests_result)
+
+      end
+
       private
       def manager_ip_address
         @manager_request.last.last

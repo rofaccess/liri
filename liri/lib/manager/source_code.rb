@@ -9,8 +9,9 @@ module Liri
       FOLDER_NAME = FOLDER_PATH.split('/').last
       COMPRESSED_FILE_PATH = File.join(FOLDER_PATH, '/', "#{FOLDER_NAME}.zip")
 
-      def initialize(compressor_class)
-        @compressor = Object.const_get(compressor_class).new(FOLDER_PATH, COMPRESSED_FILE_PATH)
+      def initialize(compression_class, unit_test_class)
+        @compressor = Object.const_get(compression_class).new(FOLDER_PATH, COMPRESSED_FILE_PATH)
+        @unit_test = Object.const_get(unit_test_class).new(FOLDER_PATH)
       end
 
       def compress_folder
@@ -27,8 +28,7 @@ module Liri
       end
 
       def all_tests
-        unit_test = Liri::Manager::UnitTest::Rspec.new(FOLDER_PATH)
-        unit_test.all_tests
+        @unit_test.all_tests
       end
 
       def compressed_file_path

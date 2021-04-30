@@ -41,7 +41,6 @@ RSpec.describe Liri::Manager::Setup do
       it 'no crea el archivo de configuración' do
         expect(@setup.create).to be false
         expect(File.exist?(@setup.path)).to be true
-        expect(true).to be false
       end
     end
 
@@ -49,9 +48,9 @@ RSpec.describe Liri::Manager::Setup do
       it 'retorna los datos del archivo de configuración' do
         setup = @setup.load
         expect(setup).to be_an_instance_of(OpenStruct)
-        expect(setup.implementation.compressor).to eq('Zip')
-        expect(setup.implementation.runner).to eq('Rspec')
-        expect(setup.source_code.compressed_file_name).to eq('compressed_source_code')
+        expect(setup.library.compression).to eq('Zip')
+        expect(setup.library.unit_test).to eq('Rspec')
+        expect(setup.compressed_file_name).to eq('compressed_source_code')
         expect(File.exist?(@setup.path)).to be true
       end
     end

@@ -14,3 +14,20 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 end
+
+def source_code_folder_path
+  Liri::Manager::SourceCode::FOLDER_PATH
+end
+
+def agent_unit_test_class
+  "Liri::Agent::UnitTest::#{Liri.setup.library.unit_test}"
+end
+
+def manager_unit_test_class
+  "Liri::Manager::UnitTest::#{Liri.setup.library.unit_test}"
+end
+
+def compression_class
+  "Liri::Common::Compressor::#{Liri.setup.library.compression}"
+end
+
