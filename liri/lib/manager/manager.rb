@@ -16,8 +16,7 @@ module Liri
         samples = all_tests.sample(3)
         puts samples
 
-        sender = Liri::Manager::Sender.new(udp_port, tcp_port)
-        sender.load_agents_addresses
+        agents = Liri::Manager::Agent.load_agents(udp_port, tcp_port)
 
         # Enviar archivo
         # Enviar pruebas

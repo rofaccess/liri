@@ -1,7 +1,8 @@
+compressed_file_name: compressed_source_code
+test_samples_by_runner: 10
 library:
   compression: Zip
   unit_test: Rspec
-compressed_file_name: compressed_source_code
 ports:
   udp: 33333
   tcp: 2000

@@ -19,6 +19,10 @@ def source_code_folder_path
   Liri::Manager::SourceCode::FOLDER_PATH
 end
 
+def test_samples_by_runner
+  Liri.setup.test_samples_by_runner
+end
+
 def agent_unit_test_class
   "Liri::Agent::UnitTest::#{Liri.setup.library.unit_test}"
 end

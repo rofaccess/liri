@@ -10,8 +10,8 @@ module Liri
       end
 
       def load_agents_addresses
-        start_connection_with_agents
         wait_agents_connection_responses
+        start_connection_with_agents
       end
 
       private
