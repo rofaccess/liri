@@ -3,7 +3,7 @@
 =end
 
 module Liri
-  module Manager
+  class Manager
     class SourceCode
       FOLDER_PATH = Dir.pwd
       FOLDER_NAME = FOLDER_PATH.split('/').last

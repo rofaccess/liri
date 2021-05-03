@@ -3,7 +3,7 @@
 =end
 
 module Liri
-  module Agent
+  class Agent
     class Runner
       def initialize(unit_test_class)
         @unit_test = Object.const_get(unit_test_class).new

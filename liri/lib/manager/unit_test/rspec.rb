@@ -1,5 +1,5 @@
 module Liri
-  module Manager
+  class Manager
     module UnitTest
       class Rspec
         TESTS_FOLDER_NAME = 'spec'

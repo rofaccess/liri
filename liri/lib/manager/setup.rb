@@ -5,7 +5,7 @@ require 'yaml'
 require 'json'
 
 module Liri
-  module Manager
+  class Manager
     class Setup
       FILE_NAME = 'liri.yml'
       FILE_PATH = File.join(Dir.pwd, '/', FILE_NAME)

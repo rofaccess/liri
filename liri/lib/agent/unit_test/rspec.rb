@@ -1,5 +1,5 @@
 module Liri
-  module Agent
+  class Agent
     module UnitTest
       class Rspec
         # Recibe un arreglo de rutas a las pruebas unitarias
