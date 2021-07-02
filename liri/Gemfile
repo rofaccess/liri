@@ -30,4 +30,7 @@ gem 'coderay', '~>1'
 group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
   gem 'rubocop', '~>0', require: false
+
+  # A Ruby Documentation Tool. https://github.com/lsegal/yard
+  gem 'yard', '~>0'
 end

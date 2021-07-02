@@ -1,6 +1,6 @@
 # Liri
 
-Gema que permite la ejecución de pruebas unitarias de manera distribuida a find de aumentar la velocidad de ejecución.
+Gema que permite la ejecución de pruebas unitarias de manera distribuida a fin de aumentar la velocidad de ejecución.
 
 ## Instalación
 
@@ -64,17 +64,32 @@ Para usar Rubocop, ejecutar el siguiente comando en la terminal:
 Más información sobre Rubocop en: https://danielcastanera.com/anadir-rubocop-proyecto-rails/ 
 
 ### Documentación
-Para la documentación se utiliza la gema Rdoc según las pautas indicadas en:
+Para la documentación se usa la gema Yard según las pautas indicadas en:
+
+- https://rubydoc.info/gems/yard/file/docs/GettingStarted.md
+
+Para generar la documentación ejecutar el comando:
+
+    $ yard
+    
+El comando anterior crea una carpeta /doc del cual se tiene que abrir el archivo index.html
+en un navegador    
+
+Una alternativa a yard es la gema Rdoc que al parecer también es utilizada por Yard:
+
 - http://blog.firsthand.ca/2010/09/ruby-rdoc-example.html
 - https://gist.github.com/hunj/f89cabc10c155f06cc3e
 
-Para generar la documentación ejecutar el cual crea una carpeta /doc del cual se tiene que abrir el archivo index.html
-en un navegador
+Para generar la documentación ejecutar comando:
 
     $ rdoc
 
+El comando anterior crea una carpeta /doc del cual se tiene que abrir el archivo index.html
+en un navegador   
+
 ## Testing
-Consultar las siguientes fuentes para la implementación de pruebas unitarias
+Consultar las siguientes fuentes para la implementación de pruebas unitarias:
+
 - https://code.tutsplus.com/es/articles/rspec-testing-for-beginners-part-1--cms-26716
 - https://code.tutsplus.com/es/articles/rspec-testing-for-beginners-02--cms-26720
 - https://code.tutsplus.com/articles/rspec-testing-for-beginners-03--cms-26728

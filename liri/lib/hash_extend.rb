@@ -1,15 +1,15 @@
 # = hash_extend.rb
 #
-# Autor::   Rodrigo Fernández
-# Web::     http://www.something.com
+# @author Rodrigo Fernández
 #
 # == Clase Hash
 # Esta clase extiende las funcionalidades de la clase Hash de Ruby
 class Hash
-  # Retorna un hash con elementos aleatorios del hash original
-  # === Parámetros
-  # * +quantity+ - la cantidad de elementos del nuevo hash retornado, por defecto es 1
-  # ==== Ejemplos
+  # Retorna un hash con elementos aleatorios del hash original.
+  #
+  # @param quantity [Integer] la cantidad de elementos del nuevo hash retornado.
+  # @return [Hash] un hash con elementos aleatorios del hash original.
+  # @example
   #   hash = {uno: 'uno', dos: 'dos', tres: 'tres'}
   #   hash.sample
   #     => {dos: 'dos'}
@@ -24,10 +24,11 @@ class Hash
     sample_values
   end
 
-  # Borra los elementos indicados del hash y retorna el hash sin los elementos indicados
-  # === Parámetros
-  # * +keys+ - las claves a remover separadas por comas
-  # ==== Ejemplos
+  # Borra elementos del hash.
+  # @note Los elementos son borrados del hash original
+  # @param keys [Array] las claves a remover separadas por comas o en un arreglo.
+  # @return [Hash] un hash sin los elementos indicados.
+  # @example
   #   hash = {uno: 'uno', dos: 'dos', tres: 'tres'}
   #   hash.remove!(:uno)
   #     => {:dos=>"dos", :tres=>"tres"}
