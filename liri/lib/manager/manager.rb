@@ -20,10 +20,10 @@ module Liri
         manager.start_agents_search # Se envía peticiones broadcast a los Agents de toda la red
         manager.start_agents_load   # Se instancian los Agents
 
-        # el sleep es temporal para que no muera todo cuando muere el thread principal
-        # hay una forma que consiste en hacer un join de todos los hilos para evitar que muera todo cuando termina el hilo principal
+        # el sleep es temporal para que no muera cuando muere el thread principal
+        # hay una forma que consiste en hacer un join de todos los hilos para evitar que muera cuando termina el hilo principal
         # entonces deberia guardar los hilos en un arreglo en manager y luego llamar un metodo que haga el join
-        sleep(15)
+        sleep(30)
 
         #manager.stop_agents_search # Se deja de enviar peticiones a los Agents de la red
         #manager.stop_agents_load # Se deja de intentar instanciar Agents

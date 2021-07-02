@@ -1,3 +1,14 @@
+# = all_libraries.rb
+#
+# Autor::   Rodrigo Fernández
+# Web::     http://www.something.com
+#
+# Este archivo se encarga de importar todas las librerías a utilizar
+
+# Se utiliza la librería *socket* de Ruby para realizar una conexión udp
+require 'socket'
+
+# El archivo *hash_extend* extiende la clase Hash de Ruby para agregarle más funcionalidades
 require 'hash_extend'
 
 require 'agent/agent'
