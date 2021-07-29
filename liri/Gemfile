@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-# Obs.: When add gems in this file, the format to manage version must be like this
+# Obs.: Al agregar nuevas gemas, el formato debe ser el siguiente:
 # gem 'rake', '~> 13'
-# In prev format, the version installed is equal or greater than 13.0.0 but less than 14.0.0
-# Use this format because when version change from 13 to 14, in theory the compatibility is lost
-# More Info: https://blog.makeitreal.camp/manejo-de-dependencias-en-ruby-con-bundler/
+# De este modo se asegura que la versión instalada es igua o mayor que 13.0.0 y menor a 14.0.0
+# Se usa este formato porque cuando la versión cambia de 13 a 14, en teoría la compatibilidad se pierde
+# Más info: https://blog.makeitreal.camp/manejo-de-dependencias-en-ruby-con-bundler/
 
 source 'https://rubygems.org'
 
