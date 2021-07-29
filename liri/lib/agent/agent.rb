@@ -9,16 +9,27 @@ module Liri
 
     class << self
       def run
+        puts "Presione s y luego Enter o Ctrl + c para salir\n\n"
         runner = Liri::Agent::Runner.new(unit_test_class)
         agent = Agent.new(udp_port, tcp_port, runner)
-        agent.start_managers_load # Se espera peticiones de Managers
-        agent.start_running_tests
+        threads = []
+        threads << agent.start_server_to_process_first_request_from_manager # Esperar y procesar primeras peticiones de Managers
+        threads << agent.start_server_to_run_tests_sent_from_manager # Esperar y ejecutar pruebas enviadas por los Managers
 
-        # el sleep es temporal para que no muera todo cuando muere el thread principal
-        sleep(30)
+        # Obs.: Las siguientes dos líneas pueden ser innecesarias porque los agentes siempre deberían estar
+        # en espera y/o trabajando desde que se encienden hasta que se apagan
+        #agent.stop_server_to_process_first_request_from_manager # Se termina la espera de primera petición de Managers
+        #agent.stop_server_to_run_tests_sent_from_manager # Se termina la espera de peticiones para ejecutar pruebas
 
-        #agent.stop_managers_load # Se termina la espera de peticiones de Managers
-        #agent.stop_running_tests
+        # Fuente: https://www.rubyguides.com/2019/10/ruby-chomp-gets/
+        key = $stdin.gets
+        if key.chomp == 's' || key.chomp == 'S'
+          threads.each{|thread| Thread.kill(thread)}
+        end
+
+        # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
+        # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
+        threads.each{|thread| thread.join}
       end
 
       private
@@ -40,43 +51,45 @@ module Liri
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
 
-      @stop_managers_load = false
-      @stop_running_tests = false
+      @stop_server_to_process_first_request_from_manager = false
+      @stop_server_to_run_tests_sent_from_manager = false
 
       @runner = runner
       @managers = {}
     end
 
-    # Inicia un servidor udp que se mantiene esperando una petición de conección
-    # El Agent usa esto para esperar la petición de conexión del Manager
-    def start_managers_load
+    # Inicia un servidor udp que se mantiene en espera de la primera petición de conexión del Manager
+    def start_server_to_process_first_request_from_manager
       # El servidor udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue esperando
       # que un Manager se conecte, cuando se conecta un Manager, se guarda la ip de este manager y se vuelve a esperar otra petición
       Thread.new do
         BasicSocket.do_not_reverse_lookup = true
         @udp_socket.bind('0.0.0.0', @udp_port)
 
-        puts 'Instanciar Managers...'
-        while !@stop_managers_load
+        puts 'En espera de peticiones UDP de Managers...'
+        puts '(Se espera que algún Manager se contacte por primera vez para posteriormente enviar las pruebas)'
+        puts ''
+        while !@stop_server_to_process_first_request_from_manager
           @manager_request = @udp_socket.recvfrom(1024)
-          load_manager(@manager_request.last.last)
+          process_first_request_from_manager(@manager_request.last.last)
 
-          break if @stop_managers_load
+          break if @stop_server_to_process_first_request_from_manager
         end
       end
     end
 
-    # Termina la ejecución del bucle e hilo iniciado en start_managers_load
-    def stop_managers_load
-      @stop_managers_load = true
-      puts 'Finalizar instanciación de Managers'
+    # Termina la ejecución del bucle e hilo iniciado en start_server_to_process_first_request_from_manager
+    def stop_server_to_process_first_request_from_manager
+      @stop_server_to_process_first_request_from_manager = true
+      puts 'Se finaliza la espera de peticiones UDP de Managers'
     end
 
-    # Inicia un cliente tcp
-    # El Agent usa esto para responder al Manager después de recibir la petición de conexión
+    # Inicia un cliente tcp para responder a la primera petición de conexión del Manager
     def respond_to_manager(ip_address)
       tcp_socket = TCPSocket.open(ip_address, @tcp_port)
-      puts 'Enviar la ip del Agent al Manager'
+      puts "Se inicia una conexión TCP con el Manager: #{ip_address}"
+      puts '(Se responde al Manager para que éste le envíe las pruebas)'
+      puts ''
       while line = tcp_socket.gets
         response_msg = line.chop
         puts response_msg
@@ -84,40 +97,43 @@ module Liri
       tcp_socket.close
     end
 
-    # Inicia un servidor tcp
-    # El Agent usa esto para recibir las pruebas unitarias del Manager
-    def start_running_tests
+    # Inicia un servidor tcp que se mantiene en espera para recibir las pruebas unitarias enviadas por el Manager
+    def start_server_to_run_tests_sent_from_manager
       Thread.new do
         tcp_socket = TCPServer.new(3000) # se hace un bind al puerto dado
-        puts "Ejecutar pruebas del Manager #{}"
-        while !@stop_running_tests
+        puts 'En espera de peticiones TCP de Managers...'
+        puts '(Se espera que algún Manager envíe las pruebas unitarias)'
+        puts ''
+        while !@stop_server_to_run_tests_sent_from_manager
           Thread.start(tcp_socket.accept) do |client|
             tests = JSON.parse(client.recvfrom(1000).first)
+            puts "Pruebas recibidas del Manager: #{client.remote_address.ip_address}"
             puts tests
             tests_result = @runner.run_tests(tests)
             puts tests_result
             client.puts(tests_result)
+            puts "Resultados de Pruebas enviadas al Manager: #{client.remote_address.ip_address}"
             client.close # se desconecta el cliente
           end
 
-          break if @stop_running_tests
+          break if @stop_server_to_run_tests_sent_from_manager
         end
       end
     end
 
-    def stop_running_tests
-      @stop_running_tests = true
-      puts 'Finalizar la ejecución de pruebas'
+    def stop_server_to_run_tests_sent_from_manager
+      @stop_server_to_run_tests_sent_from_manager = true
+      puts 'Se finaliza la espera de peticiones TCP de Managers'
     end
 
     private
     # Inserta el ip recibido dentro del hash si es que ya no existe en el hash
     # Nota: Se requieren imprimir datos para saber el estado de la aplicación, sería muy útil usar algo para logear
     # estas cosas en los diferentes niveles, debug, info, etc.
-    def load_manager(manager_ip_address)
+    def process_first_request_from_manager(manager_ip_address)
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
-        puts "Managers: #{@managers}"
+        puts "Petición UDP recibida del Manager: #{manager_ip_address}"
         respond_to_manager(manager_ip_address)
       end
     end

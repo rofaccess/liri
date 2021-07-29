@@ -6,7 +6,6 @@
 # Esta clase extiende las funcionalidades de la clase Hash de Ruby
 class Hash
   # Retorna un hash con elementos aleatorios del hash original.
-  #
   # @param quantity [Integer] la cantidad de elementos del nuevo hash retornado.
   # @return [Hash] un hash con elementos aleatorios del hash original.
   # @example
