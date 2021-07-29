@@ -9,7 +9,9 @@ module Liri
     attr_reader :agents
 
     class << self
-      def run
+      # Inicia la ejecución del Manager
+      # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
+      def run(stop=false)
         puts "Iniciar proceso de Testing"
 
         source_code = Liri::Manager::SourceCode.new(compression_class, unit_test_class)
@@ -17,13 +19,11 @@ module Liri
         all_tests = source_code.all_tests
 
         manager = Manager.new(udp_port, tcp_port, all_tests)
-        manager.start_agents_search # Se envía peticiones broadcast a los Agents de toda la red
-        manager.start_agents_load   # Se instancian los Agents
+        threads = []
+        threads << manager.start_agents_search # Se envía peticiones broadcast a los Agents de toda la red
+        threads << manager.start_agents_load   # Se instancian los Agents
 
-        # el sleep es temporal para que no muera cuando muere el thread principal
-        # hay una forma que consiste en hacer un join de todos los hilos para evitar que muera cuando termina el hilo principal
-        # entonces deberia guardar los hilos en un arreglo en manager y luego llamar un metodo que haga el join
-        sleep(30)
+        Liri.init_exit(stop, threads)
 
         #manager.stop_agents_search # Se deja de enviar peticiones a los Agents de la red
         #manager.stop_agents_load # Se deja de intentar instanciar Agents

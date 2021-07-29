@@ -24,6 +24,22 @@ module Liri
       liri_setup.delete
     end
 
+    def init_exit(stop, threads)
+      if stop
+        kill(threads)
+      else
+        # Fuente: https://www.rubyguides.com/2019/10/ruby-chomp-gets/
+        key = $stdin.gets
+        if key.chomp == 's' || key.chomp == 'S'
+          kill(threads)
+        end
+      end
+    end
+
+    def kill(threads)
+      threads.each{|thread| Thread.kill(thread)}
+    end
+
     private
 
     # Carga las configuraciones en memoria desde un archivo de configuracion

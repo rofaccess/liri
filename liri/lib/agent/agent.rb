@@ -8,7 +8,9 @@ module Liri
     attr_reader :managers
 
     class << self
-      def run
+      # Inicia la ejecución del Agent
+      # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
+      def run(stop=false)
         puts "Presione s y luego Enter o Ctrl + c para salir\n\n"
         runner = Liri::Agent::Runner.new(unit_test_class)
         agent = Agent.new(udp_port, tcp_port, runner)
@@ -16,16 +18,7 @@ module Liri
         threads << agent.start_server_to_process_first_request_from_manager # Esperar y procesar primeras peticiones de Managers
         threads << agent.start_server_to_run_tests_sent_from_manager # Esperar y ejecutar pruebas enviadas por los Managers
 
-        # Obs.: Las siguientes dos líneas pueden ser innecesarias porque los agentes siempre deberían estar
-        # en espera y/o trabajando desde que se encienden hasta que se apagan
-        #agent.stop_server_to_process_first_request_from_manager # Se termina la espera de primera petición de Managers
-        #agent.stop_server_to_run_tests_sent_from_manager # Se termina la espera de peticiones para ejecutar pruebas
-
-        # Fuente: https://www.rubyguides.com/2019/10/ruby-chomp-gets/
-        key = $stdin.gets
-        if key.chomp == 's' || key.chomp == 'S'
-          threads.each{|thread| Thread.kill(thread)}
-        end
+        Liri.init_exit(stop, threads)
 
         # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
         # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
