@@ -24,16 +24,15 @@ module Liri
       liri_setup.delete
     end
 
-    def init_exit(stop, threads)
-      if stop
-        kill(threads)
-      else
-        # Fuente: https://www.rubyguides.com/2019/10/ruby-chomp-gets/
-        key = $stdin.gets
-        if key.chomp == 's' || key.chomp == 'S'
-          kill(threads)
-        end
-      end
+    def init_exit(stop, threads, program)
+      kill(threads) if stop
+
+      # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
+      # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
+      threads.each{|thread| thread.join}
+    rescue SignalException => e
+      puts "\nEjecución del #{program} terminada manualmente\n"
+      kill(threads)
     end
 
     def kill(threads)

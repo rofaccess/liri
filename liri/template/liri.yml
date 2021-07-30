@@ -1,8 +1,21 @@
+# Este archivo .yml define ciertas configuraciones para la ejecución del sistema
+# Configuración del Nombre del archivo de código fuente comprimido enviado a los agentes
+# Obs.: Puede que no sea útil para el usuario poder cambiar este nombre
 compressed_file_name: compressed_source_code
+# Configuración de la cantidad de tests a ejecutar por tandas
 test_samples_by_runner: 10
 library:
+  # Configuración de la librería de compresión a utilizar para comprimir el código fuente
+  # Valores soportados: Sólo Zip hasta ahora
   compression: Zip
+  # Configuración de la librería de pruebas unitarias a ejecutar
+  # Valores soportados: Sólo Rspec hasta ahora
   unit_test: Rspec
 ports:
-  udp: 33333
-  tcp: 2000
+  # Configuración del puerto a través del cual se realizará la primera comunicación entre Manager y Agent
+  udp: 3000
+  # Configuración del puerto a través del cual se enviará la respuesta del Agent al Manager después de la primera comunicación
+  tcp_1: 2000
+  # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
+  tcp_2: 2001
+
