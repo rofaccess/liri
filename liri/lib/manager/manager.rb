@@ -29,9 +29,8 @@ module Liri
 
         #source_code.delete_compressed_folder
 
-        puts "\nFinalización de proceso de Testing"
-
         Liri.init_exit(stop, threads, 'Manager')
+        puts "\nFinalización de proceso de Testing"
       end
 
       private
@@ -98,7 +97,13 @@ module Liri
     # Inicia un servidor tcp para recibir la respuesta del Agent para obtener sus direcciones ip una vez iniciada la conexión a través de udp
     def start_server_socket_to_process_address_from_agent
       Thread.new do
-        tcp_socket = TCPServer.new(@tcp_port_1) # se hace un bind al puerto dado
+        begin
+          tcp_socket = TCPServer.new(@tcp_port_1) # se hace un bind al puerto dado
+        rescue Errno::EADDRINUSE => e
+          puts "Error: Puerto TCP #{@tcp_port_1} ocupado. Presion Ctrl + c para salir"
+          Thread.exit
+        end
+
         puts "En espera de peticiones de Agents en el puerto TCP: #{@tcp_port_1}"
         puts '(Se espera que algún Agent responda al broadcast UDP)'
         puts ''

@@ -58,7 +58,12 @@ module Liri
       # que un Manager se conecte, cuando se conecta un Manager, se guarda la ip de este manager y se vuelve a esperar otra petición
       Thread.new do
         BasicSocket.do_not_reverse_lookup = true
-        @udp_socket.bind('0.0.0.0', @udp_port)
+        begin
+          @udp_socket.bind('0.0.0.0', @udp_port)
+        rescue Errno::EADDRINUSE => e
+         puts "Error: Puerto UDP #{@udp_port} ocupado"
+         Thread.exit
+        end
 
         puts "En espera de peticiones de Managers en el puerto UDP #{@udp_port}"
         puts '(Se espera que algún Manager se contacte por primera vez para responderle con la dirección ip del Agent)'
@@ -80,7 +85,13 @@ module Liri
 
     # Inicia un cliente tcp para responder a la petición broadcast del Manager para que éste sepa donde enviar las pruebas
     def start_client_socket_to_send_address_to_manager(manager_ip_address)
-      tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port_1)
+      begin
+        tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port_1)
+      rescue Errno::EADDRINUSE => e
+        puts "Error: Puerto TCP #{@tcp_port_1} ocupado"
+        Thread.exit
+      end
+
       puts "Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port_1}"
       puts '(Se responde al Manager para que éste sepa donde enviar las pruebas)'
       puts ''
@@ -94,7 +105,13 @@ module Liri
     # Inicia un servidor tcp que se mantiene en espera para recibir las pruebas unitarias enviadas por el Manager
     def start_server_socket_to_run_tests_sent_from_manager
       Thread.new do
-        tcp_socket = TCPServer.new(@tcp_port_2) # se hace un bind al puerto dado
+        begin
+          tcp_socket = TCPServer.new(@tcp_port_2) # se hace un bind al puerto dado
+        rescue Errno::EADDRINUSE => e
+          puts "Error: Puerto TCP #{@tcp_port_2} ocupado"
+          Thread.exit
+        end
+
         puts "En espera de peticiones de Managers en el puerto TCP: #{@tcp_port_2}"
         puts '(Se espera que algún Manager envíe las pruebas unitarias)'
         puts ''
