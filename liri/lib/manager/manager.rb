@@ -109,7 +109,8 @@ module Liri
         puts ''
         while !@stop_server_socket_to_process_address_from_agent
           Thread.start(tcp_socket.accept) do |client|
-            puts "Respuesta al broadcast recibida del Agent: #{client.remote_address.ip_address}"
+            puts "Respuesta al broadcast recibida del Agent: #{client.remote_address.ip_address} en el puerto TCP: #{@tcp_port_1}"
+            puts ''
             process_address_from_agent(client.remote_address.ip_address)
             client.close # se desconecta el cliente
           end
@@ -121,19 +122,19 @@ module Liri
 
     def stop_server_socket_to_process_address_from_agent
       @stop_server_socket_to_process_address_from_agent = true
-      puts 'Se finaliza la espera para recibir respuestas de los Agents a la petición broadcast'
+      puts "Se finaliza la espera para recibir respuestas de los Agents a la petición broadcast en el puerto UDP: #{@udp_port}"
     end
 
     # Inicia un cliente tcp para enviar las pruebas al Agent
     def start_client_socket_to_send_tests_to_agent(agent_ip_address, message)
-      puts "Se inicia una conexión con el Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port_1}"
+      puts "Se inicia una conexión con el Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port_2}"
       puts '(Se envía las pruebas al Agent)'
       puts ''
       tcp_socket = TCPSocket.open(agent_ip_address, @tcp_port_2)
       tcp_socket.print(message)
       while line = tcp_socket.gets
         tests_result = line.chop
-        puts "Resultados de Pruebas recibidas del Agent: #{agent_ip_address}"
+        puts "Resultados de Pruebas recibidas del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port_2}"
         puts tests_result
       end
       tcp_socket.close

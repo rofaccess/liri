@@ -70,8 +70,8 @@ module Liri
         puts ''
         while !@stop_server_socket_to_process_address_request_from_manager
           @manager_request = @udp_socket.recvfrom(1024)
-          process_address_request_from_manager(@manager_request.last.last)
-
+          manager_ip_address = @manager_request.last.last
+          process_address_request_from_manager(manager_ip_address)
           break if @stop_server_socket_to_process_address_request_from_manager
         end
       end
@@ -117,7 +117,7 @@ module Liri
         puts ''
         while !@stop_server_socket_to_run_tests_sent_from_manager
           Thread.start(tcp_socket.accept) do |client|
-            puts "Pruebas recibidas del Manager: #{client.remote_address.ip_address}"
+            puts "Pruebas recibidas del Manager: #{client.remote_address.ip_address} en el puerto TCP: #{@tcp_port_2}"
             tests = JSON.parse(client.recvfrom(1000).first)
             puts tests
             tests_result = @runner.run_tests(tests)
@@ -144,7 +144,7 @@ module Liri
     def process_address_request_from_manager(manager_ip_address)
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
-        puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address}"
+        puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto TCP: #{@udp_port}"
         start_client_socket_to_send_address_to_manager(manager_ip_address)
       end
     end

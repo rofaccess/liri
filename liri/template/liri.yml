@@ -13,9 +13,9 @@ library:
   unit_test: Rspec
 ports:
   # Configuración del puerto a través del cual se realizará la primera comunicación entre Manager y Agent
-  udp: 3000
+  udp: 2000
   # Configuración del puerto a través del cual se enviará la respuesta del Agent al Manager después de la primera comunicación
-  tcp_1: 2000
+  tcp_1: 3000
   # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
-  tcp_2: 2001
+  tcp_2: 4000
 
