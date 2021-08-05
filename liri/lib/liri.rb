@@ -25,14 +25,15 @@ module Liri
     end
 
     def init_exit(stop, threads, program)
+      threads = threads.compact
       kill(threads) if stop
 
       # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
       # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
       threads.each{|thread| thread.join}
-    rescue SignalException => e
-      puts "\nEjecución del #{program} terminada manualmente\n"
-      kill(threads)
+      #rescue SignalException => e
+      #puts "\nEjecución del #{program} terminada manualmente\n"
+      #kill(threads)
     end
 
     def kill(threads)

@@ -23,6 +23,21 @@ class Hash
     sample_values
   end
 
+  # Retorna un hash con elementos aleatorios del hash original y borra estos elementos del hash.
+  # @param quantity [Integer] la cantidad de elementos del nuevo hash retornado.
+  # @return [Hash] un hash con elementos aleatorios del hash original.
+  # @example
+  #   hash = {uno: 'uno', dos: 'dos', tres: 'tres'}
+  #   hash.sample
+  #     => {dos: 'dos'}
+  #   hash.sample(2)
+  #     => {uno: 'uno', tres: 'tres'}
+  def sample!(quantity=1)
+    samples = self.sample(quantity)
+    remove!(samples.keys)
+    samples
+  end
+
   # Borra elementos del hash.
   # @note Los elementos son borrados del hash original
   # @param keys [Array] las claves a remover separadas por comas o en un arreglo.
@@ -36,7 +51,7 @@ class Hash
   #   hash
   #     => {}
   def remove!(*keys)
-    keys.each{|key| self.delete(key) }
+    keys.flatten.each{|key| self.delete(key) }
     self
   end
 end
