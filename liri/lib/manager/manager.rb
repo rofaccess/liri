@@ -20,6 +20,7 @@ module Liri
         all_tests = source_code.all_tests
 
         manager = Manager.new(udp_port, tcp_port, all_tests)
+        #manager.send_manager_user
         threads = []
         threads << manager.start_client_socket_to_search_agents # Enviar peticiones broadcast a toda la red para encontrar Agents
         threads << manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
@@ -54,6 +55,7 @@ module Liri
       def tcp_port
         Liri.setup.ports.tcp
       end
+
     end
 
     def initialize(udp_port, tcp_port_1, all_tests)
@@ -75,9 +77,15 @@ module Liri
         puts "Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}"
         puts '(Se mantiene escaneando la red para encontrar Agents)'
         puts ''
+        #ejecuto send_manager para obtener los datos del manager, como usuario y password
+        file_zip= Liri::Common::Compressor::Zip.new('home/lesliie/Documentos/TfG 2.0/tfg/liri', 'home/lesliie/Documentos/TfG 2.0/tfg/liri/lib/liri.zip')
+        send_manager_user()
+        #guardo en un arreglo los datos del manger y también la dirección de mi archivo comprimido
+        user_data = [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file]
+        data= user_data * ';'
         loop do
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          @udp_socket.send('', 0, '<broadcast>', @udp_port)
+          @udp_socket.send(data, 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
         end
       end
@@ -128,6 +136,18 @@ module Liri
           client.close # se desconecta el cliente
         end
       end
+    end
+    def send_manager_user()
+      liri_setup = Liri::Manager::Setup.new
+      liri_setup.create unless File.exist?(liri_setup.path)
+      user_manager_temp = %x[whoami]
+      puts "holaaaaaaa"
+      user_manager= 'lesliie'
+      liri_setup.update_value_two_level('manager_user', 'user', user_manager)
+      puts "Escribir contraseña de #{user_manager}:"
+      pass = '740285'
+      puts "#{pass} es la contraseña"
+      liri_setup.update_value_two_level('manager_user', 'password', pass)
     end
   end
 end

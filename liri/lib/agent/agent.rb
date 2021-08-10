@@ -1,6 +1,8 @@
 =begin
   Este módulo es el punto de entrada del programa agente
 =end
+require 'net/ssh'
+require 'net/scp'
 require 'all_libraries'
 
 module Liri
@@ -66,7 +68,10 @@ module Liri
         loop do
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
-          process_manager_connection_request(manager_ip_address)
+          user,pass,dir= @manager_request.first.split(";")
+          puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
+
+          process_manager_connection_scp(manager_ip_address, user, pass, dir)
         end
       end
     end
@@ -125,6 +130,12 @@ module Liri
         @managers[manager_ip_address] = manager_ip_address
         puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}"
         start_client_socket_to_process_tests(manager_ip_address)
+      end
+    end
+    def process_manager_connection_scp(host, user, pass, dir)
+      puts "Hola User: #{user}, contraseña: #{pass}, path: #{dir}"
+      Net::SCP.start(host, user, :password => pass) do |scp|
+        data = scp.download!(dir, '/home/lesliie/')
       end
     end
   end

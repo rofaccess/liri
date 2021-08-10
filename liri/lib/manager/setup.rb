@@ -45,6 +45,27 @@ module Liri
         end
       end
 
+      def update_value_two_level(key, key2, value)
+        if File.exist?(FILE_PATH)
+          data = YAML.load(File.read(FILE_PATH))
+          data[key][key2] = value
+          File.open(FILE_PATH, 'w') {|f| f.write data.to_yaml }
+        else
+          raise Liri::FileNotFoundError.new(FILE_PATH)
+        end
+      end
+
+
+      def update_value_one_level(key, value)
+        if File.exist?(FILE_PATH)
+          data = YAML.load(File.read(FILE_PATH))
+          data[key] = value
+          File.open(FILE_PATH, 'w') {|f| f.write data.to_yaml }
+        else
+          raise Liri::FileNotFoundError.new(FILE_PATH)
+        end
+      end
+
       def path
         FILE_PATH
       end
