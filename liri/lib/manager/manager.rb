@@ -16,7 +16,8 @@ module Liri
         puts "Presione Ctrl + c para terminar el Manager manualmente\n\n"
 
         source_code = Liri::Manager::SourceCode.new(compression_class, unit_test_class)
-        #source_code.compress_folder
+        puts "Comprimiendo el archivo"
+        source_code.compress_folder
         all_tests = source_code.all_tests
 
         manager = Manager.new(udp_port, tcp_port, all_tests)
@@ -77,8 +78,8 @@ module Liri
         puts "Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}"
         puts '(Se mantiene escaneando la red para encontrar Agents)'
         puts ''
-        #ejecuto send_manager para obtener los datos del manager, como usuario y password
-        file_zip= Liri::Common::Compressor::Zip.new('home/lesliie/Documentos/TfG 2.0/tfg/liri', 'home/lesliie/Documentos/TfG 2.0/tfg/liri/lib/liri.zip')
+        #ejecuto send_manager para obtener los datuser_manageruser_manageros del manager, como usuario y password
+        #file_zip= Liri::Common::Compressor::Zip.new('home/lesliie/Documentos/TfG 2.0/tfg/liri', 'home/lesliie/Documentos/TfG 2.0/tfg/liri/lib/liri.zip')
         send_manager_user()
         #guardo en un arreglo los datos del manger y también la dirección de mi archivo comprimido
         user_data = [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file]
@@ -137,16 +138,19 @@ module Liri
         end
       end
     end
+
+    #pide al usuario manager la contraseña del usuario del sistema operativo
     def send_manager_user()
       liri_setup = Liri::Manager::Setup.new
       liri_setup.create unless File.exist?(liri_setup.path)
-      user_manager_temp = %x[whoami]
-      puts "holaaaaaaa"
-      user_manager= 'lesliie'
-      liri_setup.update_value_two_level('manager_user', 'user', user_manager)
-      puts "Escribir contraseña de #{user_manager}:"
-      pass = '740285'
-      puts "#{pass} es la contraseña"
+      #obtiene automáticamente el usuario del sistema en la que se ejecuta el proyecto
+      temp= %x[whoami]
+      user_manager = temp.delete!("\n")
+      liri_setup.update_value_two_level('manager_user', 'user', user_manager.delete!("\n"))
+      #pide al usuario la contraseña del usuario en la que se está ejecutando el manager
+      puts "Escribir contraseña del usuario #{user_manager}:"
+      pass = STDIN.gets.chomp
+      puts "#{pass} es la contraseña de "
       liri_setup.update_value_two_level('manager_user', 'password', pass)
     end
   end
