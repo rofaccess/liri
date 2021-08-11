@@ -27,6 +27,12 @@ gem 'commander', '~>4'
 # Used by rspec to show results highlighting when save result in html file
 gem 'coderay', '~>1'
 
+# Net::SSH is a pure-Ruby implementation of the SSH2 client protocol. It allows you to write programs that invoke and interact with processes on remote servers, via SSH2. https://github.com/net-ssh/net-ssh
+gem 'net-ssh', '~>6'
+
+# Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
+gem 'net-scp', '~>3'
+
 group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
   gem 'rubocop', '~>0', require: false
