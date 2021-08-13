@@ -10,6 +10,10 @@ module Liri
       @setup ||= load_setup
     end
 
+    def logger
+      @logger ||= load_logger
+    end
+
     def reset_setup
       if @setup
         @setup = nil
@@ -47,6 +51,12 @@ module Liri
       liri_setup = Liri::Manager::Setup.new
       liri_setup.create unless File.exist?(liri_setup.path)
       liri_setup.load
+    end
+
+    # Inicializa y configura la librería encargada de logear
+    def load_logger
+      log = Liri::Log.new('liri.log', 'daily')
+      log
     end
   end
 

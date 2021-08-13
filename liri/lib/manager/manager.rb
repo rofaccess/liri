@@ -12,7 +12,7 @@ module Liri
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
-        puts "Inicio de proceso de Testing"
+        Liri.logger.info("Inicio de proceso de Testing")
         puts "Presione Ctrl + c para terminar el Manager manualmente\n\n"
 
         source_code = Liri::Manager::SourceCode.new(compression_class, unit_test_class)
@@ -22,14 +22,14 @@ module Liri
         manager = Manager.new(udp_port, tcp_port, all_tests)
         threads = []
         threads << manager.start_client_socket_to_search_agents # Enviar peticiones broadcast a toda la red para encontrar Agents
-        threads << manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
+        manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
 
         #source_code.delete_compressed_folder
 
         Liri.init_exit(stop, threads, 'Manager')
-        puts "\nFinalización del proceso de Testing"
+        Liri.logger.debug("Finalización del proceso de Testing")
       rescue SignalException => e
-        puts "\nEjecución del Manager terminada manualmente\n"
+        Liri.logger.debug("Ejecución del Manager terminada manualmente")
         Liri.kill(threads)
       end
 
@@ -64,6 +64,7 @@ module Liri
       @process_tests_threads = []
 
       @all_tests = all_tests
+      @all_tests_results = {}
       @agents = {}
     end
 
@@ -72,9 +73,9 @@ module Liri
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
-        puts "Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}"
-        puts '(Se mantiene escaneando la red para encontrar Agents)'
-        puts ''
+        Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}")
+        Liri.logger.info('(Se mantiene escaneando la red para encontrar Agents)')
+        Liri.logger.info('')
         loop do
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send('', 0, '<broadcast>', @udp_port)
@@ -88,13 +89,14 @@ module Liri
       begin
         tcp_socket = TCPServer.new(@tcp_port) # se hace un bind al puerto dado
       rescue Errno::EADDRINUSE => e
-        puts "Error: Puerto TCP #{@tcp_port} ocupado."
+        Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado.")
         Thread.kill(search_agents_thread)
         Thread.exit
       end
 
-      puts "En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}"
-      puts '(Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)'
+      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}")
+      Liri.logger.info('(Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)')
+      Liri.logger.info('')
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
       # Obs.: Parece que este bucle deja un hilo corriendo el cual no estoy pudiendo eliminar, sospecho que este
@@ -102,23 +104,21 @@ module Liri
       # lo que hace que el Manager termine al no tener tests pendientes
       loop do
         break if !@all_tests.any?
-        puts '>>> INIT TESTS THREADS'
         @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
-          puts '>>> CLIENTELA'
           client_ip_address = client.remote_address.ip_address
-          puts "\nRespuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}\n"
+          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
           response = client.recvfrom(1000).first
-          puts "    => Agent #{client_ip_address}: #{response}"
+          Liri.logger.info("    => Agent #{client_ip_address}: #{response}")
 
           while @all_tests.any?
             samples = @all_tests.sample!(Manager.test_samples_by_runner)
-            puts "\nPruebas enviadas al Agent #{client_ip_address}:"
-            puts samples
             client.puts(samples.to_json)
 
-            test_results_response = client.recvfrom(1000).first
-            puts "\nResultado de la ejecucion de Pruebas recibidas del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}"
-            puts test_results_response
+            response = client.recvfrom(1000).first
+            test_results = JSON.parse(response)
+            print test_results['result'] # Mostrar los resultados de las pruebas
+            # logging, semantic logger
+            #puts test_results
           end
 
           Thread.kill(search_agents_thread)
