@@ -15,7 +15,7 @@ module Liri
         puts "Inicio de proceso de Testing"
         puts "Presione Ctrl + c para terminar el Manager manualmente\n\n"
 
-        source_code = Liri::Manager::SourceCode.new(compression_class, unit_test_class)
+        source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
         puts "Comprimiendo el archivo"
         source_code.compress_folder
         all_tests = source_code.all_tests
@@ -84,6 +84,7 @@ module Liri
         #guardo en un arreglo los datos del manger y también la dirección de mi archivo comprimido
         user_data = [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file]
         data= user_data * ';'
+        puts "lo que estoy enviando #{data} "
         loop do
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(data, 0, '<broadcast>', @udp_port)
@@ -146,7 +147,7 @@ module Liri
       #obtiene automáticamente el usuario del sistema en la que se ejecuta el proyecto
       temp= %x[whoami]
       user_manager = temp.delete!("\n")
-      liri_setup.update_value_two_level('manager_user', 'user', user_manager.delete!("\n"))
+      liri_setup.update_value_two_level('manager_user', 'user', user_manager)
       #pide al usuario la contraseña del usuario en la que se está ejecutando el manager
       puts "Escribir contraseña del usuario #{user_manager}:"
       pass = STDIN.gets.chomp

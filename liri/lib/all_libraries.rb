@@ -7,6 +7,8 @@
 
 # Se utiliza la librería *socket* de Ruby para realizar una conexión udp
 require 'socket'
+require 'net/ssh'
+require 'net/scp'
 
 # El archivo *hash_extend* extiende la clase Hash de Ruby para agregarle más funcionalidades
 require 'hash_extend'
@@ -17,8 +19,8 @@ require 'agent/unit_test/rspec'
 
 require 'common/common'
 require 'common/compressor/zip'
+require 'common/source_code'
 
 require 'manager/manager'
 require 'manager/setup'
-require 'manager/source_code'
 require 'manager/unit_test/rspec'

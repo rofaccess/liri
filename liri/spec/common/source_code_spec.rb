@@ -1,7 +1,7 @@
-RSpec.describe Liri::Manager::SourceCode do
+RSpec.describe Liri::Common::SourceCode do
   context 'cuando el codigo fuente comprimido no existe' do
     before(:all) do
-      @source_code = Liri::Manager::SourceCode.new(compression_class, manager_unit_test_class)
+      @source_code = Liri::Common::SourceCode.new(compression_class, manager_unit_test_class)
       @source_code.delete_compressed_folder
     end
 
@@ -26,7 +26,7 @@ RSpec.describe Liri::Manager::SourceCode do
 
   context 'cuando el codigo fuente comprimido ya existe' do
     before(:all) do
-      @source_code = Liri::Manager::SourceCode.new(compression_class, manager_unit_test_class)
+      @source_code = Liri::Common::SourceCode.new(compression_class, manager_unit_test_class)
       @source_code.compress_folder
     end
 

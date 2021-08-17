@@ -16,7 +16,7 @@ RSpec.configure do |config|
 end
 
 def source_code_folder_path
-  Liri::Manager::SourceCode::FOLDER_PATH
+  Liri::Common::SourceCode::FOLDER_PATH
 end
 
 def test_samples_by_runner

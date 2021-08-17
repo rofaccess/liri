@@ -8,7 +8,9 @@ module Liri
   class Manager
     class Setup
       FILE_NAME = 'liri.yml'
+      FOLDER_NAME = 'temp'
       FILE_PATH = File.join(Dir.pwd, '/', FILE_NAME)
+      TEMP_PATH = File.join(Dir.pwd, '/', FOLDER_NAME)
       TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri.yml')
 
       # Crea un archivo de configuración en la raiz del proyecto desde un template
@@ -35,6 +37,10 @@ module Liri
         end
       end
 
+      def create_temp_folder
+        directory_name = TEMP_PATH
+        Dir.mkdir(directory_name) unless File.exists?(directory_name)
+      end
       # Borra el archivo de configuración
       def delete
         if File.exist?(FILE_PATH)
@@ -68,6 +74,9 @@ module Liri
 
       def path
         FILE_PATH
+      end
+      def temp_path
+        TEMP_PATH
       end
     end
   end

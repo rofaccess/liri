@@ -3,11 +3,13 @@
 =end
 
 module Liri
-  class Manager
+  module Common
     class SourceCode
       FOLDER_PATH = Dir.pwd
+      FOLDER_TEMP_NAME = 'temp'
       FOLDER_NAME = FOLDER_PATH.split('/').last
       COMPRESSED_FILE_PATH = File.join(FOLDER_PATH, '/', "#{FOLDER_NAME}.zip")
+      TEMP_PATH = File.join(Dir.pwd, '/', FOLDER_TEMP_NAME)
 
       def initialize(compression_class, unit_test_class)
         @compressor = Object.const_get(compression_class).new(FOLDER_PATH, COMPRESSED_FILE_PATH)
@@ -16,6 +18,9 @@ module Liri
 
       def compress_folder
         @compressor.compress
+      end
+      def descompress_file(compress_dir, descompress_dir)
+        @compressor.decompress(compress_dir, descompress_dir)
       end
 
       def delete_compressed_folder
