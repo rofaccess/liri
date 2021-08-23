@@ -11,15 +11,18 @@ module Liri
       # Inicia la ejecución del Agent
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
-        puts "Presione Ctrl + c para terminar el Agent manualmente\n\n"
+        Liri.logger.info("Proceso Agent iniciado")
+        puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
+
         runner = Liri::Agent::Runner.new(unit_test_class)
         agent = Agent.new(udp_port, tcp_port, runner)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
         Liri.init_exit(stop, threads, 'Agent')
+        Liri.logger.info("Proceso Agent terminado")
       rescue SignalException => e
-        Liri.logger.info('Ejecución del Agent terminada manualmente')
+        Liri.logger.info('Proceso Agent terminado manualmente')
         Liri.kill(threads)
       end
 
@@ -101,10 +104,7 @@ module Liri
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
       @managers.remove!(manager_ip_address)
 
-      # Obs.:La siguiente linea es para que el Manager cierre los hilos que tiene pendientes
-      # tal vez haya que hacer un metodo especifico para cerrar cualquier hilo abierto desde aqui
-      # porque no encuentro la manera de terminarlos desde el manager
-      start_client_socket_to_process_tests(manager_ip_address)
+      start_client_to_close_manager_server(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")
     rescue Errno::ECONNRESET => e
@@ -129,6 +129,14 @@ module Liri
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
         start_client_socket_to_process_tests(manager_ip_address)
       end
+    end
+
+    # Se establece una nueva comunicación con el servidor TCP del Manager con el único objetivo de cerrar el servidor
+    # Esta conexión permitirá al Manager cerrar sus hilos pendientes y terminar el proceso
+    def start_client_to_close_manager_server(manager_ip_address)
+      # Por algún motivo el siguiente método permite cerrar la conexión, por ahora se usará esto
+      # tal vez en algún momento se haga un método más específico usando el contenido relevante del siguiente método
+      start_client_socket_to_process_tests(manager_ip_address)
     end
   end
 end

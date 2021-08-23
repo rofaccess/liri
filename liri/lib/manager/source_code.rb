@@ -10,7 +10,13 @@ module Liri
       COMPRESSED_FILE_PATH = File.join(FOLDER_PATH, '/', "#{FOLDER_NAME}.zip")
 
       def initialize(compression_class, unit_test_class)
+        # Inicializa un compresor acorde a compression_class, la siguiente línea en realidad hace lo siguiente:
+        # @compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file)
+        # compression_class en este caso es Zip pero podría ser otro si existiera la implementación, por ejemplo Rar
         @compressor = Object.const_get(compression_class).new(FOLDER_PATH, COMPRESSED_FILE_PATH)
+        # Inicializa un ejecutor de pruebas acorde a unit_test_class, la siguiente línea en realidad hace lo siguiente:
+        # @unit_test = Liri::Common::UnitTest::Rspec.new(source_code_folder_path)
+        # unit_test_class en este caso es Rspec pero podría ser otro si existiera la implementación, por ejemplo UnitTest
         @unit_test = Object.const_get(unit_test_class).new(FOLDER_PATH)
       end
 

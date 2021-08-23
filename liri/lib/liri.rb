@@ -55,7 +55,7 @@ module Liri
 
     # Inicializa y configura la librería encargada de logear
     def load_logger
-      log = Liri::Log.new('liri.log', 'daily')
+      log = Liri::Common::Log.new('daily', Liri.setup.show_stdout_log)
       log
     end
   end

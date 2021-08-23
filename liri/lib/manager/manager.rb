@@ -12,14 +12,14 @@ module Liri
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
-        Liri.logger.info("Inicio de proceso de Testing")
-        puts "Presione Ctrl + c para terminar el Manager manualmente\n\n"
+        Liri.logger.info("Proceso Manager iniciado")
+        puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
         source_code = Liri::Manager::SourceCode.new(compression_class, unit_test_class)
         #source_code.compress_folder
         all_tests = source_code.all_tests
-
-        manager = Manager.new(udp_port, tcp_port, all_tests)
+        test_result = Liri::Manager::TestResult.new
+        manager = Manager.new(udp_port, tcp_port, all_tests, test_result)
         threads = []
         threads << manager.start_client_socket_to_search_agents # Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
@@ -27,9 +27,9 @@ module Liri
         #source_code.delete_compressed_folder
 
         Liri.init_exit(stop, threads, 'Manager')
-        Liri.logger.debug("Finalización del proceso de Testing")
+        Liri.logger.debug("Proceso Manager terminado")
       rescue SignalException => e
-        Liri.logger.debug("Ejecución del Manager terminada manualmente")
+        Liri.logger.debug("Proceso Manager terminado manualmente")
         Liri.kill(threads)
       end
 
@@ -56,7 +56,7 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port_1, all_tests)
+    def initialize(udp_port, tcp_port_1, all_tests, test_result)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port_1
@@ -66,6 +66,8 @@ module Liri
       @all_tests = all_tests
       @all_tests_results = {}
       @agents = {}
+
+      @test_result = test_result
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -108,18 +110,24 @@ module Liri
           client_ip_address = client.remote_address.ip_address
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
           response = client.recvfrom(1000).first
-          Liri.logger.info("    => Agent #{client_ip_address}: #{response}")
+          Liri.logger.info("    => Agent #{client_ip_address}: #{response}\n")
 
           while @all_tests.any?
             samples = @all_tests.sample!(Manager.test_samples_by_runner)
             client.puts(samples.to_json)
 
             response = client.recvfrom(1000).first
-            test_results = JSON.parse(response)
-            print test_results['result'] # Mostrar los resultados de las pruebas
-            # logging, semantic logger
-            #puts test_results
+            begin
+              # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse, hay que arreglar esto, mientras se captura el error para que no falle
+              test_result = JSON.parse(response)
+              @test_result.print_process(test_result)
+              @test_result.update(test_result)
+            rescue JSON::ParserError => e
+              Liri.logger.error("Error #{e}: Error de parseo JSON")
+            end
           end
+
+          @test_result.print_summary
 
           Thread.kill(search_agents_thread)
 

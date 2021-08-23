@@ -10,16 +10,17 @@ require 'socket'
 
 # El archivo *hash_extend* extiende la clase Hash de Ruby para agregarle más funcionalidades
 require 'hash_extend'
-require 'log'
 
 require 'agent/agent'
 require 'agent/runner'
 require 'agent/unit_test/rspec'
 
 require 'common/common'
+require 'common/log'
 require 'common/compressor/zip'
 
 require 'manager/manager'
 require 'manager/setup'
 require 'manager/source_code'
 require 'manager/unit_test/rspec'
+require 'manager/test_result'
