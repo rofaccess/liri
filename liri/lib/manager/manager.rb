@@ -108,6 +108,7 @@ module Liri
         break if !@all_tests.any?
         @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
           client_ip_address = client.remote_address.ip_address
+          puts "Conexión iniciada con el Agent: #{client_ip_address}"
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
           response = client.recvfrom(1000).first
           Liri.logger.info("    => Agent #{client_ip_address}: #{response}\n")
@@ -134,6 +135,7 @@ module Liri
           # Se envía el string exit para que el Agent termine la conexión
           client.puts('exit')
           client.close # se desconecta el cliente
+          puts "Conexión terminada con el Agent: #{client_ip_address}"
         end
       end
     end
