@@ -67,6 +67,7 @@ module Liri
       @all_tests_count = all_tests.size
       @all_tests_results = {}
       @all_tests_results_count = 0
+      @all_tests_processing_count = 0
       @agents = {}
 
       @test_result = test_result
@@ -84,6 +85,7 @@ module Liri
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send('', 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
+          break if @all_tests_count == @all_tests_processing_count
         end
       end
     end
@@ -107,25 +109,25 @@ module Liri
       # hilo permanece en espera de que el agente se conecte, por eso desde el agente se realiza de nuevo una conexion
       # lo que hace que el Manager termine al no tener tests pendientes
       loop do
-        break if @all_tests_count == @all_tests_results_count
+        break if @all_tests_count == @all_tests_processing_count
         @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
           client_ip_address = client.remote_address.ip_address
-          puts "Conexión iniciada con el Agent: #{client_ip_address}"
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
           response = client.recvfrom(1000).first
           Liri.logger.info("    => Agent #{client_ip_address}: #{response}\n")
 
           while @all_tests.any?
-            samples = @all_tests.sample!(Manager.test_samples_by_runner)
+            samples = @all_tests.sample!(Manager.test_samples_by_runner) # implementar semaforo
+            update_all_tests_processing_count(samples.size) # implementar semaforo
             client.puts(samples.to_json)
 
             response = client.recvfrom(1000).first
             begin
               # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse, hay que arreglar esto, mientras se captura el error para que no falle
               test_result = JSON.parse(response)
-              @test_result.print_process(test_result)
-              @test_result.update(test_result)
-              update_all_tests_results_count(samples.size)
+              @test_result.print_process(test_result) # implementar semaforo
+              @test_result.update(test_result) # implementar semaforo
+              update_all_tests_results_count(samples.size) # implementar semaforo
             rescue JSON::ParserError => e
               Liri.logger.error("Error #{e}: Error de parseo JSON")
             end
@@ -136,7 +138,6 @@ module Liri
           # Se envía el string exit para que el Agent termine la conexión
           client.puts('exit')
           client.close # se desconecta el cliente
-          puts "\nConexión terminada con el Agent: #{client_ip_address}"
         end
       end
 
@@ -145,6 +146,10 @@ module Liri
 
     def update_all_tests_results_count(new_count)
       @all_tests_results_count += new_count
+    end
+
+    def update_all_tests_processing_count(new_count)
+      @all_tests_processing_count += new_count
     end
   end
 end
