@@ -129,14 +129,29 @@ module Liri
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
         puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}"
+        ###
         start_client_socket_to_process_tests(manager_ip_address)
       end
     end
     def process_manager_connection_scp(host, user, pass, dir)
+      source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
       puts "Hola User: #{user}, contraseña: #{pass}, path: #{dir}"
+      file_dir = File.basename(dir)
+      source_code.create_temp_folder
       Net::SCP.start(host, user, :password => pass) do |scp|
-        data = scp.download!(dir, '/home/lesliie/')
+        data = scp.download!(dir, source_code.compress_path_save)
       end
+      folder_name = File.basename(dir, ".zip")
+      zip_dir = source_code.compress_path_save + '/'+ file_dir
+      source_code.descompress_file(zip_dir, folder_name)
     end
+    def compression_class
+      "Liri::Common::Compressor::#{Liri.setup.library.compression}"
+    end
+
+    def unit_test_class
+      "Liri::Manager::UnitTest::#{Liri.setup.library.unit_test}"
+    end
+
   end
 end

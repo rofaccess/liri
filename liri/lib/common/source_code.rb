@@ -19,8 +19,9 @@ module Liri
       def compress_folder
         @compressor.compress
       end
-      def descompress_file(compress_dir, descompress_dir)
-        @compressor.decompress(compress_dir, descompress_dir)
+      def descompress_file(compress_dir, name)
+        descompress_path = TEMP_PATH + '/'+ name
+        @compressor.decompress(compress_dir, descompress_path)
       end
 
       def delete_compressed_folder
@@ -32,12 +33,19 @@ module Liri
         end
       end
 
+      def create_temp_folder
+        Dir.mkdir(TEMP_PATH) unless File.exists?(TEMP_PATH)
+      end
+
       def all_tests
         @unit_test.all_tests
       end
 
       def compressed_file_path
         COMPRESSED_FILE_PATH
+      end
+      def compress_path_save
+        TEMP_PATH
       end
     end
   end
