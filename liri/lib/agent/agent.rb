@@ -83,7 +83,7 @@ module Liri
       Liri.logger.info('(Se establece una conexión para procesar la ejecución de las pruebas)')
       tcp_socket.print("Listo para ejecutar pruebas")
 
-      puts "Conexión iniciada con el Manager: #{manager_ip_address}"
+      puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
       while line = tcp_socket.gets
         response = line.chop
         if response == 'exit'
@@ -104,7 +104,7 @@ module Liri
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
       @managers.remove!(manager_ip_address)
 
-      puts "Conexión terminada con el Manager: #{manager_ip_address}"
+      puts "\nConexión terminada con el Manager: #{manager_ip_address}"
       start_client_to_close_manager_server(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")

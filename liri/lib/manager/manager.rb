@@ -64,7 +64,9 @@ module Liri
       @process_tests_threads = []
 
       @all_tests = all_tests
+      @all_tests_count = all_tests.size
       @all_tests_results = {}
+      @all_tests_results_count = 0
       @agents = {}
 
       @test_result = test_result
@@ -105,7 +107,7 @@ module Liri
       # hilo permanece en espera de que el agente se conecte, por eso desde el agente se realiza de nuevo una conexion
       # lo que hace que el Manager termine al no tener tests pendientes
       loop do
-        break if !@all_tests.any?
+        break if @all_tests_count == @all_tests_results_count
         @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
           client_ip_address = client.remote_address.ip_address
           puts "Conexión iniciada con el Agent: #{client_ip_address}"
@@ -123,21 +125,26 @@ module Liri
               test_result = JSON.parse(response)
               @test_result.print_process(test_result)
               @test_result.update(test_result)
+              update_all_tests_results_count(samples.size)
             rescue JSON::ParserError => e
               Liri.logger.error("Error #{e}: Error de parseo JSON")
             end
           end
-
-          @test_result.print_summary
 
           Thread.kill(search_agents_thread)
 
           # Se envía el string exit para que el Agent termine la conexión
           client.puts('exit')
           client.close # se desconecta el cliente
-          puts "Conexión terminada con el Agent: #{client_ip_address}"
+          puts "\nConexión terminada con el Agent: #{client_ip_address}"
         end
       end
+
+      @test_result.print_summary
+    end
+
+    def update_all_tests_results_count(new_count)
+      @all_tests_results_count += new_count
     end
   end
 end
