@@ -82,6 +82,7 @@ module Liri
       Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       Liri.logger.info('(Se establece una conexión para procesar la ejecución de las pruebas)')
       tcp_socket.print("Listo para ejecutar pruebas")
+      puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
 
       while line = tcp_socket.gets
         response = line.chop
@@ -95,7 +96,7 @@ module Liri
           tests_result = @runner.run_tests(tests)
           Liri.logger.info("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
           Liri.logger.debug(tests_result)
-          puts "#{tests.size} received, #{tests_result[:example_quantity]} executed"
+          puts "#{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas"
           tcp_socket.print(tests_result.to_json)
         end
       end

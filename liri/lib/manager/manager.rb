@@ -83,7 +83,8 @@ module Liri
         Liri.logger.info('')
         loop do
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          @udp_socket.send('', 0, '<broadcast>', @udp_port)
+          # Se envía la petición sólo si hay tests pendientes
+          @udp_socket.send('', 0, '<broadcast>', @udp_port) if @all_tests.any?  # agregar semáforo
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
           break if @all_tests_count == @all_tests_processing_count
         end
@@ -109,7 +110,7 @@ module Liri
       # hilo permanece en espera de que el agente se conecte, por eso desde el agente se realiza de nuevo una conexion
       # lo que hace que el Manager termine al no tener tests pendientes
       loop do
-        break if @all_tests_count == @all_tests_processing_count
+        break if @all_tests_count == @all_tests_results_count
         @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
           client_ip_address = client.remote_address.ip_address
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
