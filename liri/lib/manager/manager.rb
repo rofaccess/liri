@@ -21,9 +21,10 @@ module Liri
         all_tests = source_code.all_tests
 
         manager = Manager.new(udp_port, tcp_port, all_tests)
-        #manager.send_manager_user
+        credential = Liri::Manager::Credential.new
+        credential.get
         threads = []
-        threads << manager.start_client_socket_to_search_agents # Enviar peticiones broadcast a toda la red para encontrar Agents
+        threads << manager.start_client_socket_to_search_agents(user_data)# Enviar peticiones broadcast a toda la red para encontrar Agents
         threads << manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
 
         #source_code.delete_compressed_folder
@@ -57,6 +58,10 @@ module Liri
         Liri.setup.ports.tcp
       end
 
+      def user_data
+        [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file].join(';')
+      end
+
     end
 
     def initialize(udp_port, tcp_port_1, all_tests)
@@ -71,23 +76,17 @@ module Liri
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
-    def start_client_socket_to_search_agents
+    def start_client_socket_to_search_agents(user_data)
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
         puts "Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}"
         puts '(Se mantiene escaneando la red para encontrar Agents)'
         puts ''
-        #ejecuto send_manager para obtener los datuser_manageruser_manageros del manager, como usuario y password
-        #file_zip= Liri::Common::Compressor::Zip.new('home/lesliie/Documentos/TfG 2.0/tfg/liri', 'home/lesliie/Documentos/TfG 2.0/tfg/liri/lib/liri.zip')
-        send_manager_user()
-        #guardo en un arreglo los datos del manger y también la dirección de mi archivo comprimido
-        user_data = [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file]
-        data= user_data * ';'
-        puts "lo que estoy enviando #{data} "
+        puts "Estoy enviando: #{user_data}"
         loop do
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          @udp_socket.send(data, 0, '<broadcast>', @udp_port)
+          @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
         end
       end
@@ -138,21 +137,6 @@ module Liri
           client.close # se desconecta el cliente
         end
       end
-    end
-
-    #pide al usuario manager la contraseña del usuario del sistema operativo
-    def send_manager_user()
-      liri_setup = Liri::Manager::Setup.new
-      liri_setup.create unless File.exist?(liri_setup.path)
-      #obtiene automáticamente el usuario del sistema en la que se ejecuta el proyecto
-      temp= %x[whoami]
-      user_manager = temp.delete!("\n")
-      liri_setup.update_value_two_level('manager_user', 'user', user_manager)
-      #pide al usuario la contraseña del usuario en la que se está ejecutando el manager
-      puts "Escribir contraseña del usuario #{user_manager}:"
-      pass = STDIN.gets.chomp
-      puts "#{pass} es la contraseña de "
-      liri_setup.update_value_two_level('manager_user', 'password', pass)
     end
   end
 end

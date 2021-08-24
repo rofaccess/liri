@@ -70,8 +70,9 @@ module Liri
           manager_ip_address = @manager_request.last.last
           user,pass,dir= @manager_request.first.split(";")
           puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
-
           process_manager_connection_scp(manager_ip_address, user, pass, dir)
+          #process_manager_connection_request(manager_ip_address)
+
         end
       end
     end
@@ -129,7 +130,7 @@ module Liri
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
         puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}"
-        ###
+        #process_manager_connection_scp(manager_ip_address, user, pass, dir)
         start_client_socket_to_process_tests(manager_ip_address)
       end
     end
