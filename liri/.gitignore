@@ -16,3 +16,4 @@ tall liri
 *.zip
 liri.yml
 /temp/
+*.log

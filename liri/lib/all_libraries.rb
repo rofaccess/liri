@@ -18,6 +18,7 @@ require 'agent/runner'
 require 'agent/unit_test/rspec'
 
 require 'common/common'
+require 'common/log'
 require 'common/compressor/zip'
 require 'common/source_code'
 
@@ -25,3 +26,4 @@ require 'manager/manager'
 require 'manager/setup'
 require 'manager/unit_test/rspec'
 require 'manager/credential'
+require 'manager/test_result'
