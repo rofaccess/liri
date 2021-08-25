@@ -146,9 +146,11 @@ module Liri
     end
     
     def process_manager_connection_scp(host, user, pass, dir)
+
       source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
       puts "Hola User: #{user}, contraseña: #{pass}, path: #{dir}"
       file_dir = File.basename(dir)
+
       source_code.create_temp_folder
       Net::SCP.start(host, user, :password => pass) do |scp|
         data = scp.download!(dir, source_code.compress_path_save)
@@ -158,6 +160,9 @@ module Liri
       source_code.descompress_file(zip_dir, folder_name)
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
+
+    rescue TypeError => e
+      puts 'Para que ande nomas'
     end
 
     def compression_class
