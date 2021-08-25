@@ -70,9 +70,7 @@ module Liri
           manager_ip_address = @manager_request.last.last
           user,pass,dir= @manager_request.first.split(";")
           puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
-          process_manager_connection_scp(manager_ip_address, user, pass, dir)
-          #process_manager_connection_request(manager_ip_address)
-
+          process_manager_connection_request(manager_ip_address, user, pass, dir)
         end
       end
     end
@@ -126,11 +124,11 @@ module Liri
     # Inserta el ip recibido dentro del hash si es que ya no existe en el hash
     # Nota: Se requieren imprimir datos para saber el estado de la aplicación, sería muy útil usar algo para logear
     # estas cosas en los diferentes niveles, debug, info, etc.
-    def process_manager_connection_request(manager_ip_address)
+    def process_manager_connection_request(manager_ip_address, user, pass, dir)
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
         puts "Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}"
-        #process_manager_connection_scp(manager_ip_address, user, pass, dir)
+        process_manager_connection_scp(manager_ip_address, user, pass, dir)
         start_client_socket_to_process_tests(manager_ip_address)
       end
     end
@@ -145,7 +143,10 @@ module Liri
       folder_name = File.basename(dir, ".zip")
       zip_dir = source_code.compress_path_save + '/'+ file_dir
       source_code.descompress_file(zip_dir, folder_name)
+    rescue Net::SCP::Error => e
+      puts 'Error scp archivo no encontrado'
     end
+
     def compression_class
       "Liri::Common::Compressor::#{Liri.setup.library.compression}"
     end
