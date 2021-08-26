@@ -72,7 +72,7 @@ module Liri
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
           user, pass, dir = @manager_request.first.split(";")
-          #puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
+          puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
           process_manager_connection_request(manager_ip_address, user, pass, dir)
         end
       end
@@ -135,7 +135,7 @@ module Liri
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        #process_manager_connection_scp(manager_ip_address, user, pass, dir)
+        process_manager_connection_scp(manager_ip_address, user, pass, dir)
         start_client_socket_to_process_tests(manager_ip_address)
       end
     end
@@ -145,7 +145,7 @@ module Liri
     def start_client_to_close_manager_server(manager_ip_address)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address}")
-      #tcp_socket.print("")
+      tcp_socket.print('{}')
       tcp_socket.close
     end
 

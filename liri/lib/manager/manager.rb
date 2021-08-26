@@ -16,13 +16,13 @@ module Liri
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
         source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
-        #puts "Comprimiendo el archivo"
-        #source_code.compress_folder
+        puts "Comprimiendo el archivo"
+        source_code.compress_folder
         all_tests = source_code.all_tests
 		    test_result = Liri::Manager::TestResult.new
         manager = Manager.new(udp_port, tcp_port, all_tests, test_result)
         credential = Liri::Manager::Credential.new
-        #credential.get
+        credential.get
         threads = []
         threads << manager.start_client_socket_to_search_agents(user_data)# Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
@@ -76,8 +76,10 @@ module Liri
       @all_tests_processing_count = 0
       @agents = {}
 
+      @agents_search_processing_enabled = true
+      @test_processing_enabled = true
+
       @test_result = test_result
-      @finalized_process = false
       @semaphore = Mutex.new
     end
 
@@ -89,19 +91,11 @@ module Liri
         Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
                                       (Se mantiene escaneando la red para encontrar Agents)
         ")
-        #puts "Estoy enviando: #{user_data}"
-        while !finalized_process?
+        puts "Estoy enviando: #{user_data}"
+        while @agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          # Se pregunta de vuelta si el proceso no está finalizado porque al llegar a este punto del código
-          # el proceso ya pudo haber finalizado, probar quitar más adelante porque es muy exagerado
-          #if !finalized_process?
-            @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)
-          puts 'enviando UDP'
+          @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
-
-          #else
-          #break
-          #end
         end
       end
     end
@@ -121,14 +115,22 @@ module Liri
       ")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
-      while !finalized_process?
+      while @test_processing_enabled
         Thread.start(tcp_socket.accept) do |client|
           agent_ip_address = client.remote_address.ip_address
           response = client.recvfrom(1000).first
 
-          # El Agent pudo haber respondido a la petición UDP
-          if finalized_process?
+          if @all_tests.empty?
+            # No importa lo que le haga, el broadcast udp no se muere al instante y el agente sigue respondiendo
+            # Las siguientes dos lineas son para que se deje de hacer el broadcast pero aun asi se llegan a hacer
+            # 3 a 4 broadcast antes de que se finalize el proceso, al parecer el broadcast va a tener que quedar asi
+            # y mejorar el codigo para que se envien test pendientes para eso hay que llevar una lista de test pendientes
+            # tests enviados sin resultados, tests finalizados, si se recibe respuesta al broadcast se trata de enviar primero test pendientes
+            # luego test enviados sin resultados o sino ignorar
+            Thread.kill(search_agents_thread)
+            @agents_search_processing_enabled = false
             Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address}")
+            puts response
             client.close
             Thread.exit
           end
@@ -137,7 +139,7 @@ module Liri
                                           => Agent #{agent_ip_address}: #{response}
           ")
 
-          while !finalized_process?
+          while @all_tests.any?
             tests = samples
             break if tests.empty?
             client.puts(tests.to_json)
@@ -152,7 +154,7 @@ module Liri
             end
           end
 
-          finalize_process
+          update_processing_statuses
           puts ''
           Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address}")
           client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
@@ -163,18 +165,19 @@ module Liri
       @test_result.print_summary
     end
 
+    def update_processing_statuses
+      @semaphore.synchronize {
+        @test_processing_enabled = false if @all_tests_count == @all_tests_results_count
+        @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
+      }
+    end
+
     def update_all_tests_results_count(new_count)
       @all_tests_results_count += new_count
     end
 
     def update_all_tests_processing_count(new_count)
       @all_tests_processing_count += new_count
-    end
-
-    def finalize_process
-      @semaphore.synchronize {
-        @finalized_process = true
-      }
     end
 
     def samples
@@ -194,10 +197,6 @@ module Liri
         @test_result.print_process(tests_result)
         @test_result.update(tests_result)
       }
-    end
-
-    def finalized_process?
-        @finalized_process
     end
   end
 end
