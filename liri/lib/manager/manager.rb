@@ -16,13 +16,13 @@ module Liri
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
         source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
-        puts "Comprimiendo el archivo"
-        source_code.compress_folder
+        #puts "Comprimiendo el archivo"
+        #source_code.compress_folder
         all_tests = source_code.all_tests
-		test_result = Liri::Manager::TestResult.new
+		    test_result = Liri::Manager::TestResult.new
         manager = Manager.new(udp_port, tcp_port, all_tests, test_result)
         credential = Liri::Manager::Credential.new
-        credential.get
+        #credential.get
         threads = []
         threads << manager.start_client_socket_to_search_agents(user_data)# Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
@@ -30,9 +30,9 @@ module Liri
         #source_code.delete_compressed_folder
 
         Liri.init_exit(stop, threads, 'Manager')
-        Liri.logger.debug("Proceso Manager terminado")
+        Liri.logger.info("Proceso Manager terminado")
       rescue SignalException => e
-        Liri.logger.debug("Proceso Manager terminado manualmente")
+        Liri.logger.info("Proceso Manager terminado manualmente")
         Liri.kill(threads)
       end
 
@@ -69,8 +69,6 @@ module Liri
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port_1
 
-      @process_tests_threads = []
-
       @all_tests = all_tests
       @all_tests_count = all_tests.size
       @all_tests_results = {}
@@ -79,6 +77,8 @@ module Liri
       @agents = {}
 
       @test_result = test_result
+      @finalized_process = false
+      @semaphore = Mutex.new
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -86,16 +86,22 @@ module Liri
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
-        Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}")
-        Liri.logger.info('(Se mantiene escaneando la red para encontrar Agents)')
-        Liri.logger.info('')
-        puts "Estoy enviando: #{user_data}"
-        loop do
+        Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
+                                      (Se mantiene escaneando la red para encontrar Agents)
+        ")
+        #puts "Estoy enviando: #{user_data}"
+        while !finalized_process?
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          # Se envía la petición sólo si hay tests pendientes
-          @udp_socket.send(user_data, 0, '<broadcast>', @udp_port) if @all_tests.any?  # agregar semáforo
+          # Se pregunta de vuelta si el proceso no está finalizado porque al llegar a este punto del código
+          # el proceso ya pudo haber finalizado, probar quitar más adelante porque es muy exagerado
+          #if !finalized_process?
+            @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)
+          puts 'enviando UDP'
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
-          break if @all_tests_count == @all_tests_processing_count
+
+          #else
+          #break
+          #end
         end
       end
     end
@@ -110,43 +116,46 @@ module Liri
         Thread.exit
       end
 
-      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}")
-      Liri.logger.info('(Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)')
-      Liri.logger.info('')
+      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}
+                                      (Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)
+      ")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
-      # Obs.: Parece que este bucle deja un hilo corriendo el cual no estoy pudiendo eliminar, sospecho que este
-      # hilo permanece en espera de que el agente se conecte, por eso desde el agente se realiza de nuevo una conexion
-      # lo que hace que el Manager termine al no tener tests pendientes
-      loop do
-        break if @all_tests_count == @all_tests_results_count
-        @process_tests_threads << Thread.start(tcp_socket.accept) do |client|
-          client_ip_address = client.remote_address.ip_address
-          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{client_ip_address} en el puerto TCP: #{@tcp_port}")
+      while !finalized_process?
+        Thread.start(tcp_socket.accept) do |client|
+          agent_ip_address = client.remote_address.ip_address
           response = client.recvfrom(1000).first
-          Liri.logger.info("    => Agent #{client_ip_address}: #{response}\n")
 
-          while @all_tests.any?
-            samples = @all_tests.sample!(Manager.test_samples_by_runner) # implementar semaforo
-            update_all_tests_processing_count(samples.size) # implementar semaforo
-            client.puts(samples.to_json)
+          # El Agent pudo haber respondido a la petición UDP
+          if finalized_process?
+            Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address}")
+            client.close
+            Thread.exit
+          end
 
+          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}
+                                          => Agent #{agent_ip_address}: #{response}
+          ")
+
+          while !finalized_process?
+            tests = samples
+            break if tests.empty?
+            client.puts(tests.to_json)
             response = client.recvfrom(1000).first
+            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
+            # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
-              # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse, hay que arreglar esto, mientras se captura el error para que no falle
-              test_result = JSON.parse(response)
-              @test_result.print_process(test_result) # implementar semaforo
-              @test_result.update(test_result) # implementar semaforo
-              update_all_tests_results_count(samples.size) # implementar semaforo
+              tests_result = JSON.parse(response)
+              process_tests_result(tests, tests_result)
             rescue JSON::ParserError => e
               Liri.logger.error("Error #{e}: Error de parseo JSON")
             end
           end
 
-          Thread.kill(search_agents_thread)
-
-          # Se envía el string exit para que el Agent termine la conexión
-          client.puts('exit')
+          finalize_process
+          puts ''
+          Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address}")
+          client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
           client.close # se desconecta el cliente
         end
       end
@@ -160,6 +169,35 @@ module Liri
 
     def update_all_tests_processing_count(new_count)
       @all_tests_processing_count += new_count
+    end
+
+    def finalize_process
+      @semaphore.synchronize {
+        @finalized_process = true
+      }
+    end
+
+    def samples
+      _samples = nil
+      # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
+      @semaphore.synchronize {
+        _samples = @all_tests.sample!(Manager.test_samples_by_runner)
+        update_all_tests_processing_count(_samples.size)
+      }
+      _samples
+    end
+
+    def process_tests_result(tests, tests_result)
+      # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
+      @semaphore.synchronize {
+        update_all_tests_results_count(tests.size)
+        @test_result.print_process(tests_result)
+        @test_result.update(tests_result)
+      }
+    end
+
+    def finalized_process?
+        @finalized_process
     end
   end
 end

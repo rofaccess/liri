@@ -64,15 +64,15 @@ module Liri
           Liri.logger.error("Error: Puerto UDP #{@udp_port} ocupado")
           Thread.exit
         end
+        Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}
+                                      (Se espera que algún Manager se contacte por primera vez para para establecer una conexión TCP)
+        ")
 
-        Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}")
-        Liri.logger.info('(Se espera que algún Manager se contacte por primera vez para para establecer una conexión TCP)')
-        Liri.logger.info('')
         loop do
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
-          user,pass,dir= @manager_request.first.split(";")
-          puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
+          user, pass, dir = @manager_request.first.split(";")
+          #puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
           process_manager_connection_request(manager_ip_address, user, pass, dir)
         end
       end
@@ -82,34 +82,37 @@ module Liri
     def start_client_socket_to_process_tests(manager_ip_address)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
 
-      Liri.logger.info('')
-      Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
-      Liri.logger.info('(Se establece una conexión para procesar la ejecución de las pruebas)')
-      tcp_socket.print("Listo para ejecutar pruebas")
+      Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
+                                      (Se establece una conexión para procesar la ejecución de las pruebas)
+      ")
+
+      tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
       puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
 
+      # Se procesan las pruebas enviadds por el Manager
       while line = tcp_socket.gets
         response = line.chop
-        if response == 'exit'
-          break
-        else
-          tests = JSON.parse(response)
-          Liri.logger.info("Pruebas recibidas del Manager #{manager_ip_address}:")
-          Liri.logger.debug(tests)
+        break if response == 'exit'
 
-          tests_result = @runner.run_tests(tests)
-          Liri.logger.info("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
-          Liri.logger.debug(tests_result)
-          puts "#{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas"
-          tcp_socket.print(tests_result.to_json)
-        end
+        tests = JSON.parse(response)
+        Liri.logger.info("Pruebas recibidas del Manager #{manager_ip_address}:")
+        Liri.logger.debug(tests)
+        print "#{tests.size} pruebas recibidas"
+
+        tests_result = @runner.run_tests(tests)
+
+        Liri.logger.info("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
+        Liri.logger.debug(tests_result)
+        print ", #{tests_result[:example_quantity]} pruebas ejecutadas\n"
+
+        tcp_socket.print(tests_result.to_json)
       end
 
       tcp_socket.close
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
-      @managers.remove!(manager_ip_address)
 
       start_client_to_close_manager_server(manager_ip_address)
+      @managers.remove!(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")
     rescue Errno::ECONNRESET => e
@@ -131,20 +134,21 @@ module Liri
     def process_manager_connection_request(manager_ip_address, user, pass, dir)
       unless @managers[manager_ip_address]
         @managers[manager_ip_address] = manager_ip_address
-         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        process_manager_connection_scp(manager_ip_address, user, pass, dir)
+        Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
+        #process_manager_connection_scp(manager_ip_address, user, pass, dir)
         start_client_socket_to_process_tests(manager_ip_address)
       end
     end
 
     # Se establece una nueva comunicación con el servidor TCP del Manager con el único objetivo de cerrar el servidor
-    # Esta conexión permitirá al Manager cerrar sus hilos pendientes y terminar el proceso
+    # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
     def start_client_to_close_manager_server(manager_ip_address)
-      # Por algún motivo el siguiente método permite cerrar la conexión, por ahora se usará esto
-      # tal vez en algún momento se haga un método más específico usando el contenido relevante del siguiente método
-      start_client_socket_to_process_tests(manager_ip_address)
+      tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
+      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address}")
+      #tcp_socket.print("")
+      tcp_socket.close
     end
-    
+
     def process_manager_connection_scp(host, user, pass, dir)
       source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
       puts "Hola User: #{user}, contraseña: #{pass}, path: #{dir}"
@@ -154,7 +158,7 @@ module Liri
         data = scp.download!(dir, source_code.compress_path_save)
       end
       folder_name = File.basename(dir, ".zip")
-      zip_dir = source_code.compress_path_save + '/'+ file_dir
+      zip_dir = source_code.compress_path_save + '/' + file_dir
       source_code.descompress_file(zip_dir, folder_name)
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
