@@ -7,11 +7,19 @@ require 'json'
 module Liri
   class Manager
     class Setup
+      FOLDER_NAME = 'liri'
+      FOLDER_PATH = File.join(Dir.pwd, '/', FOLDER_NAME)
+
       FILE_NAME = 'liri.yml'
-      FOLDER_NAME = 'temp'
-      FILE_PATH = File.join(Dir.pwd, '/', FILE_NAME)
-      TEMP_PATH = File.join(Dir.pwd, '/', FOLDER_NAME)
+      FILE_PATH = File.join(FOLDER_PATH, '/', FILE_NAME)
+
       TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri.yml')
+
+      def initialize
+        # Crea la carpeta en donde se guardarán los datos relativos a liri, ya sean archivos comprimidos,
+        # archivos descomprimidos, configuraciones, etc.
+        Dir.mkdir(FOLDER_PATH) unless Dir.exist?(FOLDER_PATH)
+      end
 
       # Crea un archivo de configuración en la raiz del proyecto desde un template
       def create
@@ -37,10 +45,6 @@ module Liri
         end
       end
 
-      def create_temp_folder
-        directory_name = TEMP_PATH
-        Dir.mkdir(directory_name) unless File.exists?(directory_name)
-      end
       # Borra el archivo de configuración
       def delete
         if File.exist?(FILE_PATH)
@@ -51,32 +55,22 @@ module Liri
         end
       end
 
-      def update_value_two_level(key, key2, value)
-        if File.exist?(FILE_PATH)
-          data = YAML.load(File.read(FILE_PATH))
-          data[key][key2] = value
-          File.open(FILE_PATH, 'w') {|f| f.write data.to_yaml }
-        else
-          raise Liri::FileNotFoundError.new(FILE_PATH)
+      def set(value, *keys)
+        data = YAML.load(File.read(FILE_PATH))
+        keys = keys.first
+        aux = data
+        keys.each_with_index do |key, index|
+          if(keys[index + 1])
+            aux = data[key]
+          else
+            aux[key] = value
+          end
         end
-      end
-
-
-      def update_value_one_level(key, value)
-        if File.exist?(FILE_PATH)
-          data = YAML.load(File.read(FILE_PATH))
-          data[key] = value
-          File.open(FILE_PATH, 'w') {|f| f.write data.to_yaml }
-        else
-          raise Liri::FileNotFoundError.new(FILE_PATH)
-        end
+        File.open(FILE_PATH, 'w') {|f| f.write data.to_yaml }
       end
 
       def path
         FILE_PATH
-      end
-      def temp_path
-        TEMP_PATH
       end
     end
   end

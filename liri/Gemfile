@@ -33,6 +33,9 @@ gem 'net-ssh', '~>6'
 # Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
 gem 'net-scp', '~>3'
 
+# HighLine was designed to ease the tedious tasks of doing console input and output with low-level methods like gets and puts. https://github.com/JEG2/highline
+gem 'highline', '~>2'
+
 group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
   gem 'rubocop', '~>0', require: false

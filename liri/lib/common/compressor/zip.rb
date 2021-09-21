@@ -16,9 +16,6 @@ module Liri
         # Comprime el directorio de entrada @input_dir en un archivo con extensión zip.
         def compress
           clear_output_file
-          liri_setup = Liri::Manager::Setup.new
-          liri_setup.create unless File.exist?(liri_setup.path)
-          liri_setup.update_value_one_level('path_compress_file', @output_file)
           entries = Dir.entries(@input_dir) - %w[. ..]
 
           ::Zip::File.open(@output_file, ::Zip::File::CREATE) do |zipfile|

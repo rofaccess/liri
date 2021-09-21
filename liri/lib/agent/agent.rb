@@ -72,7 +72,6 @@ module Liri
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
           user, pass, dir = @manager_request.first.split(";")
-          puts "El usuario: #{user}, con contraseña: #{pass}, path: #{dir}"
           process_manager_connection_request(manager_ip_address, user, pass, dir)
         end
       end
@@ -150,18 +149,11 @@ module Liri
     end
 
     def process_manager_connection_scp(host, user, pass, dir)
-
-      source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
-      puts "Hola User: #{user}, contraseña: #{pass}, path: #{dir}"
-      file_dir = File.basename(dir)
-
-      source_code.create_temp_folder
+      source_code = Liri::Common::SourceCode.new(Liri::Manager::Setup::FOLDER_PATH, compression_class, unit_test_class)
       Net::SCP.start(host, user, :password => pass) do |scp|
-        data = scp.download!(dir, source_code.compress_path_save)
+        scp.download!(dir, source_code.compressed_file_folder_path)
       end
-      folder_name = File.basename(dir, ".zip")
-      zip_dir = source_code.compress_path_save + '/' + file_dir
-      source_code.descompress_file(zip_dir, folder_name)
+      source_code.decompress_file
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
 

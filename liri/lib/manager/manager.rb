@@ -15,19 +15,19 @@ module Liri
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
-        source_code = Liri::Common::SourceCode.new(compression_class, unit_test_class)
-        puts "Comprimiendo el archivo"
+        source_code = Liri::Common::SourceCode.new(Liri::Manager::Setup::FOLDER_PATH, compression_class, unit_test_class)
         source_code.compress_folder
+
         all_tests = source_code.all_tests
-		    test_result = Liri::Manager::TestResult.new
+        test_result = Liri::Manager::TestResult.new
+
         manager = Manager.new(udp_port, tcp_port, all_tests, test_result)
-        credential = Liri::Manager::Credential.new
-        credential.get
+
         threads = []
-        threads << manager.start_client_socket_to_search_agents(user_data)# Enviar peticiones broadcast a toda la red para encontrar Agents
+        threads << manager.start_client_socket_to_search_agents(manager_data(source_code)) # Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
 
-        #source_code.delete_compressed_folder
+        #source_code.delete_compressed_file
 
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info("Proceso Manager terminado")
@@ -58,8 +58,21 @@ module Liri
         Liri.setup.ports.tcp
       end
 
-      def user_data
-        [Liri.setup.manager_user.user, Liri.setup.manager_user.password, Liri.setup.path_compress_file].join(';')
+      def manager_data(source_code)
+        user = Liri.setup.manager_credentials.user
+        password = Liri.setup.manager_credentials.password
+        unless user || password
+          credential = Liri::Manager::Credential.new
+          user, password = credential.get
+          # Guardar credenciales en el archivo
+          Liri.set_setup(user, 'manager_credentials', 'user')
+          Liri.set_setup(password, 'manager_credentials', 'password')
+          Liri.reload_setup
+        end
+
+        data = [user, password, source_code.compressed_file_path].join(';')
+        puts data
+        data
       end
 
     end
@@ -91,7 +104,6 @@ module Liri
         Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
                                       (Se mantiene escaneando la red para encontrar Agents)
         ")
-        puts "Estoy enviando: #{user_data}"
         while @agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)

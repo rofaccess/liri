@@ -20,12 +20,8 @@ ports:
   # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
   tcp: 2500
   #configuración para cargar usuario y contraseña del manager, para que el agente pueda obtener el archivo comprimido
-manager_user:
-  #valor a poner: el usuario donde se está ejecuntando el proyecto
+manager_credentials:
+  # El usuario de la computadora donde se está ejecutando el sistema
   user:
-  #contraseña del usuario
+  # Contraseña del usuario
   password:
-
-#configuración para obtener el path de dónde se guardó el archivo comprimido,
-#si no se especifíca un path especial se autocompletará por defecto luego de la ejecución de la compresión de archivo
-path_compress_file:

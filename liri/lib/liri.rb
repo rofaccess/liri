@@ -23,6 +23,15 @@ module Liri
       end
     end
 
+    def set_setup(value, *keys)
+      liri_setup = Liri::Manager::Setup.new
+      liri_setup.set(value, keys)
+    end
+
+    def reload_setup
+      @setup = load_setup
+    end
+
     def delete_setup
       liri_setup = Liri::Manager::Setup.new
       liri_setup.delete
