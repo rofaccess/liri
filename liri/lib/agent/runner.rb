@@ -5,8 +5,8 @@
 module Liri
   class Agent
     class Runner
-      def initialize(unit_test_class)
-        @unit_test = Object.const_get(unit_test_class).new
+      def initialize(unit_test_class, source_code_folder_path)
+        @unit_test = Object.const_get(unit_test_class).new(source_code_folder_path)
       end
 
       def run_tests(tests)

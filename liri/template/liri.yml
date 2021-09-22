@@ -6,7 +6,7 @@ compressed_file_name: compressed_source_code
 test_samples_by_runner: 10
 # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
 # Por defecto siempre se imprimirá el log en un archivo dentro de la carpeta logs
-show_stdout_log: false
+show_stdout_log: true
 library:
   # Configuración de la librería de compresión a utilizar para comprimir el código fuente
   # Valores soportados: Sólo Zip hasta ahora
@@ -19,9 +19,3 @@ ports:
   udp: 2000
   # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
   tcp: 2500
-  #configuración para cargar usuario y contraseña del manager, para que el agente pueda obtener el archivo comprimido
-manager_credentials:
-  # El usuario de la computadora donde se está ejecutando el sistema
-  user:
-  # Contraseña del usuario
-  password:

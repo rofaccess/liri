@@ -1,11 +1,11 @@
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
-    @manager_unit_test = Liri::Manager::UnitTest::Rspec.new(source_code_folder_path)
-    @runner = Liri::Agent::Runner.new(agent_unit_test_class)
+    @unit_test = Liri::Common::UnitTest::Rspec.new(source_code_folder_path)
+    @runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code_folder_path)
   end
 
   it 'ejecuta 1 prueba unitaria' do
-    tests = @manager_unit_test.all_tests.sample(1)
+    tests = @unit_test.all_tests.sample(1)
     tests_result = @runner.run_tests(tests)
     expect(tests_result).to be_a(Hash)
     expect(tests_result[:result]).to eq('.')
@@ -18,7 +18,7 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   end
 
   it 'ejecuta 2 pruebas unitarias' do
-    tests = @manager_unit_test.all_tests.sample(2)
+    tests = @unit_test.all_tests.sample(2)
     tests_result = @runner.run_tests(tests)
     expect(tests_result).to be_a(Hash)
     expect(tests_result[:result]).to eq('..')

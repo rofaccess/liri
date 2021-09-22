@@ -4,7 +4,7 @@ RSpec.describe Liri do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do
       Liri.delete_setup
-      Liri.reset_setup
+      Liri.clear_setup
     end
 
     describe '#setup' do
@@ -17,7 +17,7 @@ RSpec.describe Liri do
 
       after(:all) do
         Liri.delete_setup
-        Liri.reset_setup
+        Liri.clear_setup
       end
     end
 
@@ -27,9 +27,9 @@ RSpec.describe Liri do
       end
     end
 
-    describe '#reset_setup' do
+    describe '#clear_setup' do
       it 'no hace nada' do
-        expect(Liri.reset_setup).to be false
+        expect(Liri.clear_setup).to be false
       end
     end
   end
@@ -58,15 +58,15 @@ RSpec.describe Liri do
     end
 =end
 
-    describe '#reset_setup' do
+    describe '#clear_setup' do
       it 'nulifica los datos de configuración' do
-        expect(Liri.reset_setup).to be true
+        expect(Liri.clear_setup).to be true
       end
     end
 
     after(:all) do
       Liri.delete_setup
-      Liri.reset_setup
+      Liri.clear_setup
     end
   end
 end

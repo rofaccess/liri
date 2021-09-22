@@ -9,16 +9,20 @@ require 'logger'
 module Liri
   module Common
     class Log
-      FOLDER_PATH = File.join(Dir.pwd, '/log')
+      FOLDER_NAME = 'logs'
+      FOLDER_PATH = File.join(Dir.pwd, "/#{FOLDER_NAME}")
       FILE_NAME = 'liri.log'
-      FILE_PATH = File.join(FOLDER_PATH, '/', FILE_NAME)
 
-      def initialize(shift_age, stdout=true)
+      def initialize(shift_age, folder_path:, file_name:, stdout: true)
         @stdout = stdout
         @datetime_format = "%d-%m-%Y %H:%M"
         @shift_age = shift_age
+        @folder_path = folder_path || FOLDER_PATH
+        @file_name = file_name || FILE_NAME
+        @file_path = File.join(@folder_path, '/', @file_name)
 
         create_stdout_logger if @stdout
+        create_log_folder
         create_file_logger
       end
 
@@ -59,13 +63,12 @@ module Liri
       end
 
       def create_file_logger
-        create_log_folder unless Dir.exist?(FOLDER_PATH)
-        @file_logger = Logger.new(FILE_PATH, @shift_age)
+        @file_logger = Logger.new(@file_path, @shift_age)
         @file_logger.datetime_format = @datetime_format
       end
 
       def create_log_folder
-        Dir.mkdir(FOLDER_PATH)
+        Dir.mkdir(@folder_path) unless Dir.exist?(@folder_path)
       end
     end
   end

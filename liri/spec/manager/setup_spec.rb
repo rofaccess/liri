@@ -1,7 +1,7 @@
 RSpec.describe Liri::Manager::Setup do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do
-      @setup = Liri::Manager::Setup.new
+      @setup = Liri::Manager::Setup.new(Liri::SETUP_FOLDER_PATH)
       @setup.delete if File.exist?(@setup.path)
     end
 
@@ -33,13 +33,13 @@ RSpec.describe Liri::Manager::Setup do
 
   context 'cuando el archivo de configuración ya existe' do
     before(:all) do
-      @setup = Liri::Manager::Setup.new
+      @setup = Liri::Manager::Setup.new(Liri::SETUP_FOLDER_PATH)
       @setup.create
     end
 
     describe '#create' do
       it 'no crea el archivo de configuración' do
-        expect(@setup.create).to be false
+        expect(@setup.create).to be true
         expect(File.exist?(@setup.path)).to be true
       end
     end
@@ -62,7 +62,7 @@ RSpec.describe Liri::Manager::Setup do
       end
 
       after(:all) do
-        @setup = Liri::Manager::Setup.new
+        @setup = Liri::Manager::Setup.new(Liri::SETUP_FOLDER_PATH)
         @setup.create
       end
     end

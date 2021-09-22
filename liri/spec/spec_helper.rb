@@ -23,12 +23,8 @@ def test_samples_by_runner
   Liri.setup.test_samples_by_runner
 end
 
-def agent_unit_test_class
-  "Liri::Agent::UnitTest::#{Liri.setup.library.unit_test}"
-end
-
-def manager_unit_test_class
-  "Liri::Manager::UnitTest::#{Liri.setup.library.unit_test}"
+def unit_test_class
+  "Liri::Common::UnitTest::#{Liri.setup.library.unit_test}"
 end
 
 def compression_class

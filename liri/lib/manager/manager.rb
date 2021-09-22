@@ -12,19 +12,24 @@ module Liri
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
+        Liri.create_folders('manager')
+
+        Liri.set_logger(Liri::LOGS_FOLDER_PATH, 'manager.log')
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
-        source_code = Liri::Common::SourceCode.new(Liri::Manager::Setup::FOLDER_PATH, compression_class, unit_test_class)
+        source_code = Liri::Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
         source_code.compress_folder
+
+        manager_data = manager_data(source_code)
 
         all_tests = source_code.all_tests
         test_result = Liri::Manager::TestResult.new
 
-        manager = Manager.new(udp_port, tcp_port, all_tests, test_result)
+        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, test_result)
 
         threads = []
-        threads << manager.start_client_socket_to_search_agents(manager_data(source_code)) # Enviar peticiones broadcast a toda la red para encontrar Agents
+        threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
 
         #source_code.delete_compressed_file
@@ -41,46 +46,26 @@ module Liri
       end
 
       private
-
-      def compression_class
-        "Liri::Common::Compressor::#{Liri.setup.library.compression}"
+      def compressed_file_folder_path
+        File.join(Liri::Common.setup_folder_path, '/manager')
       end
 
-      def unit_test_class
-        "Liri::Manager::UnitTest::#{Liri.setup.library.unit_test}"
-      end
-
-      def udp_port
-        Liri.setup.ports.udp
-      end
-
-      def tcp_port
-        Liri.setup.ports.tcp
+      def decompressed_file_folder_path
+        compressed_file_folder_path
       end
 
       def manager_data(source_code)
-        user = Liri.setup.manager_credentials.user
-        password = Liri.setup.manager_credentials.password
-        unless user || password
-          credential = Liri::Manager::Credential.new
-          user, password = credential.get
-          # Guardar credenciales en el archivo
-          Liri.set_setup(user, 'manager_credentials', 'user')
-          Liri.set_setup(password, 'manager_credentials', 'password')
-          Liri.reload_setup
-        end
+        credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
+        user, password = credential.get
 
-        data = [user, password, source_code.compressed_file_path].join(';')
-        puts data
-        data
+        [user, password, source_code.compressed_file_path].join(';')
       end
-
     end
 
-    def initialize(udp_port, tcp_port_1, all_tests, test_result)
+    def initialize(udp_port, tcp_port, all_tests, test_result)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
-      @tcp_port = tcp_port_1
+      @tcp_port = tcp_port
 
       @all_tests = all_tests
       @all_tests_count = all_tests.size

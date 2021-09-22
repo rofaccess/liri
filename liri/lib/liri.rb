@@ -4,6 +4,14 @@
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
   VERSION = '0.1.0'
+  SETUP_FOLDER_NAME = 'liri'
+  SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
+  LOGS_FOLDER_NAME = 'logs'
+  LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
+  AGENT_FOLDER_NAME = 'agent'
+  AGENT_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', AGENT_FOLDER_NAME)
+  MANAGER_FOLDER_NAME = 'manager'
+  MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
 
   class << self
     def setup
@@ -14,7 +22,11 @@ module Liri
       @logger ||= load_logger
     end
 
-    def reset_setup
+    def set_logger(folder_path, file_name)
+      @logger = load_logger(folder_path, file_name)
+    end
+
+    def clear_setup
       if @setup
         @setup = nil
         true
@@ -23,9 +35,15 @@ module Liri
       end
     end
 
-    def set_setup(value, *keys)
-      liri_setup = Liri::Manager::Setup.new
-      liri_setup.set(value, keys)
+    def create_folders(program)
+      Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
+      Dir.mkdir(LOGS_FOLDER_PATH) unless Dir.exist?(LOGS_FOLDER_PATH)
+      case program
+      when 'manager'
+        Dir.mkdir(MANAGER_FOLDER_PATH) unless Dir.exist?(MANAGER_FOLDER_PATH)
+      when 'agent'
+        Dir.mkdir(AGENT_FOLDER_PATH) unless Dir.exist?(AGENT_FOLDER_PATH)
+      end
     end
 
     def reload_setup
@@ -33,7 +51,7 @@ module Liri
     end
 
     def delete_setup
-      liri_setup = Liri::Manager::Setup.new
+      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
       liri_setup.delete
     end
 
@@ -53,18 +71,39 @@ module Liri
       threads.each{|thread| Thread.kill(thread)}
     end
 
+    def current_host_ip_address
+      addr = Socket.ip_address_list.select(&:ipv4?).detect{|addr| addr.ip_address != '127.0.0.1'}
+      addr.ip_address
+    end
+
+    def compression_class
+      "Liri::Common::Compressor::#{setup.library.compression}"
+    end
+
+    def unit_test_class
+      "Liri::Common::UnitTest::#{setup.library.unit_test}"
+    end
+
+    def udp_port
+      setup.ports.udp
+    end
+
+    def tcp_port
+      setup.ports.tcp
+    end
+
     private
 
     # Carga las configuraciones en memoria desde un archivo de configuracion
     def load_setup
-      liri_setup = Liri::Manager::Setup.new
+      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
       liri_setup.create unless File.exist?(liri_setup.path)
       liri_setup.load
     end
 
-    # Inicializa y configura la librería encargada de logear
-    def load_logger
-      log = Liri::Common::Log.new('daily', Liri.setup.show_stdout_log)
+    # Inicializa y configura la librería encargada de loguear
+    def load_logger(folder_path = nil, file_name = nil)
+      log = Liri::Common::Log.new('daily', folder_path: folder_path, file_name: file_name, stdout: Liri.setup.show_stdout_log)
       log
     end
   end

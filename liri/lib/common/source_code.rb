@@ -1,5 +1,5 @@
 =begin
-  Este clase se encarga de manejar todo lo relativo al código fuente
+  Este clase se encarga de manejar lo relativo al código fuente
 =end
 
 module Liri
@@ -42,6 +42,10 @@ module Liri
 
       def all_tests
         @unit_test.all_tests
+      end
+
+      def folder_path
+        FOLDER_PATH
       end
     end
   end

@@ -13,11 +13,15 @@ module Liri
       # Inicia la ejecución del Agent
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
+        Liri.create_folders('agent')
+
+        Liri.set_logger(Liri::LOGS_FOLDER_PATH, 'agent.log')
         Liri.logger.info("Proceso Agent iniciado")
         puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
 
-        runner = Liri::Agent::Runner.new(unit_test_class)
-        agent = Agent.new(udp_port, tcp_port, runner)
+        source_code = Liri::Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+        runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
+        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
@@ -27,28 +31,16 @@ module Liri
         Liri.logger.info('Proceso Agent terminado manualmente')
         Liri.kill(threads)
       end
-
-      private
-
-      def udp_port
-        Liri.setup.ports.udp
-      end
-
-      def tcp_port
-        Liri.setup.ports.tcp
-      end
-
-      def unit_test_class
-        "Liri::Agent::UnitTest::#{Liri.setup.library.unit_test}"
-      end
     end
 
-    def initialize(udp_port, tcp_port, runner)
+    def initialize(udp_port, tcp_port, source_code, runner)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
 
+      @source_code = source_code
       @runner = runner
+
       @managers = {}
     end
 
@@ -96,13 +88,13 @@ module Liri
         tests = JSON.parse(response)
         Liri.logger.info("Pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests)
-        print "#{tests.size} pruebas recibidas"
+        print "\n#{tests.size} pruebas recibidas"
 
         tests_result = @runner.run_tests(tests)
 
         Liri.logger.info("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests_result)
-        print ", #{tests_result[:example_quantity]} pruebas ejecutadas\n"
+        print ", #{tests_result[:example_quantity]} pruebas ejecutadas\n\n"
 
         tcp_socket.print(tests_result.to_json)
       end
@@ -149,24 +141,14 @@ module Liri
     end
 
     def process_manager_connection_scp(host, user, pass, dir)
-      source_code = Liri::Common::SourceCode.new(Liri::Manager::Setup::FOLDER_PATH, compression_class, unit_test_class)
       Net::SCP.start(host, user, :password => pass) do |scp|
-        scp.download!(dir, source_code.compressed_file_folder_path)
+        scp.download!(dir, @source_code.compressed_file_folder_path)
       end
-      source_code.decompress_file
+      @source_code.decompress_file
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
-
     rescue TypeError => e
       puts 'Para que ande nomas'
-    end
-
-    def compression_class
-      "Liri::Common::Compressor::#{Liri.setup.library.compression}"
-    end
-
-    def unit_test_class
-      "Liri::Manager::UnitTest::#{Liri.setup.library.unit_test}"
     end
   end
 end
