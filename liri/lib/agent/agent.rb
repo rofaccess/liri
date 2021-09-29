@@ -144,7 +144,9 @@ module Liri
       Net::SCP.start(host, user, :password => pass) do |scp|
         scp.download!(dir, @source_code.compressed_file_folder_path)
       end
-      @source_code.decompress_file
+      downloaded_file_name = dir.split('/').last
+      downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
+      @source_code.decompress_file(downloaded_file_path)
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
     rescue TypeError => e

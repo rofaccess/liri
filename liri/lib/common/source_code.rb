@@ -27,8 +27,8 @@ module Liri
         @compressor.compress
       end
 
-      def decompress_file
-        @compressor.decompress(@compressed_file_path, @decompressed_file_folder_path)
+      def decompress_file(compressed_file_path = @compressed_file_path)
+        @compressor.decompress(compressed_file_path, @decompressed_file_folder_path)
       end
 
       def delete_compressed_file
