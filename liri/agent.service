@@ -1,0 +1,13 @@
+[Unit]
+Description= Liri agent
+After=syslog.target network.target sockets.target network-online.target multi-user.target
+
+[Service]
+Type= simple
+User= lesliie
+Group= lesliie
+WorkingDirectory=/home/lesliie/
+ExecStart=/bin/bash --login /home/lesliie/liri/agent.sh
+
+[Install]
+WantedBy=multi-user.target
