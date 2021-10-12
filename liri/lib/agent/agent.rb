@@ -15,7 +15,7 @@ module Liri
       def run(stop = false)
         Liri.create_folders('agent')
 
-        Liri.set_logger(Liri::LOGS_FOLDER_PATH, 'agent.log')
+        Liri.set_logger(Liri::AGENT_LOGS_FOLDER_PATH, 'agent.log')
         Liri.logger.info("Proceso Agent iniciado")
         puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
 

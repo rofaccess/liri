@@ -7,7 +7,9 @@ module Liri
   SETUP_FOLDER_NAME = 'liri'
   SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
   LOGS_FOLDER_NAME = 'logs'
-  LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
+  MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
+  AGENT_LOGS_FOLDER_PATH = File.expand_path("../#{LOGS_FOLDER_NAME}")
+  LOGS = File.expand_path("../../Gemfile")
   AGENT_FOLDER_NAME = 'agent'
   AGENT_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', AGENT_FOLDER_NAME)
   MANAGER_FOLDER_NAME = 'manager'
@@ -37,7 +39,8 @@ module Liri
 
     def create_folders(program)
       Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
-      Dir.mkdir(LOGS_FOLDER_PATH) unless Dir.exist?(LOGS_FOLDER_PATH)
+      Dir.mkdir(MANAGER_LOGS_FOLDER_PATH) unless Dir.exist?(MANAGER_LOGS_FOLDER_PATH)
+      Dir.mkdir(AGENT_LOGS_FOLDER_PATH) unless Dir.exist?(AGENT_LOGS_FOLDER_PATH)
       case program
       when 'manager'
         Dir.mkdir(MANAGER_FOLDER_PATH) unless Dir.exist?(MANAGER_FOLDER_PATH)

@@ -14,7 +14,7 @@ module Liri
       def run(stop = false)
         Liri.create_folders('manager')
 
-        Liri.set_logger(Liri::LOGS_FOLDER_PATH, 'manager.log')
+        Liri.set_logger(Liri::MANAGER_LOGS_FOLDER_PATH, 'manager.log')
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 

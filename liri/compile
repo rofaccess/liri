@@ -1,4 +1,3 @@
-#!/bin/bash
 # This file is a bash script to compile code and reinstall locally.
 # How to use
 # > sh compile
