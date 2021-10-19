@@ -1,7 +1,6 @@
 =begin
   Este módulo es el punto de entrada del programa agente
 =end
-require 'net/ssh'
 require 'net/scp'
 require 'all_libraries'
 

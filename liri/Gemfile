@@ -12,29 +12,16 @@ source 'https://rubygems.org'
 gemspec
 
 # Rake is a Make-like program implemented in Ruby. Tasks and dependencies are specified in standard Ruby syntax. https://github.com/ruby/rake
+# Use to build Liri gem
 gem 'rake', '~> 13'
 
 # Behaviour Driven Development for Ruby. https://github.com/rspec/rspec
+# Use to test Liri gem
 gem 'rspec', '~> 3.10.0'
-
-# Rubyzip is a ruby library for reading and writing zip files. https://github.com/rubyzip/rubyzip
-gem 'rubyzip', '~>2'
-
-# The complete solution for Ruby command-line executables. https://github.com/commander-rb/commander
-gem 'commander', '~>4'
 
 # Fast and easy syntax highlighting for selected languages, written in Ruby. https://github.com/rubychan/coderay
 # Used by rspec to show results highlighting when save result in html file
 gem 'coderay', '~>1'
-
-# Net::SSH is a pure-Ruby implementation of the SSH2 client protocol. It allows you to write programs that invoke and interact with processes on remote servers, via SSH2. https://github.com/net-ssh/net-ssh
-gem 'net-ssh', '~>6'
-
-# Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
-gem 'net-scp', '~>3'
-
-# HighLine was designed to ease the tedious tasks of doing console input and output with low-level methods like gets and puts. https://github.com/JEG2/highline
-gem 'highline', '~>2'
 
 group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop

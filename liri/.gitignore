@@ -8,7 +8,6 @@
 /tmp/
 /.idea/
 /.liri/
-liri-0.1.0.gem
 Gemfile.lock
 # rspec failure tracking
 .rspec_status
@@ -18,3 +17,4 @@ liri.yml
 /temp/
 *.log
 /liri
+*.gem
