@@ -1,63 +1,121 @@
 #!/bin/bash
-#
-# Resolve the location of the SmartSVN installation.
-# This includes resolving any symlinks.
-PRG=$0
-while [ -h "$PRG" ]; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '^.*-> \(.*\)$' 2>/dev/null`
-    if expr "$link" : '^/' 2> /dev/null >/dev/null; then
-        PRG="$link"
-    else
-        PRG="`dirname "$PRG"`/$link"
-    fi
-done
+source messages.sh
 
-SMARTSVN_BIN=`dirname "$PRG"`
+cd ..
+ 
+AGENT_HOME=`pwd`
+LIBS_HOME=$AGENT_HOME/lib
+RVM_HOME=$LIBS_HOME/rvm
+RUBY_VERSION=2.7.2
+AGENT_USER_NAME=liri 
+GEMSET_NAME=liri
+LIRI_VERSION=0.1.1
 
-# absolutize dir
-oldpwd=`pwd`
-cd "${SMARTSVN_BIN}"
-SMARTSVN_BIN=`pwd`
-cd "${oldpwd}"
+check_command () {
+  COMMAND=$1
+  
+  if ! type $COMMAND > /dev/null; then
+    fail_msg "Por favor instale la librería adecuada para ejecutar el comando ${COMMAND} acorde a su distribución Linux."
+    exit   
+  fi    
+}
 
-ICON_NAME=smartsvn-14
-TMP_DIR=`mktemp --directory`
-DESKTOP_FILE=$TMP_DIR/smartsvn-14.desktop
-cat << EOF > $DESKTOP_FILE
-[Desktop Entry]
-Version=1.0
-Encoding=UTF-8
-Name=SmartSVN 14
-Keywords=svn;subversion
-GenericName=SVN Client
-Type=Application
-Categories=Development;RevisionControl
-Terminal=false
-StartupNotify=true
-Exec="$SMARTSVN_BIN/smartsvn.sh"
-Icon=$ICON_NAME.png
-X-Ayatana-Desktop-Shortcuts=NewWindow;RepositoryBrowser
+install_rvm () {
+  start_msg "Instalando RVM"
+  
+  # Instalar claves gpg
+  check_command gpg2
 
-[NewWindow Shortcut Group]
-Name=Open a New Window
-Exec="$SMARTSVN_BIN/smartsvn.sh"
-TargetEnvironment=Unity
+  if gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; then
+    success_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
+  else
+    fail_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
+    exit 1
+  fi
 
-[RepositoryBrowser Shortcut Group]
-Name=Open the Repository Browser
-Exec="$SMARTSVN_BIN/smartsvn.sh" --repository-browser
-TargetEnvironment=Unity
-EOF
+  # Descargar e instalar RVM
+  check_command curl
+  
+  if \curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME; then
+    success_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME"
+  else
+    fail_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME"
+    exit 1
+  fi
+  
+  # Agregar al usuario actual al grupo rvm
+  if sudo usermod -a -G rvm $(whoami); then
+    success_msg "sudo usermod -a -G rvm $whoami"
+  else
+    fail_msg "sudo usermod -a -G rvm $whoami"
+    exit 1
+  fi
 
-# seems necessary to refresh immediately:
-chmod 644 $DESKTOP_FILE
 
-xdg-desktop-menu install $DESKTOP_FILE
-xdg-icon-resource install --size  32 "$SMARTSVN_BIN/smartsvn-32.png"  $ICON_NAME
-xdg-icon-resource install --size  48 "$SMARTSVN_BIN/smartsvn-48.png"  $ICON_NAME
-xdg-icon-resource install --size  64 "$SMARTSVN_BIN/smartsvn-64.png"  $ICON_NAME
-xdg-icon-resource install --size 128 "$SMARTSVN_BIN/smartsvn-128.png" $ICON_NAME
+  # Cargar rvm en el entorno actual de la terminal.
+  [[ -s $RVM_HOME/scripts/rvm ]] && source $RVM_HOME/scripts/rvm
+  
+  end_msg "Instalación de RVM finalizada"
+}
 
-rm $DESKTOP_FILE
-rm -R $TMP_DIR
+install_ruby () {
+  start_msg "Instalando Ruby"
+
+  if rvm install $RUBY_VERSION; then
+    success_msg "rvm install $RUBY_VERSION"
+  else
+    fail_msg "rvm install $RUBY_VERSION"
+    exit 1
+  fi
+
+  
+  if rvm use $RUBY_VERSION; then
+    success_msg "rvm use $RUBY_VERSION"
+  else
+    fail_msg "rvm use $RUBY_VERSION"
+    exit 1
+  fi
+
+  end_msg "Instalación de Ruby finalizada"
+}
+
+create_gemset () {
+  start_msg "Configurando Gemset"
+  
+  if rvm gemset create $GEMSET_NAME; then
+    success_msg "rvm gemset create $GEMSET_NAME"
+  else
+    fail_msg "rvm gemset create $GEMSET_NAME"
+    exit 1
+  fi
+  
+  if rvm gemset use $GEMSET_NAME; then
+    success_msg "rvm gemset use $GEMSET_NAME"
+  else
+    fail_msg "rvm gemset use $GEMSET_NAME"
+    exit 1
+  fi
+
+  end_msg "Configuración de Gemset finalizada"
+}
+
+install_liri () {
+  start_msg "Înstalando Liri"
+
+  if gem install $LIBS_HOME/liri-$LIRI_VERSION.gem; then
+    success_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
+  else
+    fail_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
+    exit 1
+  fi
+
+  end_msg "Instalación de Liri finalizada"
+}
+
+
+########################################################################################################################
+# Proceso de instalación del programa Agent
+install_rvm
+install_ruby
+create_gemset
+install_liri
