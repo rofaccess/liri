@@ -11,6 +11,11 @@ AGENT_USER_NAME=liri
 GEMSET_NAME=liri
 LIRI_VERSION=0.1.1
 
+TMP_DIR=`mktemp --directory`
+AGENT_SERVICE_NAME=liriagent.service
+SERVICE_FILE=$TMP_DIR/$AGENT_SERVICE_NAME
+WORK_HOME=$AGENT_HOME/work
+
 check_command () {
   COMMAND=$1
   
@@ -102,6 +107,39 @@ install_liri () {
   end_msg "Instalación de Liri finalizada"
 }
 
+create_service () { 
+  start_msg "Creando servicio"
+
+cat << EOF > $SERVICE_FILE
+  [Unit]
+  Description=Liri Agent
+  After=network.target
+
+  [Service]
+  Type=simple
+
+  User=$(whoami)
+  Group=$(whoami)
+
+  WorkingDirectory=$WORK_HOME
+
+  ExecStart=$BIN_HOME/startup.sh
+  ExecStop=$BIN_HOME/shutdown.sh
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+
+  sudo mv $SERVICE_FILE /etc/systemd/system/
+  sudo systemctl daemon-reload
+
+  info_msg "Iniciar Agent: sudo systemctl start liriagent.service"
+  info_msg "Iniciar Agent durante inicio del Sistema: sudo systemctl enable liriagent.service"
+  info_msg "Estado del Agent: journalctl -e -u liriagent"
+  
+  end_msg "Creación de servicio finalizada"
+}
+
 
 ########################################################################################################################
 # Proceso de instalación del programa Agent
@@ -109,3 +147,4 @@ install_rvm
 install_ruby
 create_gemset
 install_liri
+create_service

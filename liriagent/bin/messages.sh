@@ -55,3 +55,12 @@ function fail_msg {
   SUB_MSG="FAIL: "
   msg "$MSG" "$COLOR" "$SUB_MSG"
 }
+
+check_command () {
+  COMMAND=$1
+  
+  if ! type $COMMAND > /dev/null; then
+    fail_msg "Por favor instale la librería adecuada para ejecutar el comando ${COMMAND} acorde a su distribución Linux."
+    exit   
+  fi    
+}
