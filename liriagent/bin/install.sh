@@ -5,7 +5,7 @@ cd ..
  
 AGENT_HOME=`pwd`
 LIBS_HOME=$AGENT_HOME/lib
-RVM_HOME=$LIBS_HOME/rvm
+BIN_HOME=$AGENT_HOME/bin
 RUBY_VERSION=2.7.2
 AGENT_USER_NAME=liri 
 GEMSET_NAME=liri
@@ -22,10 +22,10 @@ check_command () {
 
 install_rvm () {
   start_msg "Instalando RVM"
-  
+ 
   # Instalar claves gpg
   check_command gpg2
-
+ 
   if gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; then
     success_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
   else
@@ -35,26 +35,16 @@ install_rvm () {
 
   # Descargar e instalar RVM
   check_command curl
-  
-  if \curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME; then
-    success_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME"
-  else
-    fail_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable --path $RVM_HOME"
-    exit 1
-  fi
-  
-  # Agregar al usuario actual al grupo rvm
-  if sudo usermod -a -G rvm $(whoami); then
-    success_msg "sudo usermod -a -G rvm $whoami"
-  else
-    fail_msg "sudo usermod -a -G rvm $whoami"
-    exit 1
-  fi
 
-
-  # Cargar rvm en el entorno actual de la terminal.
-  [[ -s $RVM_HOME/scripts/rvm ]] && source $RVM_HOME/scripts/rvm
+  if \curl -sSL https://get.rvm.io | bash -s stable; then
+    success_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable"
+  else
+    fail_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable"
+    exit 1
+  fi   
   
+  source $HOME/.rvm/scripts/rvm
+
   end_msg "Instalación de RVM finalizada"
 }
 
