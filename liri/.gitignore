@@ -1,20 +1,10 @@
-/.bundle/
-/.yardoc
-/_yardoc/
-/coverage/
-/doc/
 /pkg/
-/spec/reports/
 /tmp/
 /.idea/
-/.liri/
-Gemfile.lock
-# rspec failure tracking
-.rspec_status
-tall liri
-*.zip
-liri.yml
-/temp/
 *.log
-/liri
 *.gem
+*.zip
+.rspec_status
+liri-config.yml
+liri-credentials.yml
+

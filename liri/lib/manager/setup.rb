@@ -7,8 +7,8 @@ require 'json'
 module Liri
   class Manager
     class Setup
-      FILE_NAME = 'liri.yml'
-      TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri.yml')
+      FILE_NAME = 'liri-config.yml'
+      TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri-config.yml')
 
       def initialize(folder_path)
         @file_path = File.join(folder_path, '/', FILE_NAME)

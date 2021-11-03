@@ -10,6 +10,7 @@ module Liri
           @tests_folder_path = File.join(source_code_folder_path, TESTS_FOLDER_NAME)
         end
 
+        # Retorna un hash con todos los tests. Ex.: {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
         def all_tests
           tests_count = 1
           tests_hash = {}
@@ -18,7 +19,7 @@ module Liri
               file.each_with_index do |line, index|
                 if line.strip.start_with?('it')
                   absolute_file_path = file.to_path
-                  relative_file_path = absolute_file_path.sub(@tests_folder_path + '/', '')
+                  relative_file_path = absolute_file_path.sub(@source_code_folder_path + '/', '')
 
                   test_line = relative_file_path + ":#{index + 1}"
                   tests_hash[tests_count] = test_line
@@ -33,26 +34,19 @@ module Liri
         # Recibe un arreglo de rutas a las pruebas unitarias
         # Ejecuta las pruebas unitarias y retorna el resultado como un hash
         def run_tests(tests)
-          tests_paths = tests_paths(tests)
           # Se puede ejecutar comandos en líneas de comandos usando system(cli_command) o %x|cli_command|
           # system devuelve true, false o nil, %x devuelve la salida del comando ejecutado
           # From:
           #      https://www.rubyguides.com/2018/12/ruby-system/
 
           #system("bundle exec rspec #{tests_paths} --format progress --out rspec_result.txt --no-color")
-          raw_tests_result = %x|bundle exec rspec #{tests_paths} --format progress|
+          raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
           process_tests_result(raw_tests_result)
         end
 
         private
         def test_files
           Dir[@tests_folder_path + "/**/*spec.rb"]
-        end
-
-        # convierte ["manager/setup_spec.rb:59", "agent/agent_spec.rb:2"] a "liri/agent/decompressed_liri/spec/manager/setup_spec.rb:59 liri/agent/decompressed_liri/spec/agent/agent_spec.rb:2"
-        def tests_paths(tests)
-          tests_relative_path = @tests_folder_path.sub(Dir.pwd + '/', '')
-          tests.map{|test| "#{tests_relative_path}/#{test}"}.join(' ')
         end
 
         # Recibe el resultado crudo de las pruebas unitarias

@@ -3,7 +3,7 @@ require 'highline/import'
 module Liri
   class Manager
     class Credential
-      FILE_NAME = 'credentials.yml'
+      FILE_NAME = 'liri-credentials.yml'
       def initialize(folder_path)
         @folder_path = folder_path
         @file_path = File.join(@folder_path, '/', FILE_NAME)

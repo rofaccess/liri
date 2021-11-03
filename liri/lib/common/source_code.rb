@@ -11,7 +11,7 @@ module Liri
 
       def initialize(compressed_file_folder_path, compression_class, unit_test_class)
         @compressed_file_folder_path = compressed_file_folder_path
-        @decompressed_file_folder_path = File.join(@compressed_file_folder_path, '/', "decompressed_#{FOLDER_NAME}")
+        @decompressed_file_folder_path = compressed_file_folder_path
         @compressed_file_path = File.join(@compressed_file_folder_path, '/', "#{FOLDER_NAME}.zip")
         # Inicializa un compresor acorde a compression_class, la siguiente línea en realidad hace lo siguiente:
         # @compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file)
