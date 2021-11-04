@@ -37,7 +37,7 @@ function end_msg {
 
 function info_msg {
   MSG=$1
-  COLOR="0;34m"
+  COLOR="0;36m"
   SUB_MSG="INFO: "
   msg "$MSG" "$COLOR" "$SUB_MSG"
 }

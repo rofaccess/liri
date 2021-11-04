@@ -32,8 +32,6 @@ module Liri
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
 
-        #source_code.delete_compressed_file
-
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info("Proceso Manager terminado")
       rescue SignalException => e
@@ -159,6 +157,7 @@ module Liri
         end
       end
 
+      Liri.clean_folder(Liri::MANAGER_FOLDER_PATH)
       @test_result.print_summary
     end
 

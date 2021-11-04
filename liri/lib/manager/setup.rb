@@ -11,6 +11,10 @@ module Liri
       TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri-config.yml')
 
       def initialize(folder_path)
+        # Crea la carpeta en donde se guardarán los datos relativos a liri, ya sean archivos comprimidos,
+        # archivos descomprimidos, configuraciones, etc.
+        Dir.mkdir(folder_path) unless Dir.exist?(folder_path)
+
         @file_path = File.join(folder_path, '/', FILE_NAME)
       end
 

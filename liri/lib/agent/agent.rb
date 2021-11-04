@@ -85,21 +85,23 @@ module Liri
         break if response == 'exit'
 
         tests = JSON.parse(response)
-        Liri.logger.info("Pruebas recibidas del Manager #{manager_ip_address}:")
+        Liri.logger.debug("Pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests)
-        print "\n#{tests.size} pruebas recibidas"
 
         tests_result = @runner.run_tests(tests)
-
-        Liri.logger.info("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
+        Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests_result)
-        print ", #{tests_result[:example_quantity]} pruebas ejecutadas\n\n"
 
+        Liri.logger.info("
+                                        #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
+        ")
         tcp_socket.print(tests_result.to_json)
       end
 
       tcp_socket.close
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+
+      Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
 
       start_client_to_close_manager_server(manager_ip_address)
       @managers.remove!(manager_ip_address)

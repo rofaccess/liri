@@ -40,8 +40,11 @@ module Liri
           #      https://www.rubyguides.com/2018/12/ruby-system/
 
           #system("bundle exec rspec #{tests_paths} --format progress --out rspec_result.txt --no-color")
-          raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
-          process_tests_result(raw_tests_result)
+          # chdir command move current work directory to decompressed source code directory to run tests
+          Dir.chdir(@source_code_folder_path) do
+            raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
+            process_tests_result(raw_tests_result)
+          end
         end
 
         private

@@ -95,7 +95,7 @@ create_gemset () {
 }
 
 install_liri () {
-  start_msg "Înstalando Liri"
+  start_msg "Instalando Liri"
 
   if gem install $LIBS_HOME/liri-$LIRI_VERSION.gem; then
     success_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
@@ -133,11 +133,36 @@ EOF
   sudo mv $SERVICE_FILE /etc/systemd/system/
   sudo systemctl daemon-reload
 
-  info_msg "Iniciar Agent: sudo systemctl start liriagent.service"
-  info_msg "Iniciar Agent durante inicio del Sistema: sudo systemctl enable liriagent.service"
-  info_msg "Estado del Agent: journalctl -e -u liriagent"
-  
   end_msg "Creación de servicio finalizada"
+}
+
+enable_service () {
+  start_msg "Activando Servicio Agent"
+
+  if sudo systemctl enable $AGENT_SERVICE_NAME; then
+    success_msg "sudo systemctl enable $AGENT_SERVICE_NAME"
+  else
+    fail_msg "sudo systemctl enable $AGENT_SERVICE_NAME"
+    exit 1
+  fi
+
+  end_msg "Activación de Servicio Agent finalizado"
+}
+
+
+start_service () {
+  start_msg "Iniciando Servicio Agent"
+
+  if sudo systemctl start $AGENT_SERVICE_NAME; then
+    success_msg "sudo systemctl start $AGENT_SERVICE_NAME"
+  else
+    fail_msg "sudo systemctl start $AGENT_SERVICE_NAME"
+    exit 1
+  fi
+
+  info_msg "Para ver estado del Agent utilice: journalctl -e -u $AGENT_SERVICE_NAME"
+
+  end_msg "Inicio de Servicio Agent finalizado"
 }
 
 
@@ -148,3 +173,5 @@ install_ruby
 create_gemset
 install_liri
 create_service
+enable_service
+start_service

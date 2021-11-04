@@ -5,13 +5,15 @@ module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
   VERSION = '0.1.1'
   SETUP_FOLDER_NAME = 'liri'
-  ROOT_PATH = Dir.pwd
-  SETUP_FOLDER_PATH = ROOT_PATH
+  SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
   LOGS_FOLDER_NAME = 'logs'
-  MANAGER_LOGS_FOLDER_PATH = File.join(ROOT_PATH, '/', LOGS_FOLDER_NAME)
-  AGENT_LOGS_FOLDER_PATH = File.expand_path("../#{LOGS_FOLDER_NAME}")
-  AGENT_FOLDER_PATH = ROOT_PATH
-  MANAGER_FOLDER_PATH = ROOT_PATH
+  MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
+  AGENT_LOGS_FOLDER_PATH = MANAGER_LOGS_FOLDER_PATH
+  AGENT_FOLDER_NAME = 'agent'
+  AGENT_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', AGENT_FOLDER_NAME)
+  MANAGER_FOLDER_NAME = 'manager'
+  MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
+
   class << self
     def setup
       @setup ||= load_setup
@@ -35,13 +37,20 @@ module Liri
     end
 
     def create_folders(program)
+      Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
+
       case program
       when 'manager'
-        Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
         Dir.mkdir(MANAGER_LOGS_FOLDER_PATH) unless Dir.exist?(MANAGER_LOGS_FOLDER_PATH)
+        Dir.mkdir(MANAGER_FOLDER_PATH) unless Dir.exist?(MANAGER_FOLDER_PATH)
       when 'agent'
+        Dir.mkdir(AGENT_FOLDER_PATH) unless Dir.exist?(AGENT_FOLDER_PATH)
         Dir.mkdir(AGENT_LOGS_FOLDER_PATH) unless Dir.exist?(AGENT_LOGS_FOLDER_PATH)
       end
+    end
+
+    def clean_folder(folder_path)
+      FileUtils.rm_rf(Dir.glob(folder_path + '/*')) if Dir.exist?(folder_path)
     end
 
     def reload_setup

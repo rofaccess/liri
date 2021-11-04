@@ -1,5 +1,4 @@
 /pkg/
-/tmp/
 /.idea/
 *.log
 *.gem
