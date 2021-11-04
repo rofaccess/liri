@@ -12,6 +12,7 @@ module Liri
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
+        return unless valid_project
         Liri.create_folders('manager')
 
         Liri.set_logger(Liri::MANAGER_LOGS_FOLDER_PATH, 'liri-manager.log')
@@ -44,6 +45,17 @@ module Liri
       end
 
       private
+      def valid_project
+        if File.exist?(File.join(Dir.pwd, 'Gemfile'))
+          true
+        else
+          Liri.logger.info("No se encuentra un archivo Gemfile por lo que se asume que el directorio actual no corresponde a un proyecto Ruby")
+          Liri.logger.info("Liri sólo puede ejecutarse en proyectos Ruby")
+          Liri.logger.info("Proceso Manager terminado")
+          false
+        end
+      end
+
       def compressed_file_folder_path
         File.join(Liri::Common.setup_folder_path, '/manager')
       end
