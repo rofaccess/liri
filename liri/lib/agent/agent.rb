@@ -148,6 +148,18 @@ module Liri
       downloaded_file_name = dir.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
       @source_code.decompress_file(downloaded_file_path)
+
+      # Se cambia temporalmente la carpeta de trabajo a la carpeta de código fuente descomprimida
+      Dir.chdir(@source_code.decompressed_file_folder_path) do
+        # Se borra el directorio .git para evitar el siguiente error al ejecutar las pruebas: fatal: not a git repository (or any of the parent directories): .git
+        # Una mejor alternativa es no traer siquiera esa carpeta junto al código fuente excluyendo la carpeta .git al comprimir el código fuente.
+        # Por cuestiones de tiempo se procede a borrar la carpeta .git por ahora, aunque al parecer el error mostrado no afecta la ejecución del Agent
+        # Al realizar pruebas, el error mencionado se sigue viendo en producción así que no es seguro que este borrado de la carpeta .git solucione el problema
+        git_folder_path = File.join(Dir.pwd, '/.git')
+        FileUtils.rm_rf(git_folder_path) if Dir.exist?(git_folder_path)
+        # Se instalan las dependencias del código fuente recibido
+        system("bundle install")
+      end
     rescue Net::SCP::Error => e
       puts 'Error scp archivo no encontrado'
     rescue TypeError => e

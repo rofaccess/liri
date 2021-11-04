@@ -19,28 +19,106 @@ WORK_HOME=$AGENT_HOME/work
 check_command () {
   COMMAND=$1
   
+  if [ -z "$2" ]
+    then
+      MSG="Por favor instale la librería adecuada para ejecutar el comando ${COMMAND} acorde a su distribución Linux."
+  else
+    MSG=$2
+  fi
+
   if ! type $COMMAND > /dev/null; then
-    fail_msg "Por favor instale la librería adecuada para ejecutar el comando ${COMMAND} acorde a su distribución Linux."
+    fail_msg "$MSG" # La variable debe pasarse entre comillas osino no imprime todo el mensaje
     exit   
   fi    
 }
 
+function press_key {
+  msg "\nPresione cualquier tecla + Enter para continuar o 's' + Enter para salir "
+  read option
+  if [ "$option" == "s" ]; then
+    exit
+  fi
+}
+
+check_c_compilers () {
+  if ! type gcc > /dev/null; then
+    warning_msg "No se encuentra el comando gcc"
+
+    if ! type cc > /dev/null; then
+      warning_msg "No se encuentra el comando cc"
+      fail_msg "Para realizar la instalación se requiere un compilador para el lenguaje C, como gcc o cc"
+      exit   
+    fi    
+  fi     
+}
+
+check_requeriments () {
+  info_msg "Distribución detectada: $(os_name)"
+  echo ""
+  info_msg "Por favor lea atentamente la siguiente información"
+  info_msg "Comandos requeridos para finalizar satisfactoriamente la instalación: "
+  info_msg "- gpg2: Necesario instalar las claves gpg de rvm"
+  info_msg "- curl: Necesario para descargar rvm"
+  info_msg "- gcc o cc: Necesario para la instalación de ruby"
+  info_msg "- make: Necesario para la instalación de ruby"
+  echo ""
+  info_msg "Puede ejecutar los siguientes comandos según su distribución:"
+  info_msg "Manjaro: "
+  info_msg "Ubuntu: sudo apt-install openssh-server "
+  echo ""
+  info_msg "Observaciones:"
+  info_msg "- Comandos comprobados en Manajaro 21, Ubuntu 20, Debian 11 y Fedora 35"
+  info_msg "- Prestar atención al proceso de instalación porque en algunos momentos requerirá el ingreso de la contraseña sudo o root"
+
+  check_command gpg2
+  check_command curl
+  check_c_compilers
+  check_command make
+}
+
+os_name () {
+  OS_NAME=$(cat /etc/*-release | grep -w NAME | cut -d= -f2 | tr -d '"')
+  echo "$OS_NAME"
+}
+
+install_gpg_keys () {
+  start_msg "Instalando claves"
+  OS_NAME=$(os_name)
+
+  if [ "$OS_NAME" == "Ubuntu" ] || [ "$OS_NAME" == "Debian" ]; then
+    echo 'if'
+    if curl -sSL https://rvm.io/mpapis.asc | gpg --import -; then
+      success_msg "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
+    else
+      fail_msg "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
+      exit 1
+    fi    
+
+    if curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -; then
+      success_msg "curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -"
+    else
+      fail_msg "curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -"
+      exit 1
+    fi    
+
+  else
+    echo 'else'
+    if gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; then
+      success_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
+    else
+      fail_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
+      exit 1
+    fi    
+
+  fi  
+
+  end_msg "Instalación de claves finalizada"
+}
+
 install_rvm () {
   start_msg "Instalando RVM"
- 
-  # Instalar claves gpg
-  check_command gpg2
- 
-  if gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; then
-    success_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
-  else
-    fail_msg "gpg2 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB"
-    exit 1
-  fi
 
   # Descargar e instalar RVM
-  check_command curl
-
   if \curl -sSL https://get.rvm.io | bash -s stable; then
     success_msg "\curl -sSL https://get.rvm.io | sudo bash -s stable"
   else
@@ -160,18 +238,21 @@ start_service () {
     exit 1
   fi
 
-  info_msg "Para ver estado del Agent utilice: journalctl -e -u $AGENT_SERVICE_NAME"
+  info_msg "Para ver estado del Agent utilice: journalctl -e -u $AGENT_SERVICE_NAME o sudo systemctl status $AGENT_SERVICE_NAME"
 
   end_msg "Inicio de Servicio Agent finalizado"
 }
 
 
 ########################################################################################################################
-# Proceso de instalación del programa Agent
-install_rvm
-install_ruby
-create_gemset
-install_liri
-create_service
-enable_service
-start_service
+start_msg "Proceso de instalación del programa Agent"
+check_requeriments
+press_key
+install_gpg_keys
+#install_rvm
+#install_ruby
+#create_gemset
+#install_liri
+#create_service
+#enable_service
+#start_service

@@ -40,7 +40,7 @@ module Liri
           #      https://www.rubyguides.com/2018/12/ruby-system/
 
           #system("bundle exec rspec #{tests_paths} --format progress --out rspec_result.txt --no-color")
-          # chdir command move current work directory to decompressed source code directory to run tests
+          # El comando chdir hace que el directorio de trabajo se mueva a la carpeta en donde se descomprimió el código fuente para poder ejecutar las pruebas
           Dir.chdir(@source_code_folder_path) do
             raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
             process_tests_result(raw_tests_result)

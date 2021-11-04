@@ -21,7 +21,7 @@ function msg {
 function start_msg {
   MSG=$1
   COLOR="0;35m"
-  SUB_MSG="START: "
+  SUB_MSG="INICIO: "
   printf "+------------------------------------------------------------------------------+\n"	
   msg "$MSG" "$COLOR" "$SUB_MSG"
   printf "+------------------------------------------------------------------------------+\n"
@@ -30,7 +30,7 @@ function start_msg {
 function end_msg {
   MSG=$1
   COLOR="0;35m"
-  SUB_MSG="END: " 
+  SUB_MSG="FIN: " 
   msg "$MSG" "$COLOR" "$SUB_MSG"
   printf "+------------------------------------------------------------------------------+\n"
 }
@@ -45,14 +45,21 @@ function info_msg {
 function success_msg {
   MSG=$1
   COLOR="0;32m"
-  SUB_MSG="SUCCESS: "
+  SUB_MSG="ÉXITO: "
+  msg "$MSG" "$COLOR" "$SUB_MSG"
+}
+
+function warning_msg {
+  MSG=$1
+  COLOR="0;33m"
+  SUB_MSG="CUIDADO: "
   msg "$MSG" "$COLOR" "$SUB_MSG"
 }
 
 function fail_msg {
   MSG=$1
   COLOR="0;31m"
-  SUB_MSG="FAIL: "
+  SUB_MSG="FALLA: "
   msg "$MSG" "$COLOR" "$SUB_MSG"
 }
 
