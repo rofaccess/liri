@@ -4,9 +4,16 @@
 compressed_file_name: compressed_source_code
 # Configuración de la cantidad de tests a ejecutar por tandas
 test_samples_by_runner: 10
-# Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
-# Por defecto siempre se imprimirá el log en un archivo dentro de la carpeta logs
-show_stdout_log: true
+log:
+  stdout:
+    # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
+    # Por defecto siempre se imprimirá el log en un archivo dentro de la carpeta logs
+    show: true
+    # Define los colores del texto del log. Puede ser none (no muestra colores), severity (colorea código de error),
+    # severity_date (colorea código de error y fecha), full (colorea el texto entero).
+    colorize: severity
+  file:
+    colorize: none
 library:
   # Configuración de la librería de compresión a utilizar para comprimir el código fuente
   # Valores soportados: Sólo Zip hasta ahora

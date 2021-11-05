@@ -6,6 +6,8 @@
 # Esta clase se encarga de manejar el logging
 
 require 'logger'
+require 'colorized_string'
+
 module Liri
   module Common
     class Log
@@ -15,7 +17,6 @@ module Liri
 
       def initialize(shift_age, folder_path:, file_name:, stdout: true)
         @stdout = stdout
-        @datetime_format = "%d-%m-%Y %H:%M"
         @shift_age = shift_age
         @folder_path = folder_path || FOLDER_PATH
         @file_name = file_name || FILE_NAME
@@ -59,16 +60,61 @@ module Liri
       private
       def create_stdout_logger
         @stdout_logger = Logger.new(STDOUT, @shift_age)
-        @stdout_logger.datetime_format = @datetime_format
+        @stdout_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.log.stdout.colorize)
       end
 
       def create_file_logger
         @file_logger = Logger.new(@file_path, @shift_age)
-        @file_logger.datetime_format = @datetime_format
+        @file_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.log.file.colorize)
       end
 
       def create_log_folder
         Dir.mkdir(@folder_path) unless Dir.exist?(@folder_path)
+      end
+    end
+
+    class LogFormatter
+      DATETIME_FORMAT = "%d-%m-%Y %H:%M"
+
+      SEVERITY_COLORS = {
+          DEBUG: :black,
+          INFO: :green,
+          WARN: :orange,
+          ERROR: :light_red,
+          FATAL: :red,
+          UNKNOWN: :purple
+      }
+
+      class << self
+        def colorize(type)
+          proc do |severity, datetime, progname, msg|
+            formatted_date = datetime.strftime(DATETIME_FORMAT)
+            severity_abb_block = "#{severity.slice(0)}"
+            date_block = "[#{formatted_date}##{Process.pid}]"
+            severity_block = "#{severity} -- :"
+            msg_block = "#{msg}\n"
+
+            case type
+            when 'severity' then
+              info_block = "#{colorize_according_severity(severity, severity_abb_block)} #{date_block} #{colorize_according_severity(severity, severity_block)}"
+            when 'severity_date' then
+              info_block = colorize_according_severity(severity, "#{severity_abb_block} #{date_block} #{severity_block}")
+            when 'full' then
+              info_block = colorize_according_severity(severity, "#{severity_abb_block} #{date_block} #{severity_block}")
+              msg_block = colorize_according_severity(severity, msg_block)
+            else
+              info_block = "#{severity_abb_block} #{date_block} #{severity_block}"
+            end
+
+            "#{info_block} #{msg_block}"
+          end
+        end
+
+        private
+        def colorize_according_severity(severity, line)
+          color = SEVERITY_COLORS[severity.to_sym] || :black
+          ColorizedString.new(line).public_send(color)
+        end
       end
     end
   end

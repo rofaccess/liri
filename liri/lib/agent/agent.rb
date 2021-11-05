@@ -56,7 +56,7 @@ module Liri
           Thread.exit
         end
         Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}
-                                      (Se espera que algún Manager se contacte por primera vez para para establecer una conexión TCP)
+                                     (Se espera que algún Manager se contacte por primera vez para para establecer una conexión TCP)
         ")
 
         loop do
@@ -73,7 +73,7 @@ module Liri
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
 
       Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
-                                      (Se establece una conexión para procesar la ejecución de las pruebas)
+                                     (Se establece una conexión para procesar la ejecución de las pruebas)
       ")
 
       tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
@@ -93,7 +93,7 @@ module Liri
         Liri.logger.debug(tests_result)
 
         Liri.logger.info("
-                                        #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
+                                       #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
         ")
         tcp_socket.print(tests_result.to_json)
       end
@@ -104,18 +104,18 @@ module Liri
       Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
 
       start_client_to_close_manager_server(manager_ip_address)
-      @managers.remove!(manager_ip_address)
+      unregister_manager(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")
     rescue Errno::ECONNRESET => e
       tcp_socket.close
       Liri.logger.error("Error: Conexión cerrada en el puerto TCP #{@tcp_port}")
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
-      @managers.remove!(manager_ip_address)
+      unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
       Liri.logger.error("Error: Conexión rechazada en el puerto TCP #{@tcp_port}")
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
-      @managers.remove!(manager_ip_address)
+      unregister_manager(manager_ip_address)
     end
 
     private
@@ -124,11 +124,14 @@ module Liri
     # Nota: Se requieren imprimir datos para saber el estado de la aplicación, sería muy útil usar algo para logear
     # estas cosas en los diferentes niveles, debug, info, etc.
     def process_manager_connection_request(manager_ip_address, user, pass, dir)
-      unless @managers[manager_ip_address]
-        @managers[manager_ip_address] = manager_ip_address
+      unless registered_manager?(manager_ip_address)
+        register_manager(manager_ip_address)
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        process_manager_connection_scp(manager_ip_address, user, pass, dir)
-        start_client_socket_to_process_tests(manager_ip_address)
+        if process_manager_connection_scp(manager_ip_address, user, pass, dir)
+          start_client_socket_to_process_tests(manager_ip_address)
+        else
+          unregister_manager(manager_ip_address)
+        end
       end
     end
 
@@ -157,13 +160,32 @@ module Liri
         # Al realizar pruebas, el error mencionado se sigue viendo en producción así que no es seguro que este borrado de la carpeta .git solucione el problema
         git_folder_path = File.join(Dir.pwd, '/.git')
         FileUtils.rm_rf(git_folder_path) if Dir.exist?(git_folder_path)
+
         # Se instalan las dependencias del código fuente recibido
         system("bundle install")
       end
+      true
+    rescue Errno::ECONNREFUSED => e
+      Liri.logger.error("Conexión rechazada por #{host}. Posiblemente ssh no esté habilitada en #{host}")
+      false
     rescue Net::SCP::Error => e
-      puts 'Error scp archivo no encontrado'
+      Liri.logger.warn("Error scp. Archivo no encontrado en #{host}")
+      false
     rescue TypeError => e
-      puts 'Para que ande nomas'
+      Liri.logger.warn(puts 'Para que ande nomas')
+      false
+    end
+
+    def registered_manager?(manager_ip_address)
+      @managers[manager_ip_address]
+    end
+
+    def register_manager(manager_ip_address)
+      @managers[manager_ip_address] = manager_ip_address
+    end
+
+    def unregister_manager(manager_ip_address)
+      @managers.remove!(manager_ip_address)
     end
   end
 end

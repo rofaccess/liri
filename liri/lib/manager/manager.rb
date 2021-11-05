@@ -97,7 +97,7 @@ module Liri
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
         Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
-                                      (Se mantiene escaneando la red para encontrar Agents)
+                                     (Se mantiene escaneando la red para encontrar Agents)
         ")
         while @agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
@@ -118,7 +118,7 @@ module Liri
       end
 
       Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}
-                                      (Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)
+                                     (Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)
       ")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
@@ -143,7 +143,7 @@ module Liri
           end
 
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}
-                                          => Agent #{agent_ip_address}: #{response}
+                                         => Agent #{agent_ip_address}: #{response}
           ")
 
           while @all_tests.any?

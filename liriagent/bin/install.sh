@@ -6,7 +6,7 @@ cd ..
 AGENT_HOME=`pwd`
 LIBS_HOME=$AGENT_HOME/lib
 BIN_HOME=$AGENT_HOME/bin
-RUBY_VERSION=2.7.2
+RUBY__VERSION=2.7.2 # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
 AGENT_USER_NAME=liri 
 GEMSET_NAME=liri
 LIRI_VERSION=0.1.1
@@ -33,7 +33,7 @@ check_command () {
 }
 
 function press_key {
-  msg "\nPresione cualquier Enter para continuar o la tecla 's' + Enter para salir "
+  msg "\nPresione Enter para continuar o la tecla 's' + Enter para salir "
   read option
   if [ "$option" == "s" ]; then
     exit
@@ -138,18 +138,18 @@ install_rvm () {
 install_ruby () {
   start_msg "Instalando Ruby"
 
-  if rvm install $RUBY_VERSION; then
-    success_msg "rvm install $RUBY_VERSION"
+  if rvm install $RUBY__VERSION; then
+    success_msg "rvm install $RUBY__VERSION"
   else
-    fail_msg "rvm install $RUBY_VERSION"
+    fail_msg "rvm install $RUBY__VERSION"
     exit 1
   fi
 
   
-  if rvm use $RUBY_VERSION; then
-    success_msg "rvm use $RUBY_VERSION"
+  if rvm use $RUBY__VERSION; then
+    success_msg "rvm use $RUBY__VERSION"
   else
-    fail_msg "rvm use $RUBY_VERSION"
+    fail_msg "rvm use $RUBY__VERSION"
     exit 1
   fi
 
