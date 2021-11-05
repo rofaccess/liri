@@ -1,5 +1,6 @@
 /pkg/
 /.idea/
+/liri/
 *.log
 *.gem
 *.zip

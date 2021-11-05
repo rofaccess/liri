@@ -57,20 +57,24 @@ check_requeriments () {
   echo ""
   info_msg "Por favor lea atentamente la siguiente información"
   info_msg "Comandos requeridos para finalizar satisfactoriamente la instalación: "
-  info_msg "- gpg y gpg2: Necesario instalar las claves gpg de rvm"
+  info_msg "- gpg (Ubuntu) y gpg2 (Manjaro, Debian y Fedora): Necesario instalar las claves gpg de rvm"
   info_msg "- curl: Necesario para descargar rvm"
-  info_msg "- gcc o cc: Necesario para la instalación de ruby"
+  info_msg "- gcc: Necesario para la instalación de ruby"
   info_msg "- make: Necesario para la instalación de ruby"
 
   echo ""
   info_msg "Puede ejecutar los siguientes comandos según su distribución:"
-  info_msg "Manjaro: sudo pacman -S curl gcc make"
-  info_msg "Ubuntu: sudo apt install openssh-server gnupg2 curl gcc make"
+  info_msg "Manjaro 21: sudo pacman -S curl gcc make"
+  info_msg "Ubuntu 20: sudo apt install openssh-server curl gcc make"
+  info_msg "Debian 11: sudo apt install gnupg2 curl gcc make"
+  info_msg "Fedora 35: Ya tiene instalado todos los requerimientos"
   echo ""
   info_msg "Observaciones:"
   info_msg "- Comandos comprobados en Manajaro 21, Ubuntu 20, Debian 11 y Fedora 35"
   info_msg "- Prestar atención al proceso de instalación porque en algunos momentos requerirá el ingreso de la contraseña sudo o root"
   info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose. Comando: sudo systemctl start sshd"
+  info_msg "- Antes de iniciar la instalación en Debian debe configurar el uso del comando sudo agregando al usuario al archivo sudoers"
+  info_msg "- Antes de iniciar la instalación en Fedora debe acceder al archivo /etc/selinux/config y setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
 
   check_command gpg2
   check_command curl
@@ -87,7 +91,7 @@ install_gpg_keys () {
   start_msg "Instalando claves"
   OS_NAME=$(os_name)
 
-  if [ "$OS_NAME" == "Ubuntu" ] || [ "$OS_NAME" == "Debian" ]; then
+  if [ "$OS_NAME" == "Ubuntu" ]; then
     if curl -sSL https://rvm.io/mpapis.asc | gpg --import -; then
       success_msg "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
     else
@@ -208,8 +212,19 @@ cat << EOF > $SERVICE_FILE
   WantedBy=multi-user.target
 EOF
 
-  sudo mv $SERVICE_FILE /etc/systemd/system/
-  sudo systemctl daemon-reload
+  if sudo mv $SERVICE_FILE /etc/systemd/system/; then
+    success_msg "sudo mv $SERVICE_FILE /etc/systemd/system/"
+  else
+    fail_msg "sudo mv $SERVICE_FILE /etc/systemd/system/-"
+    exit 1
+  fi   
+
+  if sudo systemctl daemon-reload; then
+    success_msg "sudo systemctl daemon-reload"
+  else
+    fail_msg "sudo systemctl daemon-reload"
+    exit 1
+  fi  
 
   end_msg "Creación de servicio finalizada"
 }
