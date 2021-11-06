@@ -56,25 +56,25 @@ check_requeriments () {
   info_msg "Distribución detectada: $(os_name)"
   echo ""
   info_msg "Por favor lea atentamente la siguiente información"
+  echo ""
   info_msg "Comandos requeridos para finalizar satisfactoriamente la instalación: "
-  info_msg "- gpg (Ubuntu) y gpg2 (Manjaro, Debian y Fedora): Necesario instalar las claves gpg de rvm"
+  info_msg "- gpg (Ubuntu) y gpg2 (Manjaro, Debian y Fedora): Necesario para instalar las claves gpg de rvm"
   info_msg "- curl: Necesario para descargar rvm"
   info_msg "- gcc: Necesario para la instalación de ruby"
   info_msg "- make: Necesario para la instalación de ruby"
 
   echo ""
-  info_msg "Puede ejecutar los siguientes comandos según su distribución:"
+  info_msg "Puede ejecutar los siguientes comandos para instalar las liberías necesarias según su distribución:"
   info_msg "Manjaro 21: sudo pacman -S curl gcc make"
   info_msg "Ubuntu 20: sudo apt install openssh-server curl gcc make"
   info_msg "Debian 11: sudo apt install gnupg2 curl gcc make"
   info_msg "Fedora 35: Ya tiene instalado todos los requerimientos"
   echo ""
   info_msg "Observaciones:"
-  info_msg "- Comandos comprobados en Manajaro 21, Ubuntu 20, Debian 11 y Fedora 35"
-  info_msg "- Prestar atención al proceso de instalación porque en algunos momentos requerirá el ingreso de la contraseña sudo o root"
-  info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose. Comando: sudo systemctl start sshd"
-  info_msg "- Antes de iniciar la instalación en Debian debe configurar el uso del comando sudo agregando al usuario al archivo sudoers"
-  info_msg "- Antes de iniciar la instalación en Fedora debe acceder al archivo /etc/selinux/config y setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
+  info_msg "- En algunos momentos se requerirá el ingreso de la contraseña sudo o root"
+  info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose\n        > sudo systemctl status sshd\n        > sudo systemctl start sshd"
+  info_msg "- Antes de instalar en Debian debe agregar su usuario al grupo sudo\n        > su\n        > nano /etc/sudoers\n        Agregar whoami ALL=(ALL) NOPASSWD:ALL al final del archivo. Reemplace whoami por su nombre de usuario"
+  info_msg "- Antes de instalar en Fedora debe configurar selinux\n        > nano /etc/selinux/config\n        Setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
 
   check_command gpg2
   check_command curl
@@ -245,6 +245,13 @@ enable_service () {
 
 start_service () {
   start_msg "Iniciando Servicio Agent"
+
+  if sudo systemctl stop $AGENT_SERVICE_NAME; then
+    success_msg "sudo systemctl stop $AGENT_SERVICE_NAME"
+  else
+    fail_msg "sudo systemctl stop $AGENT_SERVICE_NAME"
+    exit 1
+  fi
 
   if sudo systemctl start $AGENT_SERVICE_NAME; then
     success_msg "sudo systemctl start $AGENT_SERVICE_NAME"

@@ -149,8 +149,13 @@ module Liri
           while @all_tests.any?
             tests = samples
             break if tests.empty?
-            client.puts(tests.to_json)
-            response = client.recvfrom(1000).first
+            begin
+              client.puts(tests.to_json)
+              response = client.recvfrom(1000).first
+            rescue Errno::EPIPE => e
+              # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
+              Liri.logger.error("El Agent #{agent_ip_address} ya terminó la conexión")
+            end
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
@@ -164,8 +169,13 @@ module Liri
           update_processing_statuses
           puts ''
           Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address}")
-          client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
-          client.close # se desconecta el cliente
+          begin
+            client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
+            client.close # se desconecta el cliente
+          rescue Errno::EPIPE => e
+            # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
+            Liri.logger.error("El Agent #{agent_ip_address} ya terminó la conexión")
+          end
         end
       end
 

@@ -14,9 +14,23 @@ task :build do
   system "gem build " + Liri::NAME + ".gemspec"
 end
 
+task :update_agent_installer do
+  liriagent_lib_path = File.expand_path("../liriagent/lib")
+  compiled_gem_file_path = File.join(Dir.pwd,"/pkg/#{Liri::NAME}-#{Liri::VERSION}.gem")
+  system "cp #{compiled_gem_file_path} #{liriagent_lib_path}"
+end
+
+task :compress_agent_installer do
+  zip_name = 'liriagent.zip'
+  agent_installer_compressed_path = File.expand_path("../")
+  Dir.chdir(agent_installer_compressed_path) do
+    system "zip -r #{zip_name} liriagent/"
+  end
+end
+
 # Instala la gema después de compilar
 # > rake install
-task :install => :build do
+task :install => [:build, :update_agent_installer, :compress_agent_installer] do
   system "gem install " + Liri::NAME + "-" + Liri::VERSION + ".gem"
 end
 

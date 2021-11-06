@@ -8,4 +8,4 @@ rvm use $RUBY_VERSION
 rvm gemset use liri
 
 # Ejecutar el Agent
-liri a
+liri a --trace

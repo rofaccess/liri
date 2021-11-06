@@ -44,7 +44,4 @@ Gem::Specification.new do |spec|
   # Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
   # Use to get source code from Manager in Agent
   spec.add_runtime_dependency('net-scp', '~> 3')
-
-  # Ruby gem for colorizing text using ANSI escape sequences. Extends String class or add a ColorizedString with methods to set text color, background color and text effects. https://github.com/fazibear/colorize
-  spec.add_runtime_dependency('colorize', '~> 0.8')
 end

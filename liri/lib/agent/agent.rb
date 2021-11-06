@@ -103,7 +103,7 @@ module Liri
 
       Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
 
-      start_client_to_close_manager_server(manager_ip_address)
+      start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")
@@ -137,15 +137,15 @@ module Liri
 
     # Se establece una nueva comunicación con el servidor TCP del Manager con el único objetivo de cerrar el servidor
     # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
-    def start_client_to_close_manager_server(manager_ip_address)
+    def start_client_to_close_manager_server(manager_ip_address, msg)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address}")
-      tcp_socket.print('{}')
+      tcp_socket.print({msg: msg}.to_json)
       tcp_socket.close
     end
 
-    def process_manager_connection_scp(host, user, pass, dir)
-      Net::SCP.start(host, user, :password => pass) do |scp|
+    def process_manager_connection_scp(manager_ip_address, user, pass, dir)
+      Net::SCP.start(manager_ip_address, user, :password => pass) do |scp|
         scp.download!(dir, @source_code.compressed_file_folder_path)
       end
       downloaded_file_name = dir.split('/').last
@@ -166,10 +166,20 @@ module Liri
       end
       true
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Conexión rechazada por #{host}. Posiblemente ssh no esté habilitada en #{host}")
+      Liri.logger.error("Error ssh. Conexión rechazada por #{manager_ip_address}. Posiblemente ssh no esté ejecutandose en #{manager_ip_address}")
+      false
+    rescue Errno::ENOTTY => e
+      # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
+      Liri.logger.error("Error ssh. Contraseña incorrecta recibida de #{manager_ip_address}")
+      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
+      false
+    rescue Net::SSH::AuthenticationFailed => e
+      # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
+      Liri.logger.error("Error ssh. Contraseña incorrecta recibida de #{manager_ip_address}")
+      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
       false
     rescue Net::SCP::Error => e
-      Liri.logger.warn("Error scp. Archivo no encontrado en #{host}")
+      Liri.logger.warn("Error scp. Archivo no encontrado en #{manager_ip_address}")
       false
     rescue TypeError => e
       Liri.logger.warn(puts 'Para que ande nomas')

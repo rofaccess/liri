@@ -6,7 +6,6 @@
 # Esta clase se encarga de manejar el logging
 
 require 'logger'
-require 'colorized_string'
 
 module Liri
   module Common
@@ -77,12 +76,13 @@ module Liri
       DATETIME_FORMAT = "%d-%m-%Y %H:%M"
 
       SEVERITY_COLORS = {
-          DEBUG: :black,
-          INFO: :green,
-          WARN: :orange,
-          ERROR: :light_red,
-          FATAL: :red,
-          UNKNOWN: :purple
+          DEBUG: '0;0',   # white
+          ERROR: '0;31',  # red
+          INFO: '0;32',   # green
+          WARN: '0;33',   # orange
+          FATAL: '0;35',  # pink
+          ANY: '0;36',    # cyan
+          DEFAULT: '1;0'  # white
       }
 
       class << self
@@ -112,8 +112,8 @@ module Liri
 
         private
         def colorize_according_severity(severity, line)
-          color = SEVERITY_COLORS[severity.to_sym] || :black
-          ColorizedString.new(line).public_send(color)
+          color = SEVERITY_COLORS[severity.to_sym] || SEVERITY_COLORS[:DEFAULT]
+          "\e[#{color}m#{line}\e[0m"
         end
       end
     end
