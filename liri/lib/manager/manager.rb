@@ -36,7 +36,7 @@ module Liri
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info("Proceso Manager terminado")
       rescue SignalException => e
-        Liri.logger.info("Proceso Manager terminado manualmente")
+        Liri.logger.info("Exception(#{e}) Proceso Manager terminado manualmente")
         Liri.kill(threads)
       end
 
@@ -112,7 +112,7 @@ module Liri
       begin
         tcp_socket = TCPServer.new(@tcp_port) # se hace un bind al puerto dado
       rescue Errno::EADDRINUSE => e
-        Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado.")
+        Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado.")
         Thread.kill(search_agents_thread)
         Thread.exit
       end
@@ -154,7 +154,7 @@ module Liri
               response = client.recvfrom(1000).first
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
-              Liri.logger.error("El Agent #{agent_ip_address} ya terminó la conexión")
+              Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
             end
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
@@ -162,7 +162,7 @@ module Liri
               tests_result = JSON.parse(response)
               process_tests_result(tests, tests_result)
             rescue JSON::ParserError => e
-              Liri.logger.error("Error #{e}: Error de parseo JSON")
+              Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
           end
 
@@ -174,7 +174,7 @@ module Liri
             client.close # se desconecta el cliente
           rescue Errno::EPIPE => e
             # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
-            Liri.logger.error("El Agent #{agent_ip_address} ya terminó la conexión")
+            Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
           end
         end
       end

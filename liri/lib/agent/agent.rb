@@ -27,7 +27,7 @@ module Liri
         Liri.init_exit(stop, threads, 'Agent')
         Liri.logger.info("Proceso Agent terminado")
       rescue SignalException => e
-        Liri.logger.info('Proceso Agent terminado manualmente')
+        Liri.logger.info("Exception(#{e}) Proceso Agent terminado manualmente")
         Liri.kill(threads)
       end
     end
@@ -52,7 +52,7 @@ module Liri
         begin
           @udp_socket.bind('0.0.0.0', @udp_port)
         rescue Errno::EADDRINUSE => e
-          Liri.logger.error("Error: Puerto UDP #{@udp_port} ocupado")
+          Liri.logger.error("Exception(#{e}) Puerto UDP #{@udp_port} ocupado")
           Thread.exit
         end
         Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}
@@ -106,14 +106,14 @@ module Liri
       start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)
     rescue Errno::EADDRINUSE => e
-      Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado")
+      Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado")
     rescue Errno::ECONNRESET => e
       tcp_socket.close
-      Liri.logger.error("Error: Conexión cerrada en el puerto TCP #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Conexión cerrada en el puerto TCP #{@tcp_port}")
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
       unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Error: Conexión rechazada en el puerto TCP #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Conexión rechazada en el puerto TCP #{@tcp_port}")
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
       unregister_manager(manager_ip_address)
     end
@@ -166,23 +166,23 @@ module Liri
       end
       true
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Error ssh. Conexión rechazada por #{manager_ip_address}. Posiblemente ssh no esté ejecutandose en #{manager_ip_address}")
+      Liri.logger.error("Exception(#{e}) Conexión rechazada por #{manager_ip_address}. Posiblemente ssh no esté ejecutandose en #{manager_ip_address}")
       false
     rescue Errno::ENOTTY => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
-      Liri.logger.error("Error ssh. Contraseña incorrecta recibida de #{manager_ip_address}")
+      Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
       start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
       false
     rescue Net::SSH::AuthenticationFailed => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
-      Liri.logger.error("Error ssh. Contraseña incorrecta recibida de #{manager_ip_address}")
+      Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
       start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
       false
     rescue Net::SCP::Error => e
-      Liri.logger.warn("Error scp. Archivo no encontrado en #{manager_ip_address}")
+      Liri.logger.warn("Exception(#{e}) Archivo no encontrado en #{manager_ip_address} a través de scp")
       false
     rescue TypeError => e
-      Liri.logger.warn(puts 'Para que ande nomas')
+      Liri.logger.warn("Exception(#{e}) Error indeterminado")
       false
     end
 
