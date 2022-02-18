@@ -21,8 +21,10 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
-    # Se comenta la siguiente línea porque causa error en Ubuntu 20
-    # Pero sin esta línea después de hacer rake no se puede usar liria a ni liri m
+    # La siguiente línea debe comentarse al momento de ejecutar liri m dentro del proyecto Liri cuando porque al tratar de ejecutar pruebas de este código fuente
+    # con agentes ejecutandose en distribuciones Linux y Ubuntu, por algún motivo ocurre el siguiente error:
+    #
+    # Esta línea es crítica, debe estar si o sí habilitada al compilar la gema
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   end
   spec.bindir        = "exe"

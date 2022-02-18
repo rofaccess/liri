@@ -86,6 +86,7 @@ check_requeriments () {
   info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose\n        > sudo systemctl status sshd\n        > sudo systemctl start sshd"
   info_msg "- Antes de instalar en Debian debe agregar su usuario al grupo sudo\n        > su\n        > nano /etc/sudoers\n        Agregar whoami ALL=(ALL) NOPASSWD:ALL al final del archivo. Reemplace whoami por su nombre de usuario"
   info_msg "- Antes de instalar en Fedora debe configurar selinux\n        > nano /etc/selinux/config\n        Setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
+  info_msg "- Antes de instalar en Ubuntu o Debian se suele necesitar actualizar la distribución\n        > sudo apt-get update\n        Hay que asegurarse de que la Distribución se haya actualizado correctamente porque a veces hay errores que impiden instalar Ruby"
 
   check_command_gpg
   check_command curl
