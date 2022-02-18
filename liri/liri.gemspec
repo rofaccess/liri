@@ -30,18 +30,18 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Rubyzip is a ruby library for reading and writing zip files. https://github.com/rubyzip/rubyzip
-  # Use to compress source code in Manager and decompress source code in Agent
+  # Se usa para comprimir el código fuente en el Manager y descomprimir el código fuente recibido en el Agent
   spec.add_runtime_dependency('rubyzip', '~> 2')
 
   # The complete solution for Ruby command-line executables. https://github.com/commander-rb/commander
-  # Use to pass commands to Liri gem
+  # Se usa para pasar comandos a la gema Liri
   spec.add_runtime_dependency('commander', '~> 4')
 
   # HighLine was designed to ease the tedious tasks of doing console input and output with low-level methods like gets and puts. https://github.com/JEG2/highline
-  # Use to ask user password in Manager
+  # Se usa para pedir password en el Manager
   spec.add_runtime_dependency('highline', '~> 2')
 
   # Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
-  # Use to get source code from Manager in Agent
+  # Se usa para obtener el código fuente del Manager desde el Agent
   spec.add_runtime_dependency('net-scp', '~> 3')
 end
