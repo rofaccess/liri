@@ -32,6 +32,17 @@ check_command () {
   fi    
 }
 
+check_command_gpg () {
+  OS_NAME=$(os_name)
+
+  # En Ubuntu se usa gpg porque gpg2 por algún motivo falla en obtener las claves
+  if [ "$OS_NAME" == "Ubuntu" ]; then
+    check_command gpg
+  else
+    check_command gpg2
+  fi  
+}
+
 function press_key {
   msg "\nPresione Enter para continuar o la tecla 's' + Enter para salir "
   read option
@@ -76,7 +87,7 @@ check_requeriments () {
   info_msg "- Antes de instalar en Debian debe agregar su usuario al grupo sudo\n        > su\n        > nano /etc/sudoers\n        Agregar whoami ALL=(ALL) NOPASSWD:ALL al final del archivo. Reemplace whoami por su nombre de usuario"
   info_msg "- Antes de instalar en Fedora debe configurar selinux\n        > nano /etc/selinux/config\n        Setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
 
-  check_command gpg2
+  check_command_gpg
   check_command curl
   check_c_compilers
   check_command make
@@ -91,6 +102,7 @@ install_gpg_keys () {
   start_msg "Instalando claves"
   OS_NAME=$(os_name)
 
+  # En Ubuntu se usa gpg porque gpg2 por algún motivo falla en obtener las claves
   if [ "$OS_NAME" == "Ubuntu" ]; then
     if curl -sSL https://rvm.io/mpapis.asc | gpg --import -; then
       success_msg "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"

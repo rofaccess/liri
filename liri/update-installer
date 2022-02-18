@@ -1,2 +1,2 @@
 cd ..
-scp "liriagent.zip" "liri@192.168.0.19:~/"
+scp "liriagent.zip" "liri@192.168.0.22:~/"
