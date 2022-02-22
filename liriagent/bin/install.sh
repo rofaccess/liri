@@ -63,40 +63,60 @@ check_c_compilers () {
   fi     
 }
 
-check_requeriments () {
-  info_msg "Distribución detectada: $(os_name)"
-  echo ""
-  info_msg "Por favor lea atentamente la siguiente información"
-  echo ""
-  info_msg "Comandos requeridos para finalizar satisfactoriamente la instalación: "
-  info_msg "- gpg (Ubuntu) y gpg2 (Manjaro, Debian y Fedora): Necesario para instalar las claves gpg de rvm"
-  info_msg "- curl: Necesario para descargar rvm"
-  info_msg "- gcc: Necesario para la instalación de ruby"
-  info_msg "- make: Necesario para la instalación de ruby"
+os_name () {
+  OS_NAME=$(cat /etc/*-release | grep -w NAME | cut -d= -f2 | tr -d '"')
+  echo "$OS_NAME"
+}
 
+check_requeriments () {
+  OS_NAME=$(os_name)
+
+  info_msg "Distribución detectada: $OS_NAME"
   echo ""
-  info_msg "Puede ejecutar los siguientes comandos para instalar las liberías necesarias según su distribución:"
-  info_msg "Manjaro 21: sudo pacman -S curl gcc make"
-  info_msg "Ubuntu 20: sudo apt install openssh-server curl gcc make"
-  info_msg "Debian 11: sudo apt install gnupg2 curl gcc make"
-  info_msg "Fedora 35: Ya tiene instalado todos los requerimientos"
-  echo ""
-  info_msg "Observaciones:"
-  info_msg "- En algunos momentos se requerirá el ingreso de la contraseña sudo o root"
-  info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose\n        > sudo systemctl status sshd\n        > sudo systemctl start sshd"
-  info_msg "- Antes de instalar en Debian debe agregar su usuario al grupo sudo\n        > su\n        > nano /etc/sudoers\n        Agregar whoami ALL=(ALL) NOPASSWD:ALL al final del archivo. Reemplace whoami por su nombre de usuario"
-  info_msg "- Antes de instalar en Fedora debe configurar selinux\n        > nano /etc/selinux/config\n        Setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
-  info_msg "- Antes de instalar en Ubuntu o Debian se suele necesitar actualizar la distribución\n        > sudo apt-get update\n        Hay que asegurarse de que la Distribución se haya actualizado correctamente porque a veces hay errores que impiden instalar Ruby"
+  info_msg "Para finalizar satisfactoriamente la instalación debe tener actualizada el sistema operativo y tener instalado los programas necesarios"
+
+  if [ "$OS_NAME" == "Manjaro Linuxx" ]; then
+    echo "      > sudo pacman -Syu"
+    echo "      > sudo pacman -S curl gcc make"
+    info_msg "Comandos probados en Manjaro 21.2.3 (Qonos)"
+
+  elif [ "$OS_NAME" == "Ubuntu" ]; then
+    echo "        > sudo apt-get update"
+    echo "        > sudo apt update"
+    echo "        > sudo apt install openssh-server curl gcc make"
+    info_msg "Comandos probados en Ubuntu 21.10 (Impish Indri)"
+
+  elif [ "$OS_NAME" == "Debian GNU/Linux" ]; then
+    info_msg "Antes de actualizar Debian debe agregar su usuario al grupo sudo agregando whoami ALL=(ALL) NOPASSWD:ALL al final del archivo sudoers. Reemplace whoami por su nombre de usuario"
+    echo "        > su"
+    echo "        > nano /etc/sudoers"
+    echo "        > sudo apt-get update"
+    echo "        > sudo apt update"
+    echo "        > sudo apt install gnupg2 curl gcc make"
+    info_msg "Comandos probados en Debian 11.1 (Bullseye)"
+  elif [ "$OS_NAME" == "Fedora Linux" ]; then
+    info_msg "Fedora 35 ya tiene instalado todos los programas necesarios"
+    info_msg "Para poder activar e iniciar el Agente Liri se debe configurar selinux especificando SELINUX=permissive en /etc/selinux/config y reiniciando el sistema"
+    echo "        > nano /etc/selinux/config"
+    info_msg "Comandos probados en Fedora 35"
+
+  else
+    info_msg "- gpg: para instalar las claves gpg de RVM"
+    info_msg "- curl: para descargar RVM"
+    info_msg "- gcc y make: para instalar Ruby"
+
+  fi  
+
+  info_msg "En algunos momentos se requerirá el ingreso de la contraseña sudo o root"
+  info_msg "Asegurese de que el servicio ssh esté instalado y ejecutandose"
+  echo "      > sudo systemctl status sshd"
+  echo "      > sudo systemctl enable sshd"
+  echo "      > sudo systemctl start sshd" 
 
   check_command_gpg
   check_command curl
   check_c_compilers
   check_command make
-}
-
-os_name () {
-  OS_NAME=$(cat /etc/*-release | grep -w NAME | cut -d= -f2 | tr -d '"')
-  echo "$OS_NAME"
 }
 
 install_gpg_keys () {
