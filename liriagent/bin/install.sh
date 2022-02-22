@@ -75,7 +75,7 @@ check_requeriments () {
   echo ""
   info_msg "Para finalizar satisfactoriamente la instalación debe tener actualizada el sistema operativo y tener instalado los programas necesarios"
 
-  if [ "$OS_NAME" == "Manjaro Linuxx" ]; then
+  if [ "$OS_NAME" == "Manjaro Linux" ]; then
     echo "      > sudo pacman -Syu"
     echo "      > sudo pacman -S curl gcc make"
     info_msg "Comandos probados en Manjaro 21.2.3 (Qonos)"
