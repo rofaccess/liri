@@ -145,8 +145,9 @@ module Liri
       tcp_socket.close
     end
 
-    def process_manager_connection_scp(manager_ip_address, user, pass, dir)
-      Net::SCP.start(manager_ip_address, user, :password => pass) do |scp|
+    def process_manager_connection_scp(manager_ip_address, user, password, dir)
+      # puts "User: #{user} Password: #{password}"
+      Net::SCP.start(manager_ip_address, user, :password => password) do |scp|
         scp.download!(dir, @source_code.compressed_file_folder_path)
       end
       downloaded_file_name = dir.split('/').last

@@ -12,7 +12,7 @@ module Liri
       end
       def update(test_result)
         @result << test_result['result']
-        @failures << test_result['failures']
+        @failures << test_result['failures'] if test_result['failures']
         @example_quantity += test_result['example_quantity']
         @failure_quantity += test_result['failure_quantity']
         @passed_quantity += test_result['passed_quantity']

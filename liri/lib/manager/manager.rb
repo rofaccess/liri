@@ -67,7 +67,7 @@ module Liri
       def manager_data(source_code)
         credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
         user, password = credential.get
-
+        # puts "User: #{user} Password: #{password}"
         [user, password, source_code.compressed_file_path].join(';')
       end
     end
@@ -155,15 +155,17 @@ module Liri
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
               Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+			  # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado	
+              break
             end
-            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
+            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
               tests_result = response
-              json_tests_result = JSON.parse(tests_result)
               Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Agent #{agent_ip_address}:")
               Liri.logger.debug("RAW:")
               Liri.logger.debug(tests_result)
+              json_tests_result = JSON.parse(tests_result)
               Liri.logger.debug("JSON:")
               Liri.logger.debug(json_tests_result)
               process_tests_result(tests, json_tests_result)
@@ -181,6 +183,9 @@ module Liri
           rescue Errno::EPIPE => e
             # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
             Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+			# Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
+			# mientras sigan pruebas pendientes
+            Thread.exit
           end
         end
       end

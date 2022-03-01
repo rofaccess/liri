@@ -45,8 +45,11 @@ module Liri
             # Descomentar para la depuración en entorno de desarrollo (Creo que aún así no se puede depurar)
             # raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
             # Descomentar para el entorno de producción
-             raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
-            process_tests_result(raw_tests_result)
+            raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
+            hash_tests_result = process_tests_result(raw_tests_result)
+            # Se borra la información de failures porque es demasiada información y no llega completamente al Manager
+            hash_tests_result.delete(:failures)
+            hash_tests_result
           end
         end
 
