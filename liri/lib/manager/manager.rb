@@ -159,8 +159,14 @@ module Liri
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
-              tests_result = JSON.parse(response)
-              process_tests_result(tests, tests_result)
+              tests_result = response
+              json_tests_result = JSON.parse(tests_result)
+              Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Agent #{agent_ip_address}:")
+              Liri.logger.debug("RAW:")
+              Liri.logger.debug(tests_result)
+              Liri.logger.debug("JSON:")
+              Liri.logger.debug(json_tests_result)
+              process_tests_result(tests, json_tests_result)
             rescue JSON::ParserError => e
               Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end

@@ -89,13 +89,14 @@ module Liri
         Liri.logger.debug(tests)
 
         tests_result = @runner.run_tests(tests)
+        json_tests_result = tests_result.to_json
         Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
-        Liri.logger.debug(tests_result)
+        Liri.logger.debug(json_tests_result)
 
         Liri.logger.info("
                                        #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
         ")
-        tcp_socket.print(tests_result.to_json)
+        tcp_socket.print(json_tests_result)
       end
 
       tcp_socket.close
@@ -161,8 +162,13 @@ module Liri
         git_folder_path = File.join(Dir.pwd, '/.git')
         FileUtils.rm_rf(git_folder_path) if Dir.exist?(git_folder_path)
 
-        # Se instalan las dependencias del código fuente recibido
-        system("bundle install")
+        # Descomentar para la depuración en entorno de desarrollo (Creo que aún así no se puede depurar)
+        # system("bundle install")
+        # Descomentar para el entorno de producción
+        # Se setea la versión de ruby y el gemset para el código fuente descomprimido
+        # Se especifica el Gemfile del cual se van a instalar los requerimientos
+        # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí 
+        system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
       end
       true
     rescue Errno::ECONNREFUSED => e

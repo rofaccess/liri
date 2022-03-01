@@ -1,12 +1,21 @@
 #!/bin/bash
 source messages.sh
 
+if [ -z "$1" ]
+  then
+	RUBY__VERSION=2.7.2
+    info_msg "No se especificó una versión de Ruby. Ej.: ./install 2.7.2"
+    info_msg "Se usa por defecto Ruby ${RUBY__VERSION}"
+else
+  # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
+  RUBY__VERSION=$1
+fi
+
 cd ..
  
 AGENT_HOME=`pwd`
 LIBS_HOME=$AGENT_HOME/lib
 BIN_HOME=$AGENT_HOME/bin
-RUBY__VERSION=2.7.2 # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
 AGENT_USER_NAME=liri 
 GEMSET_NAME=liri
 LIRI_VERSION=0.1.1
@@ -238,7 +247,7 @@ cat << EOF > $SERVICE_FILE
 
   WorkingDirectory=$WORK_HOME
 
-  ExecStart=$BIN_HOME/startup.sh
+  ExecStart=$BIN_HOME/startup.sh $RUBY__VERSION
   ExecStop=$BIN_HOME/shutdown.sh
 
   [Install]

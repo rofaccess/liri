@@ -1,11 +1,20 @@
 #!/bin/bash
 source messages.sh
 
+if [ -z "$1" ]
+  then
+	RUBY__VERSION=2.7.2
+    info_msg "No se especificó una versión de Ruby. Ej.: ./install 2.7.2"
+    info_msg "Se usa por defecto Ruby ${RUBY__VERSION}"
+else
+  # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
+  RUBY__VERSION=$1
+fi
+
 cd ..
  
 AGENT_HOME=`pwd`
 LIBS_HOME=$AGENT_HOME/lib
-RUBY_VERSION=2.7.2
 GEMSET_NAME=liri
 LIRI_VERSION=0.1.1
 AGENT_SERVICE_NAME=liriagent.service
@@ -24,10 +33,10 @@ configure_gemset () {
 
   source $HOME/.rvm/scripts/rvm
   
-  if rvm use $RUBY_VERSION; then
-    success_msg "rvm use $RUBY_VERSION"
+  if rvm use $RUBY__VERSION; then
+    success_msg "rvm use $RUBY__VERSION"
   else
-    fail_msg "rvm use $RUBY_VERSION"
+    fail_msg "rvm use $RUBY__VERSION"
     exit 1
   fi
   

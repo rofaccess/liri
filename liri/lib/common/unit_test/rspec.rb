@@ -42,7 +42,10 @@ module Liri
           #system("bundle exec rspec #{tests_paths} --format progress --out rspec_result.txt --no-color")
           # El comando chdir hace que el directorio de trabajo se mueva a la carpeta en donde se descomprimió el código fuente para poder ejecutar las pruebas
           Dir.chdir(@source_code_folder_path) do
-            raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
+            # Descomentar para la depuración en entorno de desarrollo (Creo que aún así no se puede depurar)
+            # raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
+            # Descomentar para el entorno de producción
+             raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
             process_tests_result(raw_tests_result)
           end
         end
