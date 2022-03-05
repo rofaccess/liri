@@ -1,3 +1,5 @@
+**ATENCIÓN!!!:** Este README está desactualizado.
+
 # Liri
 
 Gema que permite la ejecución de pruebas unitarias de manera distribuida a fin de aumentar la velocidad de ejecución.
