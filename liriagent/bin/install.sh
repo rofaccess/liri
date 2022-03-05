@@ -18,7 +18,7 @@ LIBS_HOME=$AGENT_HOME/lib
 BIN_HOME=$AGENT_HOME/bin
 AGENT_USER_NAME=liri 
 GEMSET_NAME=liri
-LIRI_VERSION=0.1.1
+LIRI_VERSION=$(<.liri-version) # Obtiene la versión actual de Liri del archivo .liri-version
 
 TMP_DIR=`mktemp --directory`
 AGENT_SERVICE_NAME=liriagent.service

@@ -16,7 +16,7 @@ cd ..
 AGENT_HOME=`pwd`
 LIBS_HOME=$AGENT_HOME/lib
 GEMSET_NAME=liri
-LIRI_VERSION=0.1.1
+LIRI_VERSION=$(<.liri-version) # Obtiene la versión actual de Liri del archivo .liri-version
 AGENT_SERVICE_NAME=liriagent.service
 
 check_command () {

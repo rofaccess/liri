@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    liri (0.1.1)
+    liri (0.1.3)
       commander (~> 4)
       highline (~> 2)
       net-scp (~> 3)
