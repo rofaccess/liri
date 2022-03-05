@@ -12,5 +12,5 @@ Esta proyecto no acepta contribuciones porque se encuentra en desarrollo en el c
 
 ## Licencia
 
-Se probibe el uso de la documentación del proyecto. 
+Se probibe la reproducción total o parcial de cualquier documentación del proyecto. 
 Esto podría cambiar una vez terminado el Trabajo Final de Grado, pero con las referencias correspondientes, obviamente.
