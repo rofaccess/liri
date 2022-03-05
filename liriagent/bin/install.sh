@@ -1,29 +1,7 @@
 #!/bin/bash
 source messages.sh
-
-if [ -z "$1" ]
-  then
-	RUBY__VERSION=2.7.2
-    info_msg "No se especificó una versión de Ruby. Ej.: ./install 2.7.2"
-    info_msg "Se usa por defecto Ruby ${RUBY__VERSION}"
-else
-  # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
-  RUBY__VERSION=$1
-fi
-
-cd ..
- 
-AGENT_HOME=`pwd`
-LIBS_HOME=$AGENT_HOME/lib
-BIN_HOME=$AGENT_HOME/bin
-AGENT_USER_NAME=liri 
-GEMSET_NAME=liri
-LIRI_VERSION=$(<.liri-version) # Obtiene la versión actual de Liri del archivo .liri-version
-
-TMP_DIR=`mktemp --directory`
-AGENT_SERVICE_NAME=liriagent.service
-SERVICE_FILE=$TMP_DIR/$AGENT_SERVICE_NAME
-WORK_HOME=$AGENT_HOME/work
+source common_functions.sh
+source set_variables.sh
 
 check_command () {
   COMMAND=$1
@@ -52,7 +30,7 @@ check_command_gpg () {
   fi  
 }
 
-function press_key {
+press_key () {
   msg "\nPresione Enter para continuar o la tecla 's' + Enter para salir "
   read option
   if [ "$option" == "s" ]; then
@@ -172,7 +150,7 @@ install_rvm () {
     exit 1
   fi   
   
-  source $HOME/.rvm/scripts/rvm
+  source $RVM_HOME
 
   end_msg "Instalación de RVM finalizada"
 }
@@ -184,14 +162,6 @@ install_ruby () {
     success_msg "rvm install $RUBY__VERSION"
   else
     fail_msg "rvm install $RUBY__VERSION"
-    exit 1
-  fi
-
-  
-  if rvm use $RUBY__VERSION; then
-    success_msg "rvm use $RUBY__VERSION"
-  else
-    fail_msg "rvm use $RUBY__VERSION"
     exit 1
   fi
 
@@ -207,34 +177,14 @@ create_gemset () {
     fail_msg "rvm gemset create $GEMSET_NAME"
     exit 1
   fi
-  
-  if rvm gemset use $GEMSET_NAME; then
-    success_msg "rvm gemset use $GEMSET_NAME"
-  else
-    fail_msg "rvm gemset use $GEMSET_NAME"
-    exit 1
-  fi
 
   end_msg "Configuración de Gemset finalizada"
-}
-
-install_liri () {
-  start_msg "Instalando Liri"
-
-  if gem install $LIBS_HOME/liri-$LIRI_VERSION.gem; then
-    success_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
-  else
-    fail_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
-    exit 1
-  fi
-
-  end_msg "Instalación de Liri finalizada"
 }
 
 create_service () { 
   start_msg "Creando servicio"
 
-cat << EOF > $SERVICE_FILE
+cat << EOF > $AGENT_SERVICE_FILE_PATH
   [Unit]
   Description=Liri Agent
   After=network.target
@@ -254,10 +204,10 @@ cat << EOF > $SERVICE_FILE
   WantedBy=multi-user.target
 EOF
 
-  if sudo mv $SERVICE_FILE /etc/systemd/system/; then
-    success_msg "sudo mv $SERVICE_FILE /etc/systemd/system/"
+  if sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/; then
+    success_msg "sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/"
   else
-    fail_msg "sudo mv $SERVICE_FILE /etc/systemd/system/-"
+    fail_msg "sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/-"
     exit 1
   fi   
 
@@ -284,30 +234,6 @@ enable_service () {
   end_msg "Activación de Servicio Agent finalizado"
 }
 
-
-start_service () {
-  start_msg "Iniciando Servicio Agent"
-
-  if sudo systemctl stop $AGENT_SERVICE_NAME; then
-    success_msg "sudo systemctl stop $AGENT_SERVICE_NAME"
-  else
-    fail_msg "sudo systemctl stop $AGENT_SERVICE_NAME"
-    exit 1
-  fi
-
-  if sudo systemctl start $AGENT_SERVICE_NAME; then
-    success_msg "sudo systemctl start $AGENT_SERVICE_NAME"
-  else
-    fail_msg "sudo systemctl start $AGENT_SERVICE_NAME"
-    exit 1
-  fi
-
-  info_msg "Para ver estado del Agent utilice: journalctl -e -u $AGENT_SERVICE_NAME o sudo systemctl status $AGENT_SERVICE_NAME"
-
-  end_msg "Inicio de Servicio Agent finalizado"
-}
-
-
 ########################################################################################################################
 start_msg "Proceso de instalación del programa Agent"
 check_requeriments
@@ -315,7 +241,9 @@ press_key
 install_gpg_keys
 install_rvm
 install_ruby
+set_ruby
 create_gemset
+set_gemset
 install_liri
 create_service
 enable_service
