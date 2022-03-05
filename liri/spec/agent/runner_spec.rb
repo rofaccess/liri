@@ -15,7 +15,7 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     expect(tests_result[:example_quantity]).to eq(1)
     expect(tests_result[:failure_quantity]).to eq(0)
     expect(tests_result[:passed_quantity]).to eq(1)
-    expect(tests_result[:failed_examples]).to eq('')
+    expect(tests_result[:failed_examples]).to be_nil
     expect(tests_result[:test_keys]).to eq(tests.keys)
   end
 
@@ -30,7 +30,7 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     expect(tests_result[:example_quantity]).to eq(2)
     expect(tests_result[:failure_quantity]).to eq(0)
     expect(tests_result[:passed_quantity]).to eq(2)
-    expect(tests_result[:failed_examples]).to eq('')
+    expect(tests_result[:failed_examples]).to be_nil
     expect(tests_result[:test_keys]).to eq(tests.keys)
   end
 end

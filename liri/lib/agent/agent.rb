@@ -169,7 +169,7 @@ module Liri
         # Se setea la versión de ruby y el gemset para el código fuente descomprimido
         # Se especifica el Gemfile del cual se van a instalar los requerimientos
         # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí 
-        system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
+        system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install; rake db:migrate:reset RAILS_ENV=test'")
       end
       true
     rescue Errno::ECONNREFUSED => e

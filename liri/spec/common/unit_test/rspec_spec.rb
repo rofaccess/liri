@@ -14,7 +14,7 @@ RSpec.describe Liri::Common::UnitTest::Rspec, '#run_tests' do
     expect(tests_result[:example_quantity]).to eq(1)
     expect(tests_result[:failure_quantity]).to eq(0)
     expect(tests_result[:passed_quantity]).to eq(1)
-    expect(tests_result[:failed_examples]).to eq('')
+    expect(tests_result[:failed_examples]).to be_nil
   end
 
   it 'ejecuta 2 pruebas unitarias' do
@@ -28,6 +28,6 @@ RSpec.describe Liri::Common::UnitTest::Rspec, '#run_tests' do
     expect(tests_result[:example_quantity]).to eq(2)
     expect(tests_result[:failure_quantity]).to eq(0)
     expect(tests_result[:passed_quantity]).to eq(2)
-    expect(tests_result[:failed_examples]).to eq('')
+    expect(tests_result[:failed_examples]).to be_nil
   end
 end

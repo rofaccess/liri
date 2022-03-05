@@ -16,7 +16,7 @@ module Liri
         @example_quantity += test_result['example_quantity']
         @failure_quantity += test_result['failure_quantity']
         @passed_quantity += test_result['passed_quantity']
-        @failed_examples += test_result['failed_examples']
+        @failed_examples += test_result['failed_examples'] if test_result['failed_examples']
       end
 
       def print_process(test_result)
