@@ -1,6 +1,6 @@
 #!/bin/bash
-source messages.sh
-source set_variables.sh
+RVM_HOME=$HOME/.rvm/scripts/rvm
+RUBY__VERSION=2.7.2
 
 # Se carga rvm en el contexto actual. RVM se instaló con el script install.sh
 source $RVM_HOME
