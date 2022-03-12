@@ -11,9 +11,9 @@ log:
     show: true
     # Define los colores del texto del log. Puede ser none (no muestra colores), severity (colorea código de error),
     # severity_date (colorea código de error y fecha), full (colorea el texto entero).
-    colorize: severity
+    colorize: full
   file:
-    colorize: none
+    colorize: full
 library:
   # Configuración de la librería de compresión a utilizar para comprimir el código fuente
   # Valores soportados: Sólo Zip hasta ahora

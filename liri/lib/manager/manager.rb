@@ -36,7 +36,7 @@ module Liri
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info("Proceso Manager terminado")
       rescue SignalException => e
-        Liri.logger.info("Proceso Manager terminado manualmente")
+        Liri.logger.info("Exception(#{e}) Proceso Manager terminado manualmente")
         Liri.kill(threads)
       end
 
@@ -67,7 +67,7 @@ module Liri
       def manager_data(source_code)
         credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
         user, password = credential.get
-
+        # puts "User: #{user} Password: #{password}"
         [user, password, source_code.compressed_file_path].join(';')
       end
     end
@@ -112,7 +112,7 @@ module Liri
       begin
         tcp_socket = TCPServer.new(@tcp_port) # se hace un bind al puerto dado
       rescue Errno::EADDRINUSE => e
-        Liri.logger.error("Error: Puerto TCP #{@tcp_port} ocupado.")
+        Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado.")
         Thread.kill(search_agents_thread)
         Thread.exit
       end
@@ -149,23 +149,44 @@ module Liri
           while @all_tests.any?
             tests = samples
             break if tests.empty?
-            client.puts(tests.to_json)
-            response = client.recvfrom(1000).first
-            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultado no pueden procesarse,
+            begin
+              client.puts(tests.to_json)
+              response = client.recvfrom(1000).first
+            rescue Errno::EPIPE => e
+              # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
+              Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+			  # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado	
+              break
+            end
+            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
-              tests_result = JSON.parse(response)
-              process_tests_result(tests, tests_result)
+              tests_result = response
+              Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Agent #{agent_ip_address}:")
+              Liri.logger.debug("RAW:")
+              Liri.logger.debug(tests_result)
+              json_tests_result = JSON.parse(tests_result)
+              Liri.logger.debug("JSON:")
+              Liri.logger.debug(json_tests_result)
+              process_tests_result(tests, json_tests_result)
             rescue JSON::ParserError => e
-              Liri.logger.error("Error #{e}: Error de parseo JSON")
+              Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
           end
 
           update_processing_statuses
           puts ''
           Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address}")
-          client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
-          client.close # se desconecta el cliente
+          begin
+            client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
+            client.close # se desconecta el cliente
+          rescue Errno::EPIPE => e
+            # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
+            Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+			# Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
+			# mientras sigan pruebas pendientes
+            Thread.exit
+          end
         end
       end
 

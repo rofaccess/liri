@@ -1,20 +1,7 @@
 #!/bin/bash
 source messages.sh
-
-cd ..
- 
-AGENT_HOME=`pwd`
-LIBS_HOME=$AGENT_HOME/lib
-BIN_HOME=$AGENT_HOME/bin
-RUBY__VERSION=2.7.2 # Se usa doble guión bajo porque en algunos sistemas, RUBY_VERSION es una variable de entorno con valor propio y se termina usando el valor de esa variable en esta instalación
-AGENT_USER_NAME=liri 
-GEMSET_NAME=liri
-LIRI_VERSION=0.1.1
-
-TMP_DIR=`mktemp --directory`
-AGENT_SERVICE_NAME=liriagent.service
-SERVICE_FILE=$TMP_DIR/$AGENT_SERVICE_NAME
-WORK_HOME=$AGENT_HOME/work
+source common_functions.sh
+source set_variables.sh
 
 check_command () {
   COMMAND=$1
@@ -32,7 +19,18 @@ check_command () {
   fi    
 }
 
-function press_key {
+check_command_gpg () {
+  OS_NAME=$(os_name)
+
+  # En Ubuntu se usa gpg porque gpg2 por algún motivo falla en obtener las claves
+  if [ "$OS_NAME" == "Ubuntu" ]; then
+    check_command gpg
+  else
+    check_command gpg2
+  fi  
+}
+
+press_key () {
   msg "\nPresione Enter para continuar o la tecla 's' + Enter para salir "
   read option
   if [ "$option" == "s" ]; then
@@ -52,45 +50,67 @@ check_c_compilers () {
   fi     
 }
 
-check_requeriments () {
-  info_msg "Distribución detectada: $(os_name)"
-  echo ""
-  info_msg "Por favor lea atentamente la siguiente información"
-  info_msg "Comandos requeridos para finalizar satisfactoriamente la instalación: "
-  info_msg "- gpg (Ubuntu) y gpg2 (Manjaro, Debian y Fedora): Necesario instalar las claves gpg de rvm"
-  info_msg "- curl: Necesario para descargar rvm"
-  info_msg "- gcc: Necesario para la instalación de ruby"
-  info_msg "- make: Necesario para la instalación de ruby"
-
-  echo ""
-  info_msg "Puede ejecutar los siguientes comandos según su distribución:"
-  info_msg "Manjaro 21: sudo pacman -S curl gcc make"
-  info_msg "Ubuntu 20: sudo apt install openssh-server curl gcc make"
-  info_msg "Debian 11: sudo apt install gnupg2 curl gcc make"
-  info_msg "Fedora 35: Ya tiene instalado todos los requerimientos"
-  echo ""
-  info_msg "Observaciones:"
-  info_msg "- Comandos comprobados en Manajaro 21, Ubuntu 20, Debian 11 y Fedora 35"
-  info_msg "- Prestar atención al proceso de instalación porque en algunos momentos requerirá el ingreso de la contraseña sudo o root"
-  info_msg "- Asegurese de que el servicio ssh esté instalado y ejecutandose. Comando: sudo systemctl start sshd"
-  info_msg "- Antes de iniciar la instalación en Debian debe configurar el uso del comando sudo agregando al usuario al archivo sudoers"
-  info_msg "- Antes de iniciar la instalación en Fedora debe acceder al archivo /etc/selinux/config y setear SELINUX=permissive y reiniciar el sistema, caso contrario el servicio agente no podrá activarse ni iniciarse"
-
-  check_command gpg2
-  check_command curl
-  check_c_compilers
-  check_command make
-}
-
 os_name () {
   OS_NAME=$(cat /etc/*-release | grep -w NAME | cut -d= -f2 | tr -d '"')
   echo "$OS_NAME"
+}
+
+check_requeriments () {
+  OS_NAME=$(os_name)
+
+  info_msg "Distribución detectada: $OS_NAME"
+  echo ""
+  info_msg "Para finalizar satisfactoriamente la instalación debe tener actualizada el sistema operativo y tener instalado los programas necesarios"
+
+  if [ "$OS_NAME" == "Manjaro Linux" ]; then
+    echo "      > sudo pacman -Syu"
+    echo "      > sudo pacman -S curl gcc make"
+    info_msg "Comandos probados en Manjaro 21.2.3 (Qonos)"
+
+  elif [ "$OS_NAME" == "Ubuntu" ]; then
+    echo "        > sudo apt-get update"
+    echo "        > sudo apt update"
+    echo "        > sudo apt install openssh-server curl gcc make"
+    info_msg "Comandos probados en Ubuntu 21.10 (Impish Indri)"
+
+  elif [ "$OS_NAME" == "Debian GNU/Linux" ]; then
+    info_msg "Antes de actualizar Debian debe agregar su usuario al grupo sudo agregando whoami ALL=(ALL) NOPASSWD:ALL al final del archivo sudoers. Reemplace whoami por su nombre de usuario"
+    echo "        > su"
+    echo "        > nano /etc/sudoers"
+    echo "        > sudo apt-get update"
+    echo "        > sudo apt update"
+    echo "        > sudo apt install gnupg2 curl gcc make"
+    info_msg "Comandos probados en Debian 11.1 (Bullseye)"
+  elif [ "$OS_NAME" == "Fedora Linux" ]; then
+    info_msg "Fedora 35 ya tiene instalado todos los programas necesarios"
+    info_msg "Para poder activar e iniciar el Agente Liri se debe configurar selinux especificando SELINUX=permissive en /etc/selinux/config y reiniciando el sistema"
+    echo "        > nano /etc/selinux/config"
+    info_msg "Comandos probados en Fedora 35"
+
+  else
+    info_msg "- gpg: para instalar las claves gpg de RVM"
+    info_msg "- curl: para descargar RVM"
+    info_msg "- gcc y make: para instalar Ruby"
+
+  fi  
+
+  info_msg "En algunos momentos se requerirá el ingreso de la contraseña sudo o root"
+  info_msg "Asegurese de que el servicio ssh esté instalado y ejecutandose"
+  echo "      > sudo systemctl status sshd"
+  echo "      > sudo systemctl enable sshd"
+  echo "      > sudo systemctl start sshd" 
+
+  check_command_gpg
+  check_command curl
+  check_c_compilers
+  check_command make
 }
 
 install_gpg_keys () {
   start_msg "Instalando claves"
   OS_NAME=$(os_name)
 
+  # En Ubuntu se usa gpg porque gpg2 por algún motivo falla en obtener las claves
   if [ "$OS_NAME" == "Ubuntu" ]; then
     if curl -sSL https://rvm.io/mpapis.asc | gpg --import -; then
       success_msg "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
@@ -130,7 +150,7 @@ install_rvm () {
     exit 1
   fi   
   
-  source $HOME/.rvm/scripts/rvm
+  source $RVM_HOME
 
   end_msg "Instalación de RVM finalizada"
 }
@@ -142,14 +162,6 @@ install_ruby () {
     success_msg "rvm install $RUBY__VERSION"
   else
     fail_msg "rvm install $RUBY__VERSION"
-    exit 1
-  fi
-
-  
-  if rvm use $RUBY__VERSION; then
-    success_msg "rvm use $RUBY__VERSION"
-  else
-    fail_msg "rvm use $RUBY__VERSION"
     exit 1
   fi
 
@@ -165,34 +177,14 @@ create_gemset () {
     fail_msg "rvm gemset create $GEMSET_NAME"
     exit 1
   fi
-  
-  if rvm gemset use $GEMSET_NAME; then
-    success_msg "rvm gemset use $GEMSET_NAME"
-  else
-    fail_msg "rvm gemset use $GEMSET_NAME"
-    exit 1
-  fi
 
   end_msg "Configuración de Gemset finalizada"
-}
-
-install_liri () {
-  start_msg "Instalando Liri"
-
-  if gem install $LIBS_HOME/liri-$LIRI_VERSION.gem; then
-    success_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
-  else
-    fail_msg "gem install $LIBS_HOME/liri-$LIRI_VERSION.gem"
-    exit 1
-  fi
-
-  end_msg "Instalación de Liri finalizada"
 }
 
 create_service () { 
   start_msg "Creando servicio"
 
-cat << EOF > $SERVICE_FILE
+cat << EOF > $AGENT_SERVICE_FILE_PATH
   [Unit]
   Description=Liri Agent
   After=network.target
@@ -205,17 +197,17 @@ cat << EOF > $SERVICE_FILE
 
   WorkingDirectory=$WORK_HOME
 
-  ExecStart=$BIN_HOME/startup.sh
+  ExecStart=$BIN_HOME/startup.sh $RUBY__VERSION
   ExecStop=$BIN_HOME/shutdown.sh
 
   [Install]
   WantedBy=multi-user.target
 EOF
 
-  if sudo mv $SERVICE_FILE /etc/systemd/system/; then
-    success_msg "sudo mv $SERVICE_FILE /etc/systemd/system/"
+  if sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/; then
+    success_msg "sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/"
   else
-    fail_msg "sudo mv $SERVICE_FILE /etc/systemd/system/-"
+    fail_msg "sudo mv $AGENT_SERVICE_FILE_PATH /etc/systemd/system/-"
     exit 1
   fi   
 
@@ -242,23 +234,6 @@ enable_service () {
   end_msg "Activación de Servicio Agent finalizado"
 }
 
-
-start_service () {
-  start_msg "Iniciando Servicio Agent"
-
-  if sudo systemctl start $AGENT_SERVICE_NAME; then
-    success_msg "sudo systemctl start $AGENT_SERVICE_NAME"
-  else
-    fail_msg "sudo systemctl start $AGENT_SERVICE_NAME"
-    exit 1
-  fi
-
-  info_msg "Para ver estado del Agent utilice: journalctl -e -u $AGENT_SERVICE_NAME o sudo systemctl status $AGENT_SERVICE_NAME"
-
-  end_msg "Inicio de Servicio Agent finalizado"
-}
-
-
 ########################################################################################################################
 start_msg "Proceso de instalación del programa Agent"
 check_requeriments
@@ -266,7 +241,9 @@ press_key
 install_gpg_keys
 install_rvm
 install_ruby
+set_ruby
 create_gemset
+set_gemset
 install_liri
 create_service
 enable_service

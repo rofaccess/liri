@@ -3,7 +3,7 @@
 # Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicacion
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
-  VERSION = '0.1.1'
+  VERSION = '0.1.4'
   SETUP_FOLDER_NAME = 'liri'
   SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
   LOGS_FOLDER_NAME = 'logs'
@@ -97,6 +97,10 @@ module Liri
 
     def tcp_port
       setup.ports.tcp
+    end
+
+    def current_folder_ruby_and_gemset
+      "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
     end
 
     private

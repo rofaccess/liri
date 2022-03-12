@@ -51,3 +51,20 @@ end
 # Define el alias m para el comando agent
 alias_command :a, :agent
 
+# Define el comando y los parámetros para obtener la cantidad de tests
+command :tests do |c|
+  c.syntax = 'Liri tests [options]'
+  c.summary = 'Retorna la cantidad total de tests'
+  c.description = 'Ejecuta el comando para obtener la cantidad total de tests del proyecto'
+  c.example 'Ejecuta el comando tests', 'liri t'
+  c.example 'Ejecuta el comando tests', 'liri tests'
+  c.action do |args, options|
+    # Método que se ejecuta al llamar al comando tests
+    tests_count = Liri::Task.tests_count
+    puts tests_count
+  end
+end
+
+# Define el alias t para el comando tests
+alias_command :t, :tests
+

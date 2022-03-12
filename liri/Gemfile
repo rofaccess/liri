@@ -12,15 +12,15 @@ source 'https://rubygems.org'
 gemspec
 
 # Rake is a Make-like program implemented in Ruby. Tasks and dependencies are specified in standard Ruby syntax. https://github.com/ruby/rake
-# Use to build Liri gem
+# Se usa para compilar la gema Liri
 gem 'rake', '~> 13'
 
 # Behaviour Driven Development for Ruby. https://github.com/rspec/rspec
-# Use to test Liri gem
+# Se usa para testear la gema Liri
 gem 'rspec', '~> 3.10.0'
 
 # Fast and easy syntax highlighting for selected languages, written in Ruby. https://github.com/rubychan/coderay
-# Used by rspec to show results highlighting when save result in html file
+# Usado por rspec para mostrar los resultados resaltados cuando se guarda el resultado de la ejecución de las pruebas en un archivo html
 gem 'coderay', '~>1'
 
 group :development do

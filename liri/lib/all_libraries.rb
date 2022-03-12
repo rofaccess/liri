@@ -13,6 +13,8 @@ require 'net/scp'
 # El archivo *hash_extend* extiende la clase Hash de Ruby para agregarle más funcionalidades
 require 'hash_extend'
 
+require 'task'
+
 require 'agent/agent'
 require 'agent/runner'
 
