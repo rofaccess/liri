@@ -56,7 +56,7 @@ module Liri
           Thread.exit
         end
         Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}
-                                     (Se espera que algún Manager se contacte por primera vez para para establecer una conexión TCP)
+                                     (Se espera que algún Manager se contacte por primera vez para establecer una conexión TCP)
         ")
 
         loop do
