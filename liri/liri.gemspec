@@ -46,4 +46,12 @@ Gem::Specification.new do |spec|
   # Net::SCP is a pure-Ruby implementation of the SCP protocol. This operates over SSH (and requires the Net::SSH library), and allows files and directory trees to be copied to and from a remote server. https://github.com/net-ssh/net-scp
   # Se usa para obtener el código fuente del Manager desde el Agent
   spec.add_runtime_dependency('net-scp', '~> 3')
+
+  # A Ruby gem for converting seconds into human-readable format. https://github.com/digaev/to_duration
+  # Se usa para convertir un tiempo en segundos a un formato más legible
+  spec.add_runtime_dependency('to_duration', '~> 1')
+
+  # Ruby internationalization and localization (i18n) solution. https://github.com/ruby-i18n/i18n
+  # Este es un requerimiento de la gema to_duration
+  spec.add_runtime_dependency('i18n', '~> 1')
 end

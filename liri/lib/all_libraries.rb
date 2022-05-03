@@ -18,6 +18,7 @@ require 'task'
 require 'agent/agent'
 require 'agent/runner'
 
+require 'common/benchmarking'
 require 'common/log'
 require 'common/source_code'
 require 'common/compressor/zip'
