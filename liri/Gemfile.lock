@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    liri (0.1.5)
+    liri (0.1.6)
       commander (~> 4)
       highline (~> 2)
       i18n (~> 1)

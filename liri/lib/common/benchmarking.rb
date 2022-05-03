@@ -10,7 +10,7 @@ require 'i18n' # requirimiento de la gema to_duration
 require 'to_duration'
 
 # Se configura la ubicación del archivo de internacionalización de la gema to_duration
-I18n.load_path << Dir[File.expand_path("config/locales") + "/*.yml"]
+I18n.load_path << Dir[File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'config/locales') + "/*.yml"]
 I18n.default_locale = :es
 
 module Liri
