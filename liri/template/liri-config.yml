@@ -3,7 +3,7 @@
 # Obs.: Puede que no sea útil para el usuario poder cambiar este nombre
 compressed_file_name: compressed_source_code
 # Configuración de la cantidad de tests a ejecutar por tandas
-test_samples_by_runner: 10
+test_samples_by_runner: 100
 log:
   stdout:
     # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
