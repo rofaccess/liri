@@ -155,7 +155,7 @@ module Liri
             Thread.exit
           end
 
-          puts "Conexión iniciada con el Agente: #{agent_ip_address}"
+          puts "\nConexión iniciada con el Agente: #{agent_ip_address}"
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}
                                          => Agent #{agent_ip_address}: #{response}
           ")
