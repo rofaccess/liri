@@ -17,17 +17,18 @@ module Liri
   module Common
     module Benchmarking
       class << self
-        def start
+        def start(start_msg: nil, end_msg: 'Duración: ')
+          print start_msg
           seconds = Benchmark.realtime do
             yield
           end
-          print_result(seconds)
+          print_result(end_msg, seconds)
         end
 
         private
 
-        def print_result(seconds)
-          puts "Tiempo de ejecución: #{seconds.to_duration}"
+        def print_result(msg, seconds)
+          print "#{msg}#{seconds.to_duration}"
         end
       end
     end

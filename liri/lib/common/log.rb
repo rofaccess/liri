@@ -76,7 +76,7 @@ module Liri
       DATETIME_FORMAT = "%d-%m-%Y %H:%M"
 
       SEVERITY_COLORS = {
-          DEBUG: '0;0',   # white
+          DEBUG: '0;36',  # cyan
           ERROR: '0;31',  # red
           INFO: '0;32',   # green
           WARN: '0;33',   # orange

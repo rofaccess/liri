@@ -88,7 +88,12 @@ module Liri
         Liri.logger.debug("Pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests)
 
-        tests_result = @runner.run_tests(tests)
+        tests_result = {}
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando conjunto de pruebas. Espere... ") do
+          tests_result = @runner.run_tests(tests)
+        end
+        puts ''
+
         json_tests_result = tests_result.to_json
         Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(json_tests_result)
@@ -147,12 +152,22 @@ module Liri
 
     def process_manager_connection_scp(manager_ip_address, user, password, dir)
       # puts "User: #{user} Password: #{password}"
-      Net::SCP.start(manager_ip_address, user, :password => password) do |scp|
-        scp.download!(dir, @source_code.compressed_file_folder_path)
+      puts ''
+      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ") do
+        puts ''
+        Net::SCP.start(manager_ip_address, user, :password => password) do |scp|
+          scp.download!(dir, @source_code.compressed_file_folder_path)
+        end
       end
+      puts ''
+
       downloaded_file_name = dir.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
-      @source_code.decompress_file(downloaded_file_path)
+
+      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ") do
+        @source_code.decompress_file(downloaded_file_path)
+      end
+      puts ''
 
       # Se cambia temporalmente la carpeta de trabajo a la carpeta de código fuente descomprimida
       Dir.chdir(@source_code.decompressed_file_folder_path) do
@@ -168,8 +183,24 @@ module Liri
         # Descomentar para el entorno de producción
         # Se setea la versión de ruby y el gemset para el código fuente descomprimido
         # Se especifica el Gemfile del cual se van a instalar los requerimientos
-        # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí 
-        system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install; rake db:migrate:reset RAILS_ENV=test'")
+        # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ") do
+          puts ''
+          system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
+        end
+        puts ''
+
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ") do
+          puts ''
+          system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate RAILS_ENV=test'")
+        end
+        puts ''
+
+        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ") do
+        # puts ''
+        # system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate:reset RAILS_ENV=test'")
+        #end
+        #puts ''
       end
       true
     rescue Errno::ECONNREFUSED => e

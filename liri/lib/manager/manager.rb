@@ -25,7 +25,8 @@ module Liri
 
         manager_data = manager_data(user, password, source_code)
 
-        all_tests = source_code.all_tests
+        all_tests = get_all_tests(source_code)
+
         test_result = Liri::Manager::TestResult.new
 
         manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, test_result)
@@ -72,15 +73,25 @@ module Liri
 
       def compress_source_code
         source_code = Liri::Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
-        print "Comprimiendo código fuente. Espere... "
-        source_code.compress_folder
-        puts "Listo"
+        Liri::Common::Benchmarking.start(start_msg: "Comprimiendo código fuente. Espere... ") do
+          source_code.compress_folder
+        end
+        puts ''
         source_code
       end
 
       def manager_data(user, password, source_code)
         # puts "User: #{user} Password: #{password}"
         [user, password, source_code.compressed_file_path].join(';')
+      end
+
+      def get_all_tests(source_code)
+        all_tests = {}
+        Liri::Common::Benchmarking.start(start_msg: "Obteniendo conjunto de pruebas. Espere... ") do
+          all_tests = source_code.all_tests
+        end
+        puts ''
+        all_tests
       end
     end
 
