@@ -19,10 +19,11 @@ module Liri
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
-        source_code = Liri::Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
-        source_code.compress_folder
+        user, password = get_credentials
 
-        manager_data = manager_data(source_code)
+        source_code = compress_source_code
+
+        manager_data = manager_data(user, password, source_code)
 
         all_tests = source_code.all_tests
         test_result = Liri::Manager::TestResult.new
@@ -64,9 +65,20 @@ module Liri
         compressed_file_folder_path
       end
 
-      def manager_data(source_code)
+      def get_credentials
         credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
-        user, password = credential.get
+        credential.get
+      end
+
+      def compress_source_code
+        source_code = Liri::Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+        print "Comprimiendo código fuente. Espere... "
+        source_code.compress_folder
+        puts "Listo"
+        source_code
+      end
+
+      def manager_data(user, password, source_code)
         # puts "User: #{user} Password: #{password}"
         [user, password, source_code.compressed_file_path].join(';')
       end
@@ -96,6 +108,7 @@ module Liri
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
+        puts "\nBuscando Agentes... Espere"
         Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
                                      (Se mantiene escaneando la red para encontrar Agents)
         ")
@@ -137,11 +150,12 @@ module Liri
             Thread.kill(search_agents_thread)
             @agents_search_processing_enabled = false
             Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address}")
-            puts response
+            Liri.logger.info(response)
             client.close
             Thread.exit
           end
 
+          puts "Conexión iniciada con el Agente: #{agent_ip_address}"
           Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}
                                          => Agent #{agent_ip_address}: #{response}
           ")
@@ -155,7 +169,7 @@ module Liri
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
               Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-			  # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado	
+			        # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado
               break
             end
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
@@ -183,8 +197,8 @@ module Liri
           rescue Errno::EPIPE => e
             # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
             Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-			# Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
-			# mientras sigan pruebas pendientes
+			      # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
+			      # mientras sigan pruebas pendientes
             Thread.exit
           end
         end

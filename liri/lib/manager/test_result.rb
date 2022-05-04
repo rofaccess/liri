@@ -31,7 +31,6 @@ module Liri
 
       def print_summary
         print_failures unless @failures.empty?
-        print_benchmark
         print_examples_and_failures
         print_failed_examples unless @failed_examples.empty?
       end
@@ -42,11 +41,6 @@ module Liri
         puts "\n\nFailures:\n"
 
         puts @failures
-      end
-
-      def print_benchmark
-        puts '' if @failures.empty?
-        puts "\nFinished in 0.00000 seconds"
       end
 
       def print_examples_and_failures
