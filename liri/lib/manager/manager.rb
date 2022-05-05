@@ -175,7 +175,7 @@ module Liri
             tests = samples
             break if tests.empty?
             begin
-              client.puts(tests.to_json)
+              client.puts(tests.to_json) # Este envía un hash bastante grande al cliente y siempre llega, pero la respuesta del cliente a veces no llega todo, porque?
               response = client.recvfrom(1000).first
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
@@ -239,6 +239,8 @@ module Liri
       # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
       @semaphore.synchronize {
         _samples = @all_tests.sample!(Manager.test_samples_by_runner)
+        puts ''
+        Liri.logger.info("Cantidad de pruebas pendientes: #{@all_tests.size}")
         update_all_tests_processing_count(_samples.size)
       }
       _samples

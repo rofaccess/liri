@@ -88,11 +88,7 @@ module Liri
         Liri.logger.debug("Pruebas recibidas del Manager #{manager_ip_address}:")
         Liri.logger.debug(tests)
 
-        tests_result = {}
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando conjunto de pruebas. Espere... ") do
-          tests_result = @runner.run_tests(tests)
-        end
-        puts ''
+        tests_result = @runner.run_tests(tests)
 
         json_tests_result = tests_result.to_json
         Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
@@ -101,7 +97,7 @@ module Liri
         Liri.logger.info("
                                        #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
         ")
-        tcp_socket.print(json_tests_result)
+        tcp_socket.print(json_tests_result) # Este no logra enviar toda la información, porque? en cambio el cliente recibe un json grande sin problemas
       end
 
       tcp_socket.close

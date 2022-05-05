@@ -45,7 +45,11 @@ module Liri
             # Descomentar para la depuración en entorno de desarrollo (Creo que aún así no se puede depurar)
             # raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
             # Descomentar para el entorno de producción
-            raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
+            raw_tests_result = ''
+            Liri::Common::Benchmarking.start(start_msg: "Ejecutando conjunto de pruebas. Espere... ") do
+              raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
+            end
+
             hash_tests_result = process_tests_result(raw_tests_result)
             hash_tests_result
           end
@@ -70,6 +74,8 @@ module Liri
             end
 
             if flag == 'Finished'
+              puts ''
+              Liri.logger.info(line)
               values = line.to_s.match(/([\d]+) example.?, ([\d]+) failure.?/)
               result_hash[:example_quantity] = values[1].to_i
               result_hash[:failure_quantity] = values[2].to_i
