@@ -47,10 +47,6 @@ module Liri
             # Descomentar para el entorno de producción
             raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
             hash_tests_result = process_tests_result(raw_tests_result)
-            # Se borra la información de failures y failed_examples porque es demasiada información y no llega completamente al Manager
-            # posiblemente haya que enviar esos resultados en un archivo al final
-            hash_tests_result.delete(:failures)
-            hash_tests_result.delete(:failed_examples)
             hash_tests_result
           end
         end
@@ -63,44 +59,21 @@ module Liri
         # Recibe el resultado crudo de las pruebas unitarias
         # Procesa el resultado y lo devuelve en formato hash manejable
         # Ejemplo del hash retornado:
-        # {result: '.F', failures: '', example_quantity: 2, failure_quantity: 1, passed_quantity: 0, failed_examples: ''}
+        # {example_quantity: 2, failure_quantity: 1}
         def process_tests_result(raw_test_results)
-          result_hash = {result: '', failures: '', example_quantity: 0, failure_quantity: 0, passed_quantity: 0, failed_examples: ''}
+          result_hash = {example_quantity: 0, failure_quantity: 0}
           flag = ''
           raw_test_results.each_line do |line|
-            if flag == '' && line.strip.start_with?('Randomized')
-              flag = 'Randomized'
-              next
-            end
-
-            if flag == 'Randomized' && line.strip.start_with?('Failures')
-              flag = 'Failures'
-              next
-            end
-
-            if ['Randomized', 'Failures'].include?(flag) && line.strip.start_with?('Finished')
+            if line.strip.start_with?('Finished')
               flag = 'Finished'
               next
             end
 
-            if ['Finished', ''].include?(flag) && line.strip.start_with?('Failed')
-              flag = 'Failed'
-              next
-            end
-
-            case flag
-            when 'Randomized'
-              result_hash[:result] << line.strip
-            when 'Failures'
-              result_hash[:failures] << line
-            when 'Finished'
+            if flag == 'Finished'
               values = line.to_s.match(/([\d]+) example.?, ([\d]+) failure.?/)
               result_hash[:example_quantity] = values[1].to_i
               result_hash[:failure_quantity] = values[2].to_i
-              result_hash[:passed_quantity] = result_hash[:example_quantity] - result_hash[:failure_quantity]
               flag = ''
-            when 'Failed'
-              result_hash[:failed_examples] << line
             end
           end
 
