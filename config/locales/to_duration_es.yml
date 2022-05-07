@@ -1,0 +1,25 @@
+es:
+  to_duration:
+    and: y
+    less_than_one_second: Menos de un segundo
+    year:
+      one: año
+      other: años
+    month:
+      one: mes
+      other: meses
+    week:
+      one: semana
+      other: semanas
+    day:
+      one: día
+      other: dias
+    hour:
+      one: hora
+      other: horas
+    minute:
+      one: minuto
+      other: minutos
+    second:
+      one: segundo
+      other: segundos
