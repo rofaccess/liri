@@ -1,6 +1,7 @@
 /installers/liriagent/work/liri/
 *.log
 *.odt#
+.idea/
 
 /pkg/
 /.idea/

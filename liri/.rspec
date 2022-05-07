@@ -1,8 +1,0 @@
---format documentation
---color
---require spec_helper
---order rand
-
-# Este archivo define ciertos parámetros para la ejecución de las pruebas unitarias con rspec
-# format: define el formato de los resultados
-# order: define el orden en que se ejecutan las pruebas, rand realiza una ejecución aleatoria
