@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RUBY_MODULE" version="4">
+  <component name="ModuleRunConfigurationManager">
+    <shared />
+  </component>
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/features" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="ast (v2.4.2, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="bundler (v2.1.4, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="coderay (v1.1.3, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="commander (v4.6.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="concurrent-ruby (v1.1.9, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="highline (v2.0.3, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="i18n (v1.10.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="net-scp (v3.0.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="net-ssh (v6.1.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="parallel (v1.22.1, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="parser (v3.1.1.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rainbow (v3.1.1, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rake (v13.0.6, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="regexp_parser (v2.2.1, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rexml (v3.2.5, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rspec-core (v3.11.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rspec-support (v3.11.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rubocop (v0.93.1, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rubocop-ast (v1.16.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="ruby-progressbar (v1.11.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rubyzip (v2.3.2, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="unicode-display_width (v1.8.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="webrick (v1.7.0, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="yard (v0.9.27, RVM: ruby-2.7.2 [global]) [gem]" level="application" />
+  </component>
+</module>
