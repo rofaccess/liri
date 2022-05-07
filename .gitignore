@@ -1,3 +1,13 @@
 /installers/liriagent/work/liri/
 *.log
 *.odt#
+
+/pkg/
+/.idea/
+/liri/
+*.log
+*.gem
+*.zip
+.rspec_status
+liri-config.yml
+liri-credentials.yml
