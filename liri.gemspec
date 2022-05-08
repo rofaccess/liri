@@ -21,11 +21,12 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
-    # La siguiente línea debe comentarse al momento de ejecutar liri m dentro del proyecto Liri cuando porque al tratar de ejecutar pruebas de este código fuente
+    # La siguiente línea debe comentarse al momento de ejecutar liri m dentro del proyecto Liri porque al tratar de ejecutar pruebas de este código fuente
     # con agentes ejecutandose en distribuciones Linux y Ubuntu, por algún motivo ocurre el siguiente error:
     #
     # Esta línea es crítica, debe estar si o sí habilitada al compilar la gema
-    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+    # Esta línea define que carpetas se excluyen del .gem generado al compilar la gema
+    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|documents|installers)/}) }
   end
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
