@@ -10,9 +10,7 @@ module Liri
       end
 
       def run_tests(tests)
-        result_hash = @unit_test.run_tests(tests.values)
-        result_hash[:test_keys] = tests.keys
-        result_hash
+        @unit_test.run_tests(tests)
       end
     end
   end

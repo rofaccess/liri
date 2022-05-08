@@ -40,6 +40,8 @@ module Liri
       @source_code = source_code
       @runner = runner
 
+      @all_tests = {}
+
       @managers = {}
     end
 
@@ -84,9 +86,7 @@ module Liri
         response = line.chop
         break if response == 'exit'
 
-        tests = JSON.parse(response)
-        Liri.logger.debug("Pruebas recibidas del Manager #{manager_ip_address}:")
-        Liri.logger.debug(tests)
+        tests = get_tests(response, manager_ip_address)
 
         tests_result = @runner.run_tests(tests)
 
@@ -162,6 +162,7 @@ module Liri
 
       Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ") do
         @source_code.decompress_file(downloaded_file_path)
+        @all_tests = @source_code.all_tests
       end
       puts ''
 
@@ -218,6 +219,16 @@ module Liri
     rescue TypeError => e
       Liri.logger.warn("Exception(#{e}) Error indeterminado")
       false
+    end
+
+    def get_tests(response, manager_ip_address)
+      # Se convierte "[5, 9, 13, 1]" a un arreglo [5, 9, 13, 1]
+      tests_keys = JSON.parse(response)
+      Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}:")
+      Liri.logger.debug(tests_keys)
+      # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
+      # Se retorna un arreglo con los tests a ejecutar ["spec/liri_spec.rb:4", "spec/hash_spec.rb:5", "spec/hash_spec.rb:59", ..., "spec/hash_spec.rb:37"]
+      tests_keys.map { |test_key| @all_tests[test_key] }
     end
 
     def registered_manager?(manager_ip_address)

@@ -172,15 +172,17 @@ module Liri
           ")
 
           while @all_tests.any?
-            tests = samples
-            break if tests.empty?
+            tests_keys = samples
+            break if tests_keys.empty?
             begin
-              client.puts(tests.to_json) # Este envía un hash bastante grande al cliente y siempre llega, pero la respuesta del cliente a veces no llega todo, porque?
+              Liri.logger.debug("Claves de pruebas enviadas al Agent #{agent_ip_address}:")
+              Liri.logger.debug(tests_keys)
+              client.puts(tests_keys.to_json)
               response = client.recvfrom(1000).first
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
               Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-			        # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado
+              # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado
               break
             end
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
@@ -193,7 +195,7 @@ module Liri
               json_tests_result = JSON.parse(tests_result)
               Liri.logger.debug("JSON:")
               Liri.logger.debug(json_tests_result)
-              process_tests_result(tests, json_tests_result)
+              process_tests_result(tests_keys, json_tests_result)
             rescue JSON::ParserError => e
               Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
@@ -243,13 +245,13 @@ module Liri
         Liri.logger.info("Cantidad de pruebas pendientes: #{@all_tests.size}")
         update_all_tests_processing_count(_samples.size)
       }
-      _samples
+      _samples.keys
     end
 
-    def process_tests_result(tests, tests_result)
+    def process_tests_result(tests_keys, tests_result)
       # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
       @semaphore.synchronize {
-        update_all_tests_results_count(tests.size)
+        update_all_tests_results_count(tests_keys.size)
         @test_result.print_process(tests_result)
         @test_result.update(tests_result)
       }
