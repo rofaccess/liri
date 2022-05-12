@@ -21,16 +21,12 @@ module Liri
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
         user, password = get_credentials
-
         source_code = compress_source_code
-
         manager_data = get_manager_data(user, password, source_code)
-
         all_tests = get_all_tests(source_code)
+        tests_result = Common::TestsResult.new(Liri::MANAGER_FOLDER_PATH)
 
-        test_result = Liri::Manager::TestResult.new
-
-        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, test_result)
+        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result)
 
         threads = []
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
@@ -100,7 +96,7 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, all_tests, test_result)
+    def initialize(udp_port, tcp_port, all_tests, tests_result)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
@@ -118,7 +114,7 @@ module Liri
       @tests_batch_number = 0
       @tests_batches = {}
 
-      @test_result = test_result
+      @tests_result = tests_result
       @semaphore = Mutex.new
     end
 
@@ -172,6 +168,7 @@ module Liri
             Liri.logger.info(response)
             client.close
             Thread.exit
+            raise Exception
           end
 
           puts "\nConexión iniciada con el Agente: #{agent_ip_address}"
@@ -197,10 +194,9 @@ module Liri
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
-              tests_result_file_name = response
-              Liri.logger.debug("Archivo de resultados de las pruebas recibidas del Agent #{agent_ip_address}: #{tests_result_file_name}")
-              puts('.')
-              #process_tests_result(tests_keys, json_tests_result)
+              tests_result = JSON.parse(response)
+              Liri.logger.debug("Respuesta del Agent #{agent_ip_address}: #{tests_result}")
+              process_tests_result(tests_result)
             rescue JSON::ParserError => e
               Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
@@ -223,7 +219,7 @@ module Liri
       end
 
       Liri.clean_folder(Liri::MANAGER_FOLDER_PATH)
-      @test_result.print_summary
+      @tests_result.print_summary
     end
 
     def update_processing_statuses
@@ -267,12 +263,13 @@ module Liri
       end
     end
 
-    def process_tests_result(tests_keys, tests_result)
-      # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
+    def process_tests_result(tests_result)
+      # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
-        update_all_tests_results_count(tests_keys.size)
-        @test_result.print_process(tests_result)
-        @test_result.update(tests_result)
+        tests_batch_number = tests_result['tests_batch_number']
+        tests_result_file_name = tests_result['tests_result_file_name']
+        @tests_batches[tests_batch_number]['tests_result_file_name'] = tests_result_file_name
+        @tests_result.process(tests_result_file_name)
       end
     end
   end

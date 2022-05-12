@@ -18,9 +18,9 @@ module Liri
         Liri.logger.info("Proceso Agent iniciado")
         puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
 
-        source_code = Liri::Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
-        runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
-        tests_result = Liri::Common::TestsResult.new(Liri::AGENT_FOLDER_PATH)
+        source_code = Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+        runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
+        tests_result = Common::TestsResult.new(Liri::AGENT_FOLDER_PATH)
         agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
@@ -93,12 +93,13 @@ module Liri
 
         raw_tests_result = @runner.run_tests(tests)
 
-        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_batch['tests_batch_number'])
+        tests_batch_number = tests_batch['tests_batch_number']
+        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_batch_number)
         tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
 
         send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
-
-        tcp_socket.puts(tests_result_file_name) # Envía el nombre del archivo de resultados
+        result = { tests_batch_number: tests_batch_number, tests_result_file_name: tests_result_file_name }
+        tcp_socket.puts(result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
       end
 
       tcp_socket.close

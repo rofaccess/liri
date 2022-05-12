@@ -58,32 +58,6 @@ module Liri
         def test_files
           Dir[@tests_folder_path + "/**/*spec.rb"]
         end
-
-        # Recibe el resultado crudo de las pruebas unitarias
-        # Procesa el resultado y lo devuelve en formato hash manejable
-        # Ejemplo del hash retornado:
-        # {example_quantity: 2, failure_quantity: 1}
-        def process_tests_result(raw_test_results)
-          result_hash = {example_quantity: 0, failure_quantity: 0}
-          flag = ''
-          raw_test_results.each_line do |line|
-            if line.strip.start_with?('Finished')
-              flag = 'Finished'
-              next
-            end
-
-            if flag == 'Finished'
-              puts ''
-              Liri.logger.info(line)
-              values = line.to_s.match(/([\d]+) example.?, ([\d]+) failure.?/)
-              result_hash[:example_quantity] = values[1].to_i
-              result_hash[:failure_quantity] = values[2].to_i
-              flag = ''
-            end
-          end
-
-          result_hash
-        end
       end
     end
   end
