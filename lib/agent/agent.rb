@@ -20,7 +20,8 @@ module Liri
 
         source_code = Liri::Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
         runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
-        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner)
+        tests_result = Liri::Common::TestsResult.new(Liri::AGENT_FOLDER_PATH)
+        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
@@ -32,13 +33,14 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, source_code, runner)
+    def initialize(udp_port, tcp_port, source_code, runner, tests_result)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
 
       @source_code = source_code
       @runner = runner
+      @tests_result = tests_result
 
       @all_tests = {}
 
@@ -73,7 +75,7 @@ module Liri
     # Inicia un cliente tcp para responder a la petición broadcast del Manager para que éste sepa donde enviar las pruebas
     def start_client_socket_to_process_tests(manager_ip_address)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-
+      agent_ip_address = tcp_socket.addr[2]
       Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
                                      (Se establece una conexión para procesar la ejecución de las pruebas)
       ")
@@ -81,18 +83,23 @@ module Liri
       tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
       puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
 
-      # Se procesan las pruebas enviadds por el Manager
+      tests_group_counter = 0
+
+      # Se procesan las pruebas enviadas por el Manager
       while line = tcp_socket.gets
+        tests_group_counter += 1
         response = line.chop
         break if response == 'exit'
 
         tests = get_tests(response, manager_ip_address)
 
-        tests_result = @runner.run_tests(tests)
+        raw_tests_result, tests_result = @runner.run_tests(tests)
+
+        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_group_counter)
+        @tests_result.save(tests_result_file_name, raw_tests_result)
 
         json_tests_result = tests_result.to_json
-        Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
-        Liri.logger.debug(json_tests_result)
+        Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}: #{json_tests_result}")
 
         Liri.logger.info("
                                        #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
@@ -103,7 +110,7 @@ module Liri
       tcp_socket.close
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
 
-      Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
+      #Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
 
       start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)

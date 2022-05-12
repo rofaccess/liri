@@ -51,7 +51,7 @@ module Liri
             end
 
             hash_tests_result = process_tests_result(raw_tests_result)
-            hash_tests_result
+            return raw_tests_result, hash_tests_result
           end
         end
 

@@ -7,6 +7,7 @@ module Liri
         @failure_quantity = 0
         @passed_quantity = 0
       end
+
       def update(test_result)
         @example_quantity += test_result['example_quantity']
         @failure_quantity += test_result['failure_quantity']

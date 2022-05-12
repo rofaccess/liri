@@ -175,8 +175,7 @@ module Liri
             tests_keys = samples
             break if tests_keys.empty?
             begin
-              Liri.logger.debug("Claves de pruebas enviadas al Agent #{agent_ip_address}:")
-              Liri.logger.debug(tests_keys)
+              Liri.logger.debug("Claves de pruebas enviadas al Agent #{agent_ip_address}: #{tests_keys}")
               client.puts(tests_keys.to_json)
               response = client.recvfrom(1000).first
             rescue Errno::EPIPE => e

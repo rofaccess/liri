@@ -23,6 +23,7 @@ require 'common/log'
 require 'common/source_code'
 require 'common/compressor/zip'
 require 'common/unit_test/rspec'
+require 'common/tests_result'
 
 require 'manager/manager'
 require 'manager/setup'
