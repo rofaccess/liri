@@ -20,6 +20,7 @@ require 'agent/runner'
 
 require 'common/benchmarking'
 require 'common/log'
+require 'common/manager_data'
 require 'common/source_code'
 require 'common/compressor/zip'
 require 'common/unit_test/rspec'

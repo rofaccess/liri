@@ -13,6 +13,7 @@ module Liri
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
       def run(stop = false)
         return unless valid_project
+
         Liri.create_folders('manager')
 
         Liri.set_logger(Liri::MANAGER_LOGS_FOLDER_PATH, 'liri-manager.log')
@@ -23,7 +24,7 @@ module Liri
 
         source_code = compress_source_code
 
-        manager_data = manager_data(user, password, source_code)
+        manager_data = get_manager_data(user, password, source_code)
 
         all_tests = get_all_tests(source_code)
 
@@ -72,17 +73,21 @@ module Liri
       end
 
       def compress_source_code
-        source_code = Liri::Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
-        Liri::Common::Benchmarking.start(start_msg: "Comprimiendo código fuente. Espere... ") do
+        source_code = Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+        Common::Benchmarking.start(start_msg: "Comprimiendo código fuente. Espere... ") do
           source_code.compress_folder
         end
         puts ''
         source_code
       end
 
-      def manager_data(user, password, source_code)
-        # puts "User: #{user} Password: #{password}"
-        [user, password, source_code.compressed_file_path].join(';')
+      def get_manager_data(user, password, source_code)
+        Common::ManagerData.new(
+          folder_path: Liri::MANAGER_FOLDER_PATH,
+          compressed_file_path: source_code.compressed_file_path,
+          user: user,
+          password: password
+        )
       end
 
       def get_all_tests(source_code)
@@ -110,12 +115,15 @@ module Liri
       @agents_search_processing_enabled = true
       @test_processing_enabled = true
 
+      @tests_batch_number = 0
+      @tests_batches = {}
+
       @test_result = test_result
       @semaphore = Mutex.new
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
-    def start_client_socket_to_search_agents(user_data)
+    def start_client_socket_to_search_agents(manager_data)
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
@@ -125,7 +133,7 @@ module Liri
         ")
         while @agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
-          @udp_socket.send(user_data, 0, '<broadcast>', @udp_port)
+          @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
         end
       end
@@ -172,12 +180,14 @@ module Liri
           ")
 
           while @all_tests.any?
-            tests_keys = samples
-            break if tests_keys.empty?
+            tests_batch = tests_batch(agent_ip_address)
+            break unless tests_batch
+
             begin
-              Liri.logger.debug("Claves de pruebas enviadas al Agent #{agent_ip_address}: #{tests_keys}")
-              client.puts(tests_keys.to_json)
-              response = client.recvfrom(1000).first
+              Liri.logger.debug("Conjunto de pruebas enviadas al Agent #{agent_ip_address}: #{tests_batch}")
+
+              client.puts(tests_batch.to_json) # Se envia el lote de tests
+              response = client.recvfrom(1000).first # Se recibe la respuesta. Cuando mas alto es el parámetro de recvfrom, mas datos se reciben osino se truncan.
             rescue Errno::EPIPE => e
               # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
               Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
@@ -187,14 +197,10 @@ module Liri
             # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
-              tests_result = response
-              Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Agent #{agent_ip_address}:")
-              Liri.logger.debug("RAW:")
-              Liri.logger.debug(tests_result)
-              json_tests_result = JSON.parse(tests_result)
-              Liri.logger.debug("JSON:")
-              Liri.logger.debug(json_tests_result)
-              process_tests_result(tests_keys, json_tests_result)
+              tests_result_file_name = response
+              Liri.logger.debug("Archivo de resultados de las pruebas recibidas del Agent #{agent_ip_address}: #{tests_result_file_name}")
+              puts('.')
+              #process_tests_result(tests_keys, json_tests_result)
             rescue JSON::ParserError => e
               Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
@@ -221,10 +227,10 @@ module Liri
     end
 
     def update_processing_statuses
-      @semaphore.synchronize {
+      @semaphore.synchronize do
         @test_processing_enabled = false if @all_tests_count == @all_tests_results_count
         @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
-      }
+      end
     end
 
     def update_all_tests_results_count(new_count)
@@ -238,22 +244,36 @@ module Liri
     def samples
       _samples = nil
       # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
-      @semaphore.synchronize {
+      @semaphore.synchronize do
         _samples = @all_tests.sample!(Manager.test_samples_by_runner)
         puts ''
         Liri.logger.info("Cantidad de pruebas pendientes: #{@all_tests.size}")
         update_all_tests_processing_count(_samples.size)
-      }
-      _samples.keys
+      end
+      _samples
+    end
+
+    def tests_batch(agent_ip_address)
+      # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
+      @semaphore.synchronize do
+        return nil if @all_tests.empty?
+
+        @tests_batch_number += 1 # Se numera cada lote
+        samples = @all_tests.sample!(Manager.test_samples_by_runner) # Se obtiene algunos tests
+        samples_keys = samples.keys # Se obtiene la clave asignada a los tests
+        @tests_batches[@tests_batch_number] = { agent_ip_address: agent_ip_address, tests_batch_keys: samples_keys } # Se guarda el lote a enviar
+        tests_batch = { tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
+        return tests_batch
+      end
     end
 
     def process_tests_result(tests_keys, tests_result)
       # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
-      @semaphore.synchronize {
+      @semaphore.synchronize do
         update_all_tests_results_count(tests_keys.size)
         @test_result.print_process(tests_result)
         @test_result.update(tests_result)
-      }
+      end
     end
   end
 end

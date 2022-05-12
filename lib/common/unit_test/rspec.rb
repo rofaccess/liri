@@ -50,8 +50,7 @@ module Liri
               raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
             end
 
-            hash_tests_result = process_tests_result(raw_tests_result)
-            return raw_tests_result, hash_tests_result
+            return raw_tests_result
           end
         end
 

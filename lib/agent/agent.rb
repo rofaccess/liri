@@ -66,14 +66,14 @@ module Liri
         loop do
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
-          user, pass, dir = @manager_request.first.split(";")
-          process_manager_connection_request(manager_ip_address, user, pass, dir)
+          manager_data = get_manager_data(JSON.parse(@manager_request.first))
+          process_manager_connection_request(manager_ip_address, manager_data)
         end
       end
     end
 
     # Inicia un cliente tcp para responder a la petición broadcast del Manager para que éste sepa donde enviar las pruebas
-    def start_client_socket_to_process_tests(manager_ip_address)
+    def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       agent_ip_address = tcp_socket.addr[2]
       Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
@@ -83,28 +83,22 @@ module Liri
       tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
       puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
 
-      tests_group_counter = 0
-
       # Se procesan las pruebas enviadas por el Manager
       while line = tcp_socket.gets
-        tests_group_counter += 1
         response = line.chop
         break if response == 'exit'
 
-        tests = get_tests(response, manager_ip_address)
+        tests_batch = JSON.parse(response)
+        tests = get_tests(tests_batch, manager_ip_address)
 
-        raw_tests_result, tests_result = @runner.run_tests(tests)
+        raw_tests_result = @runner.run_tests(tests)
 
-        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_group_counter)
-        @tests_result.save(tests_result_file_name, raw_tests_result)
+        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_batch['tests_batch_number'])
+        tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
 
-        json_tests_result = tests_result.to_json
-        Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}: #{json_tests_result}")
+        send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
 
-        Liri.logger.info("
-                                       #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
-        ")
-        tcp_socket.print(json_tests_result) # Este no logra enviar toda la información, porque? en cambio el cliente recibe un json grande sin problemas
+        tcp_socket.puts(tests_result_file_name) # Envía el nombre del archivo de resultados
       end
 
       tcp_socket.close
@@ -132,12 +126,12 @@ module Liri
     # Inserta el ip recibido dentro del hash si es que ya no existe en el hash
     # Nota: Se requieren imprimir datos para saber el estado de la aplicación, sería muy útil usar algo para logear
     # estas cosas en los diferentes niveles, debug, info, etc.
-    def process_manager_connection_request(manager_ip_address, user, pass, dir)
+    def process_manager_connection_request(manager_ip_address, manager_data)
       unless registered_manager?(manager_ip_address)
         register_manager(manager_ip_address)
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        if process_manager_connection_scp(manager_ip_address, user, pass, dir)
-          start_client_socket_to_process_tests(manager_ip_address)
+        if get_source_code(manager_ip_address, manager_data)
+          start_client_socket_to_process_tests(manager_ip_address, manager_data)
         else
           unregister_manager(manager_ip_address)
         end
@@ -153,18 +147,18 @@ module Liri
       tcp_socket.close
     end
 
-    def process_manager_connection_scp(manager_ip_address, user, password, dir)
+    def get_source_code(manager_ip_address, manager_data)
       # puts "User: #{user} Password: #{password}"
       puts ''
       Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ") do
         puts ''
-        Net::SCP.start(manager_ip_address, user, :password => password) do |scp|
-          scp.download!(dir, @source_code.compressed_file_folder_path)
+        Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
+          scp.download!(manager_data.compressed_file_path, @source_code.compressed_file_folder_path)
         end
       end
       puts ''
 
-      downloaded_file_name = dir.split('/').last
+      downloaded_file_name = manager_data.compressed_file_path.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
 
       Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ") do
@@ -228,9 +222,27 @@ module Liri
       false
     end
 
-    def get_tests(response, manager_ip_address)
+    def get_manager_data(manager_data_hash)
+      Common::ManagerData.new(
+        folder_path: manager_data_hash['folder_path'],
+        compressed_file_path: manager_data_hash['compressed_file_path'],
+        user: manager_data_hash['user'],
+        password: manager_data_hash['password']
+      )
+    end
+
+    def send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
+      puts ''
+      Liri::Common::Benchmarking.start(start_msg: "Enviando archivo de resultados. Espere... ") do
+        Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
+          scp.upload!(tests_result_file_path, manager_data.folder_path)
+        end
+      end
+    end
+
+    def get_tests(tests_batch, manager_ip_address)
       # Se convierte "[5, 9, 13, 1]" a un arreglo [5, 9, 13, 1]
-      tests_keys = JSON.parse(response)
+      tests_keys = tests_batch['tests_batch_keys']
       Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}:")
       Liri.logger.debug(tests_keys)
       # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}

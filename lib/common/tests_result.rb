@@ -15,10 +15,11 @@ module Liri
       def save(file_name, raw_tests_result)
         file_path = File.join(@folder_path, '/', file_name)
         File.write(file_path, raw_tests_result)
+        file_path
       end
 
-      def build_file_name(agent_ip_address, tests_group_counter)
-        "agent_#{agent_ip_address}_tests_results_#{tests_group_counter}"
+      def build_file_name(agent_ip_address, tests_batch_number)
+        "batch_#{tests_batch_number}_agent_#{agent_ip_address}_tests_results"
       end
     end
   end
