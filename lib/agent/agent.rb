@@ -11,16 +11,17 @@ module Liri
     class << self
       # Inicia la ejecución del Agent
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
-      def run(stop = false)
-        Liri.create_folders('agent')
+      def run(work_folder_path, stop = false)
+        setup_manager = Liri.set_setup(work_folder_path)
+        agent_folder_path = setup_manager.agent_folder_path
 
-        Liri.set_logger(Liri::AGENT_LOGS_FOLDER_PATH, 'liri-agent.log')
+        Liri.set_logger(setup_manager.logs_folder_path, 'liri-agent.log')
         Liri.logger.info("Proceso Agent iniciado")
         puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
 
-        source_code = Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+        source_code = Common::SourceCode.new(agent_folder_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
         runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
-        tests_result = Common::TestsResult.new(Liri::AGENT_FOLDER_PATH)
+        tests_result = Common::TestsResult.new(agent_folder_path)
         agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager

@@ -4,14 +4,6 @@
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
   VERSION = '0.1.0'
-  SETUP_FOLDER_PATH = Dir.pwd
-  LOGS_FOLDER_NAME = 'logs'
-  MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
-  AGENT_LOGS_FOLDER_PATH = MANAGER_LOGS_FOLDER_PATH
-  AGENT_FOLDER_NAME = 'agent'
-  AGENT_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', AGENT_FOLDER_NAME)
-  MANAGER_FOLDER_NAME = 'manager'
-  MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
 
   class << self
     def set_setup(destination_folder_path)
@@ -40,19 +32,6 @@ module Liri
       end
     end
 
-    def create_folders(program)
-      Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
-
-      case program
-      when 'manager'
-        Dir.mkdir(MANAGER_LOGS_FOLDER_PATH) unless Dir.exist?(MANAGER_LOGS_FOLDER_PATH)
-        Dir.mkdir(MANAGER_FOLDER_PATH) unless Dir.exist?(MANAGER_FOLDER_PATH)
-      when 'agent'
-        Dir.mkdir(AGENT_FOLDER_PATH) unless Dir.exist?(AGENT_FOLDER_PATH)
-        Dir.mkdir(AGENT_LOGS_FOLDER_PATH) unless Dir.exist?(AGENT_LOGS_FOLDER_PATH)
-      end
-    end
-
     def clean_folder(folder_path)
       FileUtils.rm_rf(Dir.glob(folder_path + '/*')) if Dir.exist?(folder_path)
     end
@@ -62,7 +41,7 @@ module Liri
     end
 
     def delete_setup
-      @setup_manager ? @setup_manager.delete_folder : false
+      @setup_manager ? @setup_manager.delete_setup_folder : false
     end
 
     def init_exit(stop, threads, program)
@@ -110,7 +89,7 @@ module Liri
 
     # Inicializa el objeto que gestiona las configuraciones
     def load_setup_manager(destination_folder_path)
-      @setup_manager = Liri::Manager::Setup.new(destination_folder_path)
+      @setup_manager = Liri::Common::Setup.new(destination_folder_path)
       @setup_manager.init
       @setup = @setup_manager.load
       @setup_manager

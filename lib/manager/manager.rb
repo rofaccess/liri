@@ -14,20 +14,21 @@ module Liri
     class << self
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
-      def run(stop = false)
+      def run(source_code_folder_path, stop = false)
         return unless valid_project
 
-        Liri.create_folders('manager')
+        setup_manager = Liri.set_setup(source_code_folder_path)
+        manager_folder_path = setup_manager.manager_folder_path
 
-        Liri.set_logger(Liri::MANAGER_LOGS_FOLDER_PATH, 'liri-manager.log')
+        Liri.set_logger(setup_manager.logs_folder_path, 'liri-manager.log')
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
         user, password = get_credentials
-        source_code = compress_source_code
-        manager_data = get_manager_data(user, password, source_code)
+        source_code = compress_source_code(source_code_folder_path, manager_folder_path)
+        manager_data = get_manager_data(user, password, manager_folder_path, source_code)
         all_tests = get_all_tests(source_code)
-        tests_result = Common::TestsResult.new(Liri::MANAGER_FOLDER_PATH)
+        tests_result = Common::TestsResult.new(manager_folder_path)
 
         manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result)
 
@@ -63,8 +64,8 @@ module Liri
         credential.get
       end
 
-      def compress_source_code
-        source_code = Common::SourceCode.new(Liri::MANAGER_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
+      def compress_source_code(source_code_folder_path, manager_folder_path)
+        source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
         Common::Benchmarking.start(start_msg: "Comprimiendo código fuente. Espere... ") do
           source_code.compress_folder
         end
@@ -72,9 +73,9 @@ module Liri
         source_code
       end
 
-      def get_manager_data(user, password, source_code)
+      def get_manager_data(user, password, manager_folder_path, source_code)
         Common::ManagerData.new(
-          folder_path: Liri::MANAGER_FOLDER_PATH,
+          folder_path: manager_folder_path,
           compressed_file_path: source_code.compressed_file_path,
           user: user,
           password: password

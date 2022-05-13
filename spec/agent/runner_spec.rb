@@ -1,6 +1,5 @@
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
-    Liri.create_folders('test')
     @unit_test = Liri::Common::UnitTest::Rspec.new(dummy_app_folder_path)
     @runner = Liri::Agent::Runner.new(unit_test_class, dummy_app_folder_path)
     @tests_result = Liri::Common::TestsResult.new(dummy_app_folder_path)

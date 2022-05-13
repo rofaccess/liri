@@ -1,9 +1,8 @@
 RSpec.describe Liri::Agent, '#run' do
   it 'run tests' do
-    #Liri::Agent.run(true)
-  end
+    Liri::Agent.run(dummy_app_folder_path, true)
 
-  after(:all) do
-    #Liri.delete_setup_folder
+    Liri.clear_setup
+    Liri.delete_setup
   end
 end
