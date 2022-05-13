@@ -27,14 +27,14 @@ def dummy_app_folder_path
 end
 
 def test_samples_by_runner
-  Liri.setup.test_samples_by_runner
+  10
 end
 
 def unit_test_class
-  "Liri::Common::UnitTest::#{Liri.setup.library.unit_test}"
+  "Liri::Common::UnitTest::Rspec"
 end
 
 def compression_class
-  "Liri::Common::Compressor::#{Liri.setup.library.compression}"
+  "Liri::Common::Compressor::Zip"
 end
 
