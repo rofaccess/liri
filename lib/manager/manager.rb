@@ -127,7 +127,7 @@ module Liri
         Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
                                      (Se mantiene escaneando la red para encontrar Agents)
         ")
-        while @agents_search_processing_enabled
+        while agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
           sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
@@ -150,12 +150,12 @@ module Liri
       ")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
-      while @test_processing_enabled
+      while test_processing_enabled
         Thread.start(tcp_socket.accept) do |client|
           agent_ip_address = client.remote_address.ip_address
           response = client.recvfrom(1000).first
 
-          if @all_tests.empty?
+          if all_tests.empty?
             # No importa lo que le haga, el broadcast udp no se muere al instante y el agente sigue respondiendo
             # Las siguientes dos lineas son para que se deje de hacer el broadcast pero aun asi se llegan a hacer
             # 3 a 4 broadcast antes de que se finalize el proceso, al parecer el broadcast va a tener que quedar asi
@@ -163,12 +163,11 @@ module Liri
             # tests enviados sin resultados, tests finalizados, si se recibe respuesta al broadcast se trata de enviar primero test pendientes
             # luego test enviados sin resultados o sino ignorar
             Thread.kill(search_agents_thread)
-            @agents_search_processing_enabled = false
+            agents_search_processing_enabled = false
             Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address}")
             Liri.logger.info(response)
             client.close
             Thread.exit
-            raise Exception
           end
 
           puts "\nConexión iniciada con el Agente: #{agent_ip_address}"
@@ -176,7 +175,7 @@ module Liri
                                          => Agent #{agent_ip_address}: #{response}
           ")
 
-          while @all_tests.any?
+          while all_tests.any?
             tests_batch = tests_batch(agent_ip_address)
             break unless tests_batch
 
@@ -191,7 +190,7 @@ module Liri
               # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado
               break
             end
-            # TODO A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
+            # A veces se tiene un error de parseo JSON, de ser asi los resultados no pueden procesarse,
             # hay que arreglar esto, mientras, se captura el error para que no falle
             begin
               tests_result = JSON.parse(response)
@@ -222,31 +221,35 @@ module Liri
       @tests_result.print_summary
     end
 
+    def all_tests
+      @semaphore.synchronize do
+        @all_tests
+      end
+    end
+
+    def agents_search_processing_enabled=(value)
+      @semaphore.synchronize do
+        @agents_search_processing_enabled = value
+      end
+    end
+
+    def agents_search_processing_enabled
+      @semaphore.synchronize do
+        @agents_search_processing_enabled
+      end
+    end
+
+    def test_processing_enabled
+      @semaphore.synchronize do
+        @test_processing_enabled
+      end
+    end
+
     def update_processing_statuses
       @semaphore.synchronize do
         @test_processing_enabled = false if @all_tests_count == @all_tests_results_count
         @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
       end
-    end
-
-    def update_all_tests_results_count(new_count)
-      @all_tests_results_count += new_count
-    end
-
-    def update_all_tests_processing_count(new_count)
-      @all_tests_processing_count += new_count
-    end
-
-    def samples
-      _samples = nil
-      # Varios hilos no deben acceder simultaneamente al siguiente bloque porque actualiza variables compartidas
-      @semaphore.synchronize do
-        _samples = @all_tests.sample!(Manager.test_samples_by_runner)
-        puts ''
-        Liri.logger.info("Cantidad de pruebas pendientes: #{@all_tests.size}")
-        update_all_tests_processing_count(_samples.size)
-      end
-      _samples
     end
 
     def tests_batch(agent_ip_address)
@@ -257,9 +260,10 @@ module Liri
         @tests_batch_number += 1 # Se numera cada lote
         samples = @all_tests.sample!(Manager.test_samples_by_runner) # Se obtiene algunos tests
         samples_keys = samples.keys # Se obtiene la clave asignada a los tests
+        @all_tests_processing_count += samples_keys.size
         @tests_batches[@tests_batch_number] = { agent_ip_address: agent_ip_address, tests_batch_keys: samples_keys } # Se guarda el lote a enviar
         tests_batch = { tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
-        return tests_batch
+        tests_batch
       end
     end
 
@@ -268,7 +272,9 @@ module Liri
       @semaphore.synchronize do
         tests_batch_number = tests_result['tests_batch_number']
         tests_result_file_name = tests_result['tests_result_file_name']
-        @tests_batches[tests_batch_number]['tests_result_file_name'] = tests_result_file_name
+        tests_batch_keys = @tests_batches[tests_batch_number][:tests_batch_keys]
+        @all_tests_results_count += tests_batch_keys.size
+        @tests_batches[tests_batch_number][:tests_result_file_name] = tests_result_file_name
         @tests_result.process(tests_result_file_name)
       end
     end
