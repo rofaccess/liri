@@ -18,12 +18,12 @@ RSpec.configure do |config|
   end
 end
 
-def source_code_folder_path
-  Liri::Common::SourceCode::FOLDER_PATH
+def dummy_app_name
+  'dummy-app'
 end
 
-def setup_folder_path
-  Liri::SETUP_FOLDER_PATH
+def dummy_app_folder_path
+  File.join(File.expand_path("./"), '/', dummy_app_name)
 end
 
 def test_samples_by_runner
