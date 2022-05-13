@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+SimpleCov.start
+
 require 'bundler/setup'
 require 'all_libraries'
 
@@ -17,6 +20,10 @@ end
 
 def source_code_folder_path
   Liri::Common::SourceCode::FOLDER_PATH
+end
+
+def setup_folder_path
+  Liri::SETUP_FOLDER_PATH
 end
 
 def test_samples_by_runner

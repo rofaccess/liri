@@ -29,7 +29,12 @@ module Liri
       end
 
       def decompress_file(compressed_file_path = @compressed_file_path)
-        @compressor.decompress(compressed_file_path, @decompressed_file_folder_path)
+        if File.exist?(compressed_file_path)
+          @compressor.decompress(compressed_file_path, @decompressed_file_folder_path)
+          Dir.exist?(@decompressed_file_folder_path) ? true : false
+        else
+          raise FileNotFoundError, compressed_file_path
+        end
       end
 
       def delete_compressed_file
@@ -41,12 +46,17 @@ module Liri
         end
       end
 
-      def all_tests
-        @unit_test.all_tests
+      def delete_decompressed_file_folder_path
+        if Dir.exist?(@decompressed_file_folder_path)
+          FileUtils.rm_rf(@decompressed_file_folder_path)
+          Dir.exist?(@decompressed_file_folder_path) ? false : true
+        else
+          false
+        end
       end
 
-      def folder_path
-        FOLDER_PATH
+      def all_tests
+        @unit_test.all_tests
       end
     end
   end

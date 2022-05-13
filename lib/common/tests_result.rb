@@ -33,6 +33,7 @@ module Liri
         result_hash = process_tests_result_file(file_path)
         update_partial_result(result_hash)
         print_partial_result(result_hash)
+        result_hash
       end
 
       def print_summary
@@ -46,7 +47,7 @@ module Liri
       # Ejemplo del hash retornado:
       # {result: '.F', failures: '', example_quantity: 2, failure_quantity: 1, failed_examples: ''}
       def process_tests_result_file(file_path)
-        result_hash = {result: '', failures: '', example_quantity: 0, failure_quantity: 0, passed_quantity: 0, failed_examples: ''}
+        result_hash = {failures: '', example_quantity: 0, failure_quantity: 0, passed_quantity: 0, failed_examples: ''}
         flag = ''
         File.foreach(file_path) do |line|
           if flag == '' && line.strip.start_with?('Randomized')
@@ -70,8 +71,6 @@ module Liri
           end
 
           case flag
-          when 'Randomized'
-            result_hash[:result] << line.strip
           when 'Failures'
             result_hash[:failures] << line
           when 'Finished'

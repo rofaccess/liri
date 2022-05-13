@@ -55,14 +55,6 @@ module Liri
         end
       end
 
-      def compressed_file_folder_path
-        File.join(Liri::Common.setup_folder_path, '/manager')
-      end
-
-      def decompressed_file_folder_path
-        compressed_file_folder_path
-      end
-
       def get_credentials
         credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
         credential.get

@@ -30,3 +30,6 @@ group :development do
   # A Ruby Documentation Tool. https://github.com/lsegal/yard
   gem 'yard', '~>0'
 end
+
+# SimpleCov is a code coverage analysis tool for Ruby. https://github.com/simplecov-ruby/simplecov
+gem 'simplecov', '~>0', require: false
