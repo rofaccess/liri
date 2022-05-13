@@ -55,12 +55,12 @@ module Liri
             next
           end
 
-          if flag == 'Randomized' && line.strip.start_with?('Failures')
+          if ['Randomized', ''].include?(flag) && line.strip.start_with?('Failures')
             flag = 'Failures'
             next
           end
 
-          if ['Randomized', 'Failures'].include?(flag) && line.strip.start_with?('Finished')
+          if ['Randomized', 'Failures', ''].include?(flag) && line.strip.start_with?('Finished')
             flag = 'Finished'
             next
           end

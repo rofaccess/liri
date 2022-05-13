@@ -65,10 +65,6 @@ module Liri
       @setup_manager ? @setup_manager.delete_folder : false
     end
 
-    def delete_setup_folder
-      FileUtils.rm_rf(SETUP_FOLDER_PATH) if Dir.exist?(SETUP_FOLDER_PATH)
-    end
-
     def init_exit(stop, threads, program)
       threads = threads.compact
       kill(threads) if stop
