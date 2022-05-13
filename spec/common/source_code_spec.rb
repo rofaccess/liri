@@ -69,5 +69,9 @@ RSpec.describe Liri::Common::SourceCode do
         expect(Dir.exist?(@source_code.decompressed_file_folder_path)).to be false
       end
     end
+
+    after(:all) do
+      @source_code.delete_compressed_file
+    end
   end
 end
