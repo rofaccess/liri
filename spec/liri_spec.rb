@@ -1,23 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe Liri do
-  context 'cuando el archivo de configuración no existe' do
-    before(:all) do
-      Liri.delete_setup
-      Liri.clear_setup
-    end
-
+  context 'cuando no se inició el gestor de configuración' do
     describe '#setup' do
-      it 'carga los datos del archivo de configuración' do
-        expect(Liri.setup).to be_an_instance_of(OpenStruct)
-        expect(Liri.setup.library.compression).to eq('Zip')
-        expect(Liri.setup.library.unit_test).to eq('Rspec')
-        expect(Liri.setup.compressed_file_name).to eq('compressed_source_code')
-      end
-
-      after(:all) do
-        Liri.delete_setup
-        Liri.clear_setup
+      it 'devuelve nil' do
+        expect(Liri.setup).to be_nil
       end
     end
 
@@ -34,9 +21,9 @@ RSpec.describe Liri do
     end
   end
 
-  context 'cuando el archivo de configuración ya existe' do
+  context 'cuando el gestor de condiguración está inciado' do
     before(:all) do
-      Liri.setup
+      Liri.set_setup(dummy_app_folder_path)
     end
 
     describe '#setup' do
@@ -47,30 +34,24 @@ RSpec.describe Liri do
       end
     end
 
-    # La siguiente prueba falla aleatoriamente
-=begin
     describe '#delete_setup' do
-      it 'borra la configuración' do
-        Liri.setup # al parecer los tests que ejecutan tests a veces borran el archivo de configuración
-                   # por eso se se llama a Liri.setup para crear el archivo de configuración
+      it 'borra la carpeta y archivo de configuración' do
         expect(Liri.delete_setup).to be true
+        # Crea de vuelta lo que borró para que otros tests no salgan afectados
+        Liri.set_setup(dummy_app_folder_path)
       end
     end
-=end
 
     describe '#clear_setup' do
       it 'nulifica los datos de configuración' do
         expect(Liri.clear_setup).to be true
+        Liri.reload_setup
       end
     end
 
     after(:all) do
-      Liri.delete_setup
       Liri.clear_setup
+      Liri.delete_setup
     end
-  end
-
-  after(:all) do
-    Liri.delete_setup_folder
   end
 end

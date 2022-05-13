@@ -14,8 +14,13 @@ module Liri
   MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
 
   class << self
-    def setup(destination_folder_path = nil)
-      @setup ||= load_setup(destination_folder_path)
+    def set_setup(destination_folder_path)
+      load_setup_manager(destination_folder_path)
+    end
+
+    # Carga las configuraciones en memoria desde un archivo de configuracion
+    def setup
+      @setup
     end
 
     def logger
@@ -53,12 +58,11 @@ module Liri
     end
 
     def reload_setup
-      @setup = load_setup
+      @setup = (@setup_manager ? @setup_manager.load : nil)
     end
 
     def delete_setup
-      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
-      liri_setup.delete
+      @setup_manager ? @setup_manager.delete_folder : false
     end
 
     def delete_setup_folder
@@ -108,11 +112,12 @@ module Liri
 
     private
 
-    # Carga las configuraciones en memoria desde un archivo de configuracion
-    def load_setup(destination_folder_path)
-      liri_setup = Liri::Manager::Setup.new(destination_folder_path)
-      liri_setup.init
-      liri_setup.load
+    # Inicializa el objeto que gestiona las configuraciones
+    def load_setup_manager(destination_folder_path)
+      @setup_manager = Liri::Manager::Setup.new(destination_folder_path)
+      @setup_manager.init
+      @setup = @setup_manager.load
+      @setup_manager
     end
 
     # Inicializa y configura la librería encargada de loguear

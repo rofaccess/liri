@@ -2,7 +2,6 @@ RSpec.describe Liri::Manager::Setup do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do
       @setup = Liri::Manager::Setup.new(dummy_app_folder_path)
-      @setup.delete_folder
     end
 
     describe '#init' do
@@ -67,6 +66,7 @@ RSpec.describe Liri::Manager::Setup do
       it 'borra la carpeta de configuración' do
         expect(@setup.delete_folder).to be true
         expect(Dir.exist?(@setup.folder_path)).to be false
+        @setup.init
       end
     end
 
@@ -74,6 +74,7 @@ RSpec.describe Liri::Manager::Setup do
       it 'borra el archivo de configuración' do
         expect(@setup.delete_file).to be true
         expect(File.exist?(@setup.file_path)).to be false
+        @setup.init
       end
     end
 

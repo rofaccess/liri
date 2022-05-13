@@ -33,25 +33,6 @@ module Liri
         end
       end
 
-      # Borra el archivo de configuración
-      def delete_file
-        if File.exist?(@file_path)
-          File.delete(@file_path)
-          File.exist?(@file_path) ? false : true
-        else
-          false
-        end
-      end
-
-      def delete_folder
-        if Dir.exist?(@folder_path)
-          FileUtils.rm_rf(@folder_path)
-          Dir.exist?(@folder_path) ? false : true
-        else
-          false
-        end
-      end
-
       def set(value, *keys)
         data = YAML.load(File.read(@file_path))
         keys = keys.first
@@ -73,6 +54,15 @@ module Liri
         Dir.exist?(@folder_path) ? true : false
       end
 
+      def delete_folder
+        if Dir.exist?(@folder_path)
+          FileUtils.rm_rf(@folder_path)
+          Dir.exist?(@folder_path) ? false : true
+        else
+          false
+        end
+      end
+
       # Crea un archivo de configuración en la raiz del proyecto desde un template
       def create_file
         File.open(@file_path, 'w') do |output_file|
@@ -82,6 +72,16 @@ module Liri
         end
 
         File.exist?(@file_path) ? true : false
+      end
+
+      # Borra el archivo de configuración
+      def delete_file
+        if File.exist?(@file_path)
+          File.delete(@file_path)
+          File.exist?(@file_path) ? false : true
+        else
+          false
+        end
       end
     end
   end
