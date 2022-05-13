@@ -63,7 +63,9 @@ command :tests do |c|
   c.example 'Ejecuta el comando tests', 'liri tests'
   c.action do |args, options|
     # Método que se ejecuta al llamar al comando tests
-    tests_count = Liri::Task.tests_count
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder)
+    tests_count = Liri::Task.tests_count(current_folder)
     puts tests_count
   end
 end
