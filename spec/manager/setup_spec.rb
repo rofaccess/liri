@@ -1,18 +1,19 @@
 RSpec.describe Liri::Manager::Setup do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do
-      @setup = Liri::Manager::Setup.new(Liri::SETUP_FOLDER_PATH)
-      #@setup.delete if File.exist?(@setup.path)
+      @setup = Liri::Manager::Setup.new(dummy_app_folder_path)
+      @setup.delete_folder
     end
 
-    describe '#create' do
-      it 'crea el archivo de configuración' do
-        expect(@setup.create).to be true
-        expect(File.exist?(@setup.path)).to be true
+    describe '#init' do
+      it 'crea la carpeta y el archivo de configuración' do
+        expect(@setup.init).to be true
+        expect(Dir.exist?(@setup.folder_path)).to be true
+        expect(File.exist?(@setup.file_path)).to be true
       end
 
       after(:all) do
-        #@setup.delete
+        @setup.delete_folder
       end
     end
 

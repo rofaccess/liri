@@ -11,7 +11,7 @@ module Liri
       FILE_NAME = 'liri-config.yml'
       TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri-config.yml')
 
-      attr_reader :file_path
+      attr_reader :folder_path, :file_path
 
       def initialize(destination_folder_path)
         @folder_path = File.join(destination_folder_path, '/', FOLDER_NAME)
@@ -34,13 +34,18 @@ module Liri
       end
 
       # Borra el archivo de configuración
-      def delete
+      def delete_file
         if File.exist?(@file_path)
           File.delete(@file_path)
           true
         else
           false
         end
+      end
+
+      def delete_folder
+        #FileUtils.rm_rf(@folder_path) if Dir.exist?(@folder_path)
+        Dir.exist?(@folder_path) ? false : true
       end
 
       def set(value, *keys)

@@ -4,7 +4,7 @@
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
   VERSION = '0.1.0'
-  SETUP_FOLDER_NAME = Dir.pwd
+  SETUP_FOLDER_PATH = Dir.pwd
   LOGS_FOLDER_NAME = 'logs'
   MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
   AGENT_LOGS_FOLDER_PATH = MANAGER_LOGS_FOLDER_PATH
