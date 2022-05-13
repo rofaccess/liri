@@ -37,15 +37,19 @@ module Liri
       def delete_file
         if File.exist?(@file_path)
           File.delete(@file_path)
-          true
+          File.exist?(@file_path) ? false : true
         else
           false
         end
       end
 
       def delete_folder
-        #FileUtils.rm_rf(@folder_path) if Dir.exist?(@folder_path)
-        Dir.exist?(@folder_path) ? false : true
+        if Dir.exist?(@folder_path)
+          FileUtils.rm_rf(@folder_path)
+          Dir.exist?(@folder_path) ? false : true
+        else
+          false
+        end
       end
 
       def set(value, *keys)
