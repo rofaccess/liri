@@ -64,6 +64,7 @@ RSpec.describe Liri::Common::SourceCode do
 
     describe '#delete_compressed_file' do
       it 'borra el archivo comprimido' do
+        @source_code.compress_folder
         expect(@source_code.delete_compressed_file).to be true
         expect(File.exist?(@source_code.compressed_file_path)).to be false
       end
@@ -80,5 +81,9 @@ RSpec.describe Liri::Common::SourceCode do
     after(:all) do
       @source_code.delete_compressed_file
     end
+  end
+
+  after(:all) do
+    Liri.delete_setup_folder
   end
 end

@@ -71,5 +71,9 @@ RSpec.describe Liri::Manager::Setup do
       @setup.delete if File.exist?(@setup.path)
     end
   end
+
+  after(:all) do
+    Liri.delete_setup_folder
+  end
 end
 

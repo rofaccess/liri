@@ -69,4 +69,8 @@ RSpec.describe Liri do
       Liri.clear_setup
     end
   end
+
+  after(:all) do
+    Liri.delete_setup_folder
+  end
 end

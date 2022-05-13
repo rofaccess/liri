@@ -1,6 +1,9 @@
 =begin
   Este modulo es el punto de entrada del programa principal
 =end
+
+# TODO Para trabajar con hilos y concurrencia recomiendan usar parallel, workers, concurrent-ruby. Fuente: https://www.rubyguides.com/2015/07/ruby-threads/
+
 require 'all_libraries'
 
 module Liri
@@ -30,7 +33,7 @@ module Liri
 
         threads = []
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
-        manager.start_server_socket_to_process_tests(threads[0]) # Esperar y enviar los test unitarios a los Agents
+        manager.start_server_socket_to_process_tests(threads[0]) unless stop # Esperar y enviar los test unitarios a los Agents
 
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info("Proceso Manager terminado")

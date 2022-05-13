@@ -1,10 +1,14 @@
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
+    Liri.create_folders('test')
     @unit_test = Liri::Common::UnitTest::Rspec.new(source_code_folder_path)
     @runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code_folder_path)
     @tests_result = Liri::Common::TestsResult.new(setup_folder_path)
   end
 
+  # TODO El runner en realidad devuelve sólo un String con el resultado crudo de los tests, pero,
+  # acá se está procesando los resultados y comprobándolos, estas comprobaciones se deben hacer en sus
+  # respectivos Tests. Esto nos dice que estos tests requieren refactorización
   it 'ejecuta 1 prueba unitaria' do
     all_tests = @unit_test.all_tests
     tests = {}
@@ -33,6 +37,10 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     expect(tests_result[:passed_quantity]).to eq(2)
     expect(tests_result[:failed_examples]).to be_empty
     delete_file(test_results_file_path)
+  end
+
+  after(:all) do
+    Liri.delete_setup_folder
   end
 end
 

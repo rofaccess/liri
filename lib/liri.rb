@@ -62,6 +62,10 @@ module Liri
       liri_setup.delete
     end
 
+    def delete_setup_folder
+      FileUtils.rm_rf(SETUP_FOLDER_PATH) if Dir.exist?(SETUP_FOLDER_PATH)
+    end
+
     def init_exit(stop, threads, program)
       threads = threads.compact
       kill(threads) if stop
@@ -75,7 +79,7 @@ module Liri
     end
 
     def kill(threads)
-      threads.each{|thread| Thread.kill(thread)}
+      threads.each{ |thread| Thread.kill(thread) }
     end
 
     def current_host_ip_address
