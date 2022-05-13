@@ -7,25 +7,20 @@ require 'json'
 module Liri
   class Manager
     class Setup
+      FOLDER_NAME = 'liri'
       FILE_NAME = 'liri-config.yml'
       TEMPLATE_PATH = File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'template/liri-config.yml')
 
-      def initialize(folder_path)
-        # Crea la carpeta en donde se guardarán los datos relativos a liri, ya sean archivos comprimidos,
-        # archivos descomprimidos, configuraciones, etc.
-        Dir.mkdir(folder_path) unless Dir.exist?(folder_path)
+      attr_reader :file_path
 
-        @file_path = File.join(folder_path, '/', FILE_NAME)
+      def initialize(destination_folder_path)
+        @folder_path = File.join(destination_folder_path, '/', FOLDER_NAME)
+        @file_path = File.join(@folder_path, '/', FILE_NAME)
       end
 
-      # Crea un archivo de configuración en la raiz del proyecto desde un template
-      def create
-        File.open(@file_path, "w") do |output_file|
-          File.foreach(TEMPLATE_PATH) do |input_line|
-            output_file.write(input_line)
-          end
-        end
-        true
+      def init
+        create_folder
+        create_file
       end
 
       # Retorna los datos del archivo de configuración
@@ -62,8 +57,22 @@ module Liri
         File.open(@file_path, 'w') { |f| f.write data.to_yaml }
       end
 
-      def path
-        @file_path
+      def create_folder
+        # Crea la carpeta en donde se guardarán los datos relativos a liri, ya sean archivos comprimidos,
+        # archivos descomprimidos, configuraciones, etc.
+        Dir.mkdir(@folder_path) unless Dir.exist?(@folder_path)
+        Dir.exist?(@folder_path) ? true : false
+      end
+
+      # Crea un archivo de configuración en la raiz del proyecto desde un template
+      def create_file
+        File.open(@file_path, 'w') do |output_file|
+          File.foreach(TEMPLATE_PATH) do |input_line|
+            output_file.write(input_line)
+          end
+        end
+
+        File.exist?(@file_path) ? true : false
       end
     end
   end

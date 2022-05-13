@@ -4,8 +4,7 @@
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
   VERSION = '0.1.0'
-  SETUP_FOLDER_NAME = 'liri'
-  SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
+  SETUP_FOLDER_NAME = Dir.pwd
   LOGS_FOLDER_NAME = 'logs'
   MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
   AGENT_LOGS_FOLDER_PATH = MANAGER_LOGS_FOLDER_PATH
@@ -15,8 +14,8 @@ module Liri
   MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
 
   class << self
-    def setup
-      @setup ||= load_setup
+    def setup(destination_folder_path = nil)
+      @setup ||= load_setup(destination_folder_path)
     end
 
     def logger
@@ -110,9 +109,9 @@ module Liri
     private
 
     # Carga las configuraciones en memoria desde un archivo de configuracion
-    def load_setup
-      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
-      liri_setup.create unless File.exist?(liri_setup.path)
+    def load_setup(destination_folder_path)
+      liri_setup = Liri::Manager::Setup.new(destination_folder_path)
+      liri_setup.init
       liri_setup.load
     end
 
