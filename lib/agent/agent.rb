@@ -22,7 +22,7 @@ module Liri
         source_code = Common::SourceCode.new(agent_folder_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
         runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
         tests_result = Common::TestsResult.new(agent_folder_path)
-        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result)
+        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result, agent_folder_path)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
@@ -34,7 +34,7 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, source_code, runner, tests_result)
+    def initialize(udp_port, tcp_port, source_code, runner, tests_result, agent_folder_path)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
@@ -46,6 +46,8 @@ module Liri
       @all_tests = {}
 
       @managers = {}
+
+      @agent_folder_path = agent_folder_path
     end
 
     # Inicia un servidor udp que se mantiene en espera de la primera petición de conexión del Manager
@@ -106,7 +108,7 @@ module Liri
       tcp_socket.close
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
 
-      #Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
+      #Liri.clean_folder_content(@agent_folder_path)
 
       start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)

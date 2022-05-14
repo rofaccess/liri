@@ -30,7 +30,7 @@ module Liri
         all_tests = get_all_tests(source_code)
         tests_result = Common::TestsResult.new(manager_folder_path)
 
-        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result)
+        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result, manager_folder_path)
 
         threads = []
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
@@ -92,7 +92,7 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, all_tests, tests_result)
+    def initialize(udp_port, tcp_port, all_tests, tests_result, manager_folder_path)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
@@ -112,6 +112,8 @@ module Liri
 
       @tests_result = tests_result
       @semaphore = Mutex.new
+
+      @manager_folder_path = manager_folder_path
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -213,7 +215,7 @@ module Liri
         end
       end
 
-      Liri.clean_folder(Liri::MANAGER_FOLDER_PATH)
+      Liri.clean_folder_content(@manager_folder_path)
       @tests_result.print_summary
     end
 

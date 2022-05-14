@@ -32,7 +32,7 @@ module Liri
       end
     end
 
-    def clean_folder(folder_path)
+    def clean_folder_content(folder_path)
       FileUtils.rm_rf(Dir.glob(folder_path + '/*')) if Dir.exist?(folder_path)
     end
 

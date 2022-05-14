@@ -1,10 +1,35 @@
 RSpec.describe Liri::Manager, '#run' do
   it 'run tests' do
-    allow(Liri::Manager).to receive(:get_credentials).and_return(['user', 'password'])
+    allow(Liri::Manager).to receive(:get_credentials).and_return(['rofaccess', 'dos trocitos'])
 
-    Liri::Manager.run(dummy_app_folder_path, true)
+    @threads = []
 
-    Liri.clear_setup
-    Liri.delete_setup
+    @threads << Thread.new do
+      Liri::Agent.run(dummy_app_folder_path)
+    end
+
+    # Se espera un poco antes de iniciar el Manager, porque ambos van a tratar de crear las mismas carpetas
+    # y chocan entre sí
+    sleep(1)
+
+    @threads << Thread.new do
+      Liri::Manager.run(dummy_app_folder_path)
+      @manager_process_finished = true
+    end
+
+    # Con este hilo se chequea constantemente si el manager ya terminó su proceso
+    # cuando se considera terminado, entonces se terminan los hilos de procesos del Agent y del Manager
+    @threads << Thread.new do
+      until @manager_process_finished
+        next unless @manager_process_finished
+        puts "¿¿¿¿¿¿¿¿¿¿¿MATANDO PROCESOS¿¿¿¿¿¿¿¿¿¿¿¿¿¿"
+        Liri.kill(@threads)
+
+        Liri.clear_setup
+        Liri.delete_setup
+      end
+    end
+
+    @threads.each(&:join)
   end
 end
