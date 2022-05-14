@@ -85,6 +85,10 @@ module Liri
       setup.print_failures
     end
 
+    def udp_request_delay
+      setup.udp_request_delay
+    end
+
     def current_folder_ruby_and_gemset
       "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
     end

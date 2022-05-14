@@ -5,6 +5,7 @@ compressed_file_name: compressed_source_code
 # Configuración de la cantidad de tests a ejecutar por tandas
 test_samples_by_runner: 1000
 print_failures: false
+udp_request_delay: 10
 log:
   stdout:
     # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.

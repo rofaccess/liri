@@ -87,6 +87,7 @@ module Liri
       Liri.logger.info("Se inicia una conexión para procesar pruebas con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       Liri.logger.info("\nConexión iniciada con el Manager: #{manager_ip_address}", true)
 
+      # En la siguiente línea se espera un puts desde el Manager, pero el Manager no lo hace
       response = JSON.parse(tcp_socket.gets)
       return unless response['exist_tests']
 

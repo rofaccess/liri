@@ -9,9 +9,6 @@ require 'terminal-table'
 
 module Liri
   class Manager
-    UDP_REQUEST_DELAY = 3
-    attr_reader :agents
-
     class << self
       # Inicia la ejecución del Manager
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
@@ -129,13 +126,13 @@ module Liri
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
         Liri.logger.info("Buscando Agentes... Espere")
-        Liri.logger.info("Se emite un broadcast cada #{UDP_REQUEST_DELAY} segundos en el puerto UDP: #{@udp_port}
+        Liri.logger.info("Se emite un broadcast cada #{Liri.udp_request_delay} segundos en el puerto UDP: #{@udp_port}
                                      (Se mantiene escaneando la red para encontrar Agents)
         ")
         while agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
-          sleep(UDP_REQUEST_DELAY) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
+          sleep(Liri.udp_request_delay) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
         end
       end
     end
