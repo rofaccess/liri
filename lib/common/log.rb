@@ -26,32 +26,38 @@ module Liri
         create_file_logger
       end
 
-      def debug(text)
+      def debug(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.debug(text) if @stdout
         @file_logger.debug(text)
       end
 
-      def info(text)
+      def info(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.info(text) if @stdout
         @file_logger.info(text)
       end
 
-      def warn(text)
+      def warn(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.warn(text) if @stdout
         @file_logger.warn(text)
       end
 
-      def error(text)
+      def error(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.error(text) if @stdout
         @file_logger.error(text)
       end
 
-      def fatal(text)
+      def fatal(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.fatal(text) if @stdout
         @file_logger.fatal(text)
       end
 
-      def unknown(text)
+      def unknown(text, stdout = false)
+        puts(text) if stdout
         @stdout_logger.unknown(text) if @stdout
         @file_logger.unknown(text)
       end

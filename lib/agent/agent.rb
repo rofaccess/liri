@@ -17,7 +17,7 @@ module Liri
 
         Liri.set_logger(setup_manager.logs_folder_path, 'liri-agent.log')
         Liri.logger.info("Proceso Agent iniciado")
-        puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
+        Liri.logger.info("Presione Ctrl + c para terminar el proceso Agent manualmente\n", true)
 
         decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
         source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
@@ -85,7 +85,7 @@ module Liri
       tcp_socket.puts({ msg: 'Listo' }) # Se envía un mensaje inicial al Manager
 
       Liri.logger.info("Se inicia una conexión para procesar pruebas con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
-      puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
+      Liri.logger.info("\nConexión iniciada con el Manager: #{manager_ip_address}", true)
 
       response = JSON.parse(tcp_socket.gets)
       return unless response['exist_tests']
@@ -160,7 +160,7 @@ module Liri
     def get_source_code(manager_ip_address, manager_data)
       #puts "#{manager_data.to_h}"
       puts ''
-      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ") do
+      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ", stdout: true) do
         puts ''
         Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
           scp.download!(manager_data.compressed_file_path, @source_code.compressed_file_folder_path)
@@ -171,7 +171,7 @@ module Liri
       downloaded_file_name = manager_data.compressed_file_path.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
 
-      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ") do
+      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ", stdout: true) do
         @source_code.decompress_file(downloaded_file_path)
         @all_tests = @source_code.all_tests
       end
@@ -192,19 +192,19 @@ module Liri
         # Se setea la versión de ruby y el gemset para el código fuente descomprimido
         # Se especifica el Gemfile del cual se van a instalar los requerimientos
         # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ") do
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
         end
         puts ''
 
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ") do
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate RAILS_ENV=test'")
         end
         puts ''
 
-        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ") do
+        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ", stdout: true) do
         # puts ''
         # system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate:reset RAILS_ENV=test'")
         #end
@@ -243,7 +243,7 @@ module Liri
 
     def send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
       puts ''
-      Liri::Common::Benchmarking.start(start_msg: "Enviando archivo de resultados. Espere... ") do
+      Liri::Common::Benchmarking.start(start_msg: "Enviando archivo de resultados. Espere... ", stdout: true) do
         Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
           scp.upload!(tests_result_file_path, manager_data.folder_path)
         end

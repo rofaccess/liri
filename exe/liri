@@ -25,9 +25,10 @@ command :manager do |c|
   c.example 'Ejecuta el programa principal guardando los resultados en un archivo .html', 'liri -o result.html'
   c.option '-o', '--output [filename]', String, 'Especifica donde guardar los resultados de la ejecución de pruebas unitarias'
   c.action do |args, options|
-    Liri::Common::Benchmarking.start(end_msg: "\nFinalizado en: ") do
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder)
+    Liri::Common::Benchmarking.start(end_msg: "\nFinalizado en: ", stdout: true) do
       # Metodo que se ejecuta al llamar al comando manager
-      current_folder = Dir.pwd
       Liri::Manager.run(current_folder)
     end
     puts ''

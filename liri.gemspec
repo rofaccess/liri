@@ -55,4 +55,12 @@ Gem::Specification.new do |spec|
   # Ruby internationalization and localization (i18n) solution. https://github.com/ruby-i18n/i18n
   # Este es un requerimiento de la gema to_duration
   spec.add_runtime_dependency('i18n', '~> 1')
+
+  # The ultimate text progress bar library for Ruby!. https://github.com/jfelchner/ruby-progressbar
+  # Para mostrar barras de progreso
+  spec.add_runtime_dependency('ruby-progressbar', '~> 1')
+
+  # Terminal Table is a fast and simple, yet feature rich table generator written in Ruby. https://github.com/tj/terminal-table
+  # Para mostrar resumen de resultados
+  spec.add_runtime_dependency('terminal-table', '~> 3')
 end

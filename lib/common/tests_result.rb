@@ -32,12 +32,12 @@ module Liri
         file_path = File.join(@folder_path, '/', tests_result_file_name)
         result_hash = process_tests_result_file(file_path)
         update_partial_result(result_hash)
-        print_partial_result(result_hash)
+        #print_partial_result(result_hash)
         result_hash
       end
 
       def print_summary
-        puts "#{@example_quantity} examples, #{@failure_quantity} failures\n\n"
+        puts "\n#{@example_quantity} examples, #{@failure_quantity} failures\n"
       end
 
       private

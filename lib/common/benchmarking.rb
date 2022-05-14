@@ -6,7 +6,7 @@
 # Este módulo se encarga de medir el tiempo de ejecución de algunos bloques de código
 
 require 'benchmark'
-require 'i18n' # requirimiento de la gema to_duration
+require 'i18n' # requerimiento de la gema to_duration
 require 'to_duration'
 
 # Se configura la ubicación del archivo de internacionalización de la gema to_duration
@@ -17,18 +17,13 @@ module Liri
   module Common
     module Benchmarking
       class << self
-        def start(start_msg: nil, end_msg: 'Duración: ')
-          print start_msg
+        def start(start_msg: nil, end_msg: 'Duración: ', stdout: true)
+          Liri.logger.info(start_msg, stdout)
           seconds = Benchmark.realtime do
             yield
           end
-          print_result(end_msg, seconds)
-        end
-
-        private
-
-        def print_result(msg, seconds)
-          print "#{msg}#{seconds.to_duration}"
+          Liri.logger.info("#{end_msg}#{seconds.to_duration}", stdout)
+          seconds
         end
       end
     end
