@@ -1,6 +1,6 @@
 RSpec.describe Liri::Manager, '#run' do
   it 'run tests' do
-    allow(Liri::Manager).to receive(:get_credentials).and_return(['rofaccess', 'dos trocitos'])
+    allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
 
     @threads = []
 
@@ -22,14 +22,16 @@ RSpec.describe Liri::Manager, '#run' do
     @threads << Thread.new do
       until @manager_process_finished
         next unless @manager_process_finished
-        puts "¿¿¿¿¿¿¿¿¿¿¿MATANDO PROCESOS¿¿¿¿¿¿¿¿¿¿¿¿¿¿"
-        Liri.kill(@threads)
-
-        Liri.clear_setup
-        Liri.delete_setup
       end
+
+      Liri.kill(@threads)
+      Liri.set_setup(dummy_app_folder_path)
+      Liri.clear_setup
+      Liri.delete_setup
     end
 
     @threads.each(&:join)
   end
 end
+
+

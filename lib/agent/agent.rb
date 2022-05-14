@@ -108,7 +108,7 @@ module Liri
       tcp_socket.close
       Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
 
-      #Liri.clean_folder_content(@agent_folder_path)
+      Liri.clean_folder_content(@agent_folder_path)
 
       start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)
@@ -242,13 +242,13 @@ module Liri
           scp.upload!(tests_result_file_path, manager_data.folder_path)
         end
       end
+      puts ''
     end
 
     def get_tests(tests_batch, manager_ip_address)
       # Se convierte "[5, 9, 13, 1]" a un arreglo [5, 9, 13, 1]
       tests_keys = tests_batch['tests_batch_keys']
-      Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}:")
-      Liri.logger.debug(tests_keys)
+      Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}: #{tests_keys}")
       # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
       # Se retorna un arreglo con los tests a ejecutar ["spec/liri_spec.rb:4", "spec/hash_spec.rb:5", "spec/hash_spec.rb:59", ..., "spec/hash_spec.rb:37"]
       tests_keys.map { |test_key| @all_tests[test_key] }

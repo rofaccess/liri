@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start 'liri'
 
 require 'bundler/setup'
 require 'all_libraries'
@@ -28,6 +28,15 @@ end
 
 def test_samples_by_runner
   10
+end
+
+def spec_credentials_file_path
+  File.expand_path('./spec_credentials.yml')
+end
+
+def spec_credentials
+  data = YAML.load(File.read(spec_credentials_file_path))
+  [data['user'], data['password']]
 end
 
 def unit_test_class
