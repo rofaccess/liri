@@ -26,8 +26,8 @@ def dummy_app_folder_path
   File.join(File.expand_path("./"), '/', dummy_app_name)
 end
 
-def test_samples_by_runner
-  10
+def test_files_by_runner
+  1
 end
 
 def spec_credentials_file_path

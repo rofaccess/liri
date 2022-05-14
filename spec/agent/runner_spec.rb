@@ -2,6 +2,7 @@
 # se especifique liri, porque si se especifica otro gemset, entonces, la ejecución de estos tests falla.
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
+    Liri.set_setup(dummy_app_folder_path)
     @unit_test = Liri::Common::UnitTest::Rspec.new(dummy_app_folder_path)
     @runner = Liri::Agent::Runner.new(unit_test_class, dummy_app_folder_path)
     @tests_result = Liri::Common::TestsResult.new(dummy_app_folder_path)
@@ -17,11 +18,11 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     test_results_file_path, tests_result = run_tests(tests)
 
     expect(tests_result).to be_a(Hash)
-    expect(tests_result[:failures]).to be_empty
-    expect(tests_result[:example_quantity]).to eq(1)
-    expect(tests_result[:failure_quantity]).to eq(0)
+    expect(tests_result[:failures]).to_not be_empty
+    expect(tests_result[:example_quantity]).to eq(2)
+    expect(tests_result[:failure_quantity]).to eq(1)
     expect(tests_result[:passed_quantity]).to eq(1)
-    expect(tests_result[:failed_examples]).to be_empty
+    expect(tests_result[:failed_examples]).to_not be_empty
     delete_file(test_results_file_path)
   end
 
@@ -33,9 +34,9 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
 
     expect(tests_result).to be_a(Hash)
     expect(tests_result[:failures]).not_to be_empty
-    expect(tests_result[:example_quantity]).to eq(2)
-    expect(tests_result[:failure_quantity]).to eq(1)
-    expect(tests_result[:passed_quantity]).to eq(1)
+    expect(tests_result[:example_quantity]).to eq(4)
+    expect(tests_result[:failure_quantity]).to eq(2)
+    expect(tests_result[:passed_quantity]).to eq(2)
     expect(tests_result[:failed_examples]).not_to be_empty
     delete_file(test_results_file_path)
   end

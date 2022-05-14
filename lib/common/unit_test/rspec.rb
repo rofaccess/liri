@@ -15,21 +15,8 @@ module Liri
           tests_count = 1
           tests_hash = {}
           test_files.each do |test_file|
-            File.open(test_file) do |file|
-              @inside_comment = false
-              file.each_with_index do |line, index|
-                next if line_inside_comment_block(line)
-
-                if line.strip.start_with?('it')
-                  absolute_file_path = file.to_path
-                  relative_file_path = absolute_file_path.sub(@source_code_folder_path + '/', '')
-
-                  test_line = relative_file_path + ":#{index + 1}"
-                  tests_hash[tests_count] = test_line
-                  tests_count += 1
-                end
-              end
-            end
+            tests_hash[tests_count] = test_file.sub(@source_code_folder_path + '/', '')
+            tests_count += 1
           end
           tests_hash
         end

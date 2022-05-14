@@ -41,8 +41,8 @@ module Liri
         Liri.kill(threads)
       end
 
-      def test_samples_by_runner
-        Liri.setup.test_samples_by_runner
+      def test_files_by_runner
+        Liri.setup.test_files_by_runner
       end
 
       private
@@ -263,7 +263,7 @@ module Liri
         return nil if @all_tests.empty?
 
         @tests_batch_number += 1 # Se numera cada lote
-        samples = @all_tests.sample!(Manager.test_samples_by_runner) # Se obtiene algunos tests
+        samples = @all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
         samples_keys = samples.keys # Se obtiene la clave asignada a los tests
         @all_tests_processing_count += samples_keys.size
 

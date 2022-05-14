@@ -3,7 +3,7 @@
 # Obs.: Puede que no sea útil para el usuario poder cambiar este nombre
 compressed_file_name: compressed_source_code
 # Configuración de la cantidad de tests a ejecutar por tandas
-test_samples_by_runner: 1000
+test_files_by_runner: 10
 print_failures: false
 udp_request_delay: 10
 log:
