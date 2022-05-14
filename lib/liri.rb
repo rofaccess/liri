@@ -81,6 +81,10 @@ module Liri
       setup.ports.tcp
     end
 
+    def print_failures
+      setup.print_failures
+    end
+
     def current_folder_ruby_and_gemset
       "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
     end

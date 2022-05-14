@@ -107,7 +107,7 @@ module Liri
         tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
 
         send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
-        result = { tests_batch_number: tests_batch_number, tests_result_file_name: tests_result_file_name }
+        result = { tests_batch_number: tests_batch_number, tests_result_file_name: tests_result_file_name, tests_batch_keys_size: tests_batch['tests_batch_keys'].size}
         tcp_socket.puts(result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
       end
 

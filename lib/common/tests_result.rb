@@ -13,6 +13,7 @@ module Liri
         @example_quantity = 0
         @failure_quantity = 0
         @passed_quantity = 0
+        @failures = ''
       end
 
       def save(file_name, raw_tests_result)
@@ -38,6 +39,11 @@ module Liri
 
       def print_summary
         puts "\n#{@example_quantity} examples, #{@failure_quantity} failures\n"
+      end
+
+      def print_failures
+        puts "\nFailures: " if !@failures.empty?
+        puts @failures
       end
 
       private
@@ -91,6 +97,7 @@ module Liri
         @example_quantity += hash_result[:example_quantity]
         @failure_quantity += hash_result[:failure_quantity]
         @passed_quantity += hash_result[:passed_quantity]
+        @failures << hash_result[:failures]
       end
 
       def print_partial_result(result_hash)

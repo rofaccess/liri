@@ -68,7 +68,7 @@ module Liri
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
 
-        Common::Progressbar.start(total: nil, length: 150, format: 'Comprimiendo Código Fuente |%B| %a') do
+        Common::Progressbar.start(total: nil, length: 100, format: 'Comprimiendo Código Fuente |%B| %a') do
           source_code.compress_folder
         end
         puts "\n\n"
@@ -88,7 +88,7 @@ module Liri
       def get_all_tests(source_code)
         all_tests = {}
 
-        Common::Progressbar.start(total: nil, length: 150, format: 'Extrayendo Pruebas Unitarias |%B| %a') do
+        Common::Progressbar.start(total: nil, length: 100, format: 'Extrayendo Pruebas Unitarias |%B| %a') do
           all_tests = source_code.all_tests
         end
         puts "\n\n"
@@ -120,7 +120,7 @@ module Liri
 
       @manager_folder_path = manager_folder_path
 
-      @progressbar = ProgressBar.create(starting_at: 0, total: @all_tests_count, length: 150, format: 'Progress %c/%C |%b=%i| %p%% | %a')
+      @progressbar = ProgressBar.create(starting_at: 0, total: @all_tests_count, length: 100, format: 'Progress %c/%C |%b=%i| %p%% | %a')
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -226,6 +226,7 @@ module Liri
       Liri.clean_folder_content(@manager_folder_path)
       @tests_result.print_summary
       print_agents_summary
+      @tests_result.print_failures if Liri.print_failures
     end
 
     def all_tests
@@ -271,7 +272,7 @@ module Liri
 
         @agents[agent_ip_address] = { agent_ip_address: agent_ip_address, tests_processed_count: 0, examples: 0, failures: 0, time_in_seconds: 0, duration: '' } unless @agents[agent_ip_address]
 
-        @tests_batches[@tests_batch_number] = { agent_ip_address: agent_ip_address, tests_batch_keys: samples_keys } # Se guarda el lote a enviar
+        #@tests_batches[@tests_batch_number] = { agent_ip_address: agent_ip_address, tests_batch_keys: samples_keys } # Se guarda el lote a enviar
         tests_batch = { tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
         tests_batch
       end
@@ -282,13 +283,15 @@ module Liri
       @semaphore.synchronize do
         tests_batch_number = tests_result['tests_batch_number']
         tests_result_file_name = tests_result['tests_result_file_name']
-        tests_batch_keys = @tests_batches[tests_batch_number][:tests_batch_keys]
-        tests_processed_count = tests_batch_keys.size
+        tests_batch_keys_size = tests_result['tests_batch_keys_size']
+
+        #tests_batch_keys = @tests_batches[tests_batch_number][:tests_batch_keys]
+        tests_processed_count = tests_batch_keys_size
         @all_tests_results_count += tests_processed_count
 
         @progressbar.progress = @all_tests_results_count
 
-        @tests_batches[tests_batch_number][:tests_result_file_name] = tests_result_file_name
+        #@tests_batches[tests_batch_number][:tests_result_file_name] = tests_result_file_name
 
         tests_result = @tests_result.process(tests_result_file_name)
 
