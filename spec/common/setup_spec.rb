@@ -44,9 +44,9 @@ RSpec.describe Liri::Common::Setup do
       @setup.init
     end
 
-    describe '#create' do
+    describe '#init' do
       it 'no crea el archivo de configuración' do
-        expect(@setup.init).to be true
+        expect(@setup.init).to be false
         expect(Dir.exist?(@setup.setup_folder_path)).to be true
         expect(File.exist?(@setup.setup_file_path)).to be true
       end

@@ -76,13 +76,17 @@ module Liri
 
       # Crea un archivo de configuración en la raiz del proyecto desde un template
       def create_setup_file
-        File.open(@setup_file_path, 'w') do |output_file|
-          File.foreach(TEMPLATE_PATH) do |input_line|
-            output_file.write(input_line)
+        if File.exist?(@setup_file_path)
+          false
+        else
+          File.open(@setup_file_path, 'w') do |output_file|
+            File.foreach(TEMPLATE_PATH) do |input_line|
+              output_file.write(input_line)
+            end
           end
-        end
 
-        File.exist?(@setup_file_path) ? true : false
+          File.exist?(@setup_file_path) ? true : false
+        end
       end
 
       # Borra el archivo de configuración

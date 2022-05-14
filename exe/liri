@@ -27,7 +27,8 @@ command :manager do |c|
   c.action do |args, options|
     Liri::Common::Benchmarking.start(end_msg: "\nFinalizado en: ") do
       # Metodo que se ejecuta al llamar al comando manager
-      Liri::Manager.run
+      current_folder = Dir.pwd
+      Liri::Manager.run(current_folder)
     end
     puts ''
   end
@@ -47,7 +48,8 @@ command :agent do |c|
   c.example 'Ejecuta el programa agente', 'liri agent'
   c.action do |args, options|
     # Método que se ejecuta al llamar al comando agent
-    Liri::Agent.run
+    current_folder = Dir.pwd
+    Liri::Agent.run(current_folder)
   end
 end
 

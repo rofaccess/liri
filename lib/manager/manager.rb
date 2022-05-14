@@ -24,7 +24,7 @@ module Liri
         Liri.logger.info("Proceso Manager iniciado")
         puts "Presione Ctrl + c para terminar el proceso Manager manualmente\n\n"
 
-        user, password = get_credentials
+        user, password = get_credentials(setup_manager.setup_folder_path)
         source_code = compress_source_code(source_code_folder_path, manager_folder_path)
         manager_data = get_manager_data(user, password, manager_folder_path, source_code)
         all_tests = get_all_tests(source_code)
@@ -59,8 +59,8 @@ module Liri
         end
       end
 
-      def get_credentials
-        credential = Liri::Manager::Credential.new(Liri::SETUP_FOLDER_PATH)
+      def get_credentials(setup_folder_path)
+        credential = Liri::Manager::Credential.new(setup_folder_path)
         credential.get
       end
 

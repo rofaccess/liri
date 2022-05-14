@@ -1,6 +1,8 @@
 RSpec.describe Liri::Manager, '#run' do
   it 'run tests' do
     allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
+    allow(Liri).to receive(:udp_port).and_return(2001)
+    allow(Liri).to receive(:tcp_port).and_return(2501)
 
     @threads = []
 
@@ -33,5 +35,3 @@ RSpec.describe Liri::Manager, '#run' do
     @threads.each(&:join)
   end
 end
-
-
