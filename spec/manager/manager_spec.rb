@@ -1,7 +1,7 @@
 # Atención: Es recomendable comentar estos tests cuando se va a ejecutar los tests de Liri usando
 # Liri desde la línea de comandos. Esto porque la ejecución de estos tests no funciona usando Liri en línea de comandos,
 # tal vez por el uso de hilos.
-=begin
+
 RSpec.describe Liri::Manager, '#run' do
   it 'run tests' do
     allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
@@ -39,7 +39,6 @@ RSpec.describe Liri::Manager, '#run' do
     @threads.each(&:join)
   end
 end
-=end
 
 # El siguiente bloque es útil para debuguear
 RSpec.describe Liri::Manager, '#run' do
