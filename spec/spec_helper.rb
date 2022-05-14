@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+SimpleCov.start 'liri'
+
 require 'bundler/setup'
 require 'all_libraries'
 
@@ -15,19 +18,36 @@ RSpec.configure do |config|
   end
 end
 
-def source_code_folder_path
-  Liri::Common::SourceCode::FOLDER_PATH
+def dummy_app_name
+  'dummy-app'
+end
+
+def dummy_app_folder_path
+  File.join(File.expand_path("./"), '/', dummy_app_name)
 end
 
 def test_samples_by_runner
-  Liri.setup.test_samples_by_runner
+  10
+end
+
+def spec_credentials_file_path
+  File.expand_path('./spec_credentials.yml')
+end
+
+def liri_folder_path
+  File.expand_path('./')
+end
+
+def spec_credentials
+  data = YAML.load(File.read(spec_credentials_file_path))
+  [data['user'], data['password']]
 end
 
 def unit_test_class
-  "Liri::Common::UnitTest::#{Liri.setup.library.unit_test}"
+  "Liri::Common::UnitTest::Rspec"
 end
 
 def compression_class
-  "Liri::Common::Compressor::#{Liri.setup.library.compression}"
+  "Liri::Common::Compressor::Zip"
 end
 

@@ -3,20 +3,16 @@
 # Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicacion
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
-  VERSION = '0.1.0'
-  SETUP_FOLDER_NAME = 'liri'
-  SETUP_FOLDER_PATH = File.join(Dir.pwd, '/', SETUP_FOLDER_NAME)
-  LOGS_FOLDER_NAME = 'logs'
-  MANAGER_LOGS_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', LOGS_FOLDER_NAME)
-  AGENT_LOGS_FOLDER_PATH = MANAGER_LOGS_FOLDER_PATH
-  AGENT_FOLDER_NAME = 'agent'
-  AGENT_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', AGENT_FOLDER_NAME)
-  MANAGER_FOLDER_NAME = 'manager'
-  MANAGER_FOLDER_PATH = File.join(SETUP_FOLDER_PATH, '/', MANAGER_FOLDER_NAME)
+  VERSION = '0.2.0'
 
   class << self
+    def set_setup(destination_folder_path)
+      load_setup_manager(destination_folder_path)
+    end
+
+    # Carga las configuraciones en memoria desde un archivo de configuracion
     def setup
-      @setup ||= load_setup
+      @setup
     end
 
     def logger
@@ -36,30 +32,16 @@ module Liri
       end
     end
 
-    def create_folders(program)
-      Dir.mkdir(SETUP_FOLDER_PATH) unless Dir.exist?(SETUP_FOLDER_PATH)
-
-      case program
-      when 'manager'
-        Dir.mkdir(MANAGER_LOGS_FOLDER_PATH) unless Dir.exist?(MANAGER_LOGS_FOLDER_PATH)
-        Dir.mkdir(MANAGER_FOLDER_PATH) unless Dir.exist?(MANAGER_FOLDER_PATH)
-      when 'agent'
-        Dir.mkdir(AGENT_FOLDER_PATH) unless Dir.exist?(AGENT_FOLDER_PATH)
-        Dir.mkdir(AGENT_LOGS_FOLDER_PATH) unless Dir.exist?(AGENT_LOGS_FOLDER_PATH)
-      end
-    end
-
-    def clean_folder(folder_path)
+    def clean_folder_content(folder_path)
       FileUtils.rm_rf(Dir.glob(folder_path + '/*')) if Dir.exist?(folder_path)
     end
 
     def reload_setup
-      @setup = load_setup
+      @setup = (@setup_manager ? @setup_manager.load : nil)
     end
 
     def delete_setup
-      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
-      liri_setup.delete
+      @setup_manager ? @setup_manager.delete_setup_folder : false
     end
 
     def init_exit(stop, threads, program)
@@ -75,7 +57,7 @@ module Liri
     end
 
     def kill(threads)
-      threads.each{|thread| Thread.kill(thread)}
+      threads.each{ |thread| Thread.kill(thread) }
     end
 
     def current_host_ip_address
@@ -99,22 +81,27 @@ module Liri
       setup.ports.tcp
     end
 
+    def print_failures
+      setup.print_failures
+    end
+
     def current_folder_ruby_and_gemset
       "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
     end
 
     private
 
-    # Carga las configuraciones en memoria desde un archivo de configuracion
-    def load_setup
-      liri_setup = Liri::Manager::Setup.new(SETUP_FOLDER_PATH)
-      liri_setup.create unless File.exist?(liri_setup.path)
-      liri_setup.load
+    # Inicializa el objeto que gestiona las configuraciones
+    def load_setup_manager(destination_folder_path)
+      @setup_manager = Liri::Common::Setup.new(destination_folder_path)
+      @setup_manager.init
+      @setup = @setup_manager.load
+      @setup_manager
     end
 
     # Inicializa y configura la librería encargada de loguear
     def load_logger(folder_path = nil, file_name = nil)
-      log = Liri::Common::Log.new('daily', folder_path: folder_path, file_name: file_name, stdout: Liri.setup.log.stdout.show)
+      log = Liri::Common::Log.new('daily', folder_path: folder_path, file_name: file_name, stdout: setup.log.stdout.show)
       log
     end
   end

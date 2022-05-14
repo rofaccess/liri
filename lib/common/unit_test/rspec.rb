@@ -16,7 +16,10 @@ module Liri
           tests_hash = {}
           test_files.each do |test_file|
             File.open(test_file) do |file|
+              @inside_comment = false
               file.each_with_index do |line, index|
+                next if line_inside_comment_block(line)
+
                 if line.strip.start_with?('it')
                   absolute_file_path = file.to_path
                   relative_file_path = absolute_file_path.sub(@source_code_folder_path + '/', '')
@@ -50,40 +53,29 @@ module Liri
               raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
             end
 
-            hash_tests_result = process_tests_result(raw_tests_result)
-            hash_tests_result
+            return raw_tests_result
           end
         end
 
         private
+
         def test_files
           Dir[@tests_folder_path + "/**/*spec.rb"]
         end
 
-        # Recibe el resultado crudo de las pruebas unitarias
-        # Procesa el resultado y lo devuelve en formato hash manejable
-        # Ejemplo del hash retornado:
-        # {example_quantity: 2, failure_quantity: 1}
-        def process_tests_result(raw_test_results)
-          result_hash = {example_quantity: 0, failure_quantity: 0}
-          flag = ''
-          raw_test_results.each_line do |line|
-            if line.strip.start_with?('Finished')
-              flag = 'Finished'
-              next
-            end
-
-            if flag == 'Finished'
-              puts ''
-              Liri.logger.info(line)
-              values = line.to_s.match(/([\d]+) example.?, ([\d]+) failure.?/)
-              result_hash[:example_quantity] = values[1].to_i
-              result_hash[:failure_quantity] = values[2].to_i
-              flag = ''
-            end
+        # Revisa si la línea se encuentra dentro de un bloque comentado
+        def line_inside_comment_block(line)
+          if line.strip.start_with?('=begin')
+            @inside_comment = true
+            return true
           end
 
-          result_hash
+          if line.strip.start_with?('=end')
+            @inside_comment = false
+            return false
+          end
+
+          return true if @inside_comment
         end
       end
     end

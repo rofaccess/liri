@@ -1,0 +1,1 @@
+scp "installers/liriagent.zip" "liri@192.168.0.31:~/"

@@ -11,16 +11,19 @@ module Liri
     class << self
       # Inicia la ejecución del Agent
       # @param stop [Boolean] el valor true es para que no se ejecute infinitamente el método en el test unitario.
-      def run(stop = false)
-        Liri.create_folders('agent')
+      def run(work_folder_path, stop = false)
+        setup_manager = Liri.set_setup(work_folder_path)
+        agent_folder_path = setup_manager.agent_folder_path
 
-        Liri.set_logger(Liri::AGENT_LOGS_FOLDER_PATH, 'liri-agent.log')
+        Liri.set_logger(setup_manager.logs_folder_path, 'liri-agent.log')
         Liri.logger.info("Proceso Agent iniciado")
-        puts "Presione Ctrl + c para terminar el proceso Agent manualmente\n\n"
+        Liri.logger.info("Presione Ctrl + c para terminar el proceso Agent manualmente\n", true)
 
-        source_code = Liri::Common::SourceCode.new(Liri::AGENT_FOLDER_PATH, Liri.compression_class, Liri.unit_test_class)
-        runner = Liri::Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
-        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner)
+        decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
+        source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
+        runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
+        tests_result = Common::TestsResult.new(agent_folder_path)
+        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result, agent_folder_path)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
@@ -32,15 +35,20 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, source_code, runner)
+    def initialize(udp_port, tcp_port, source_code, runner, tests_result, agent_folder_path)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
 
       @source_code = source_code
       @runner = runner
+      @tests_result = tests_result
+
+      @all_tests = {}
 
       @managers = {}
+
+      @agent_folder_path = agent_folder_path
     end
 
     # Inicia un servidor udp que se mantiene en espera de la primera petición de conexión del Manager
@@ -62,48 +70,51 @@ module Liri
         loop do
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
-          user, pass, dir = @manager_request.first.split(";")
-          process_manager_connection_request(manager_ip_address, user, pass, dir)
+          manager_data = get_manager_data(JSON.parse(@manager_request.first))
+          process_manager_connection_request(manager_ip_address, manager_data)
         end
       end
     end
 
     # Inicia un cliente tcp para responder a la petición broadcast del Manager para que éste sepa donde enviar las pruebas
-    def start_client_socket_to_process_tests(manager_ip_address)
+    def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
 
-      Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
-                                     (Se establece una conexión para procesar la ejecución de las pruebas)
-      ")
+      agent_ip_address = tcp_socket.addr[2]
 
-      tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
-      puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
+      tcp_socket.puts({ msg: 'Listo' }) # Se envía un mensaje inicial al Manager
 
-      # Se procesan las pruebas enviadds por el Manager
+      Liri.logger.info("Se inicia una conexión para procesar pruebas con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      Liri.logger.info("\nConexión iniciada con el Manager: #{manager_ip_address}", true)
+
+      response = JSON.parse(tcp_socket.gets)
+      return unless response['exist_tests']
+
+      get_source_code(manager_ip_address, manager_data)
+
+      # Se procesan las pruebas enviadas por el Manager
       while line = tcp_socket.gets
         response = line.chop
         break if response == 'exit'
 
-        tests = JSON.parse(response)
-        Liri.logger.debug("Pruebas recibidas del Manager #{manager_ip_address}:")
-        Liri.logger.debug(tests)
+        tests_batch = JSON.parse(response)
+        tests = get_tests(tests_batch, manager_ip_address)
 
-        tests_result = @runner.run_tests(tests)
+        raw_tests_result = @runner.run_tests(tests)
 
-        json_tests_result = tests_result.to_json
-        Liri.logger.debug("Resultados de la ejecución de las pruebas recibidas del Manager #{manager_ip_address}:")
-        Liri.logger.debug(json_tests_result)
+        tests_batch_number = tests_batch['tests_batch_number']
+        tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_batch_number)
+        tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
 
-        Liri.logger.info("
-                                       #{tests.size} pruebas recibidas, #{tests_result[:example_quantity]} pruebas ejecutadas
-        ")
-        tcp_socket.print(json_tests_result) # Este no logra enviar toda la información, porque? en cambio el cliente recibe un json grande sin problemas
+        send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
+        result = { tests_batch_number: tests_batch_number, tests_result_file_name: tests_result_file_name, tests_batch_keys_size: tests_batch['tests_batch_keys'].size}
+        tcp_socket.puts(result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
       end
 
       tcp_socket.close
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
 
-      Liri.clean_folder(Liri::AGENT_FOLDER_PATH)
+      Liri.clean_folder_content(@agent_folder_path)
 
       start_client_to_close_manager_server(manager_ip_address, 'Conexión Terminada')
       unregister_manager(manager_ip_address)
@@ -112,11 +123,11 @@ module Liri
     rescue Errno::ECONNRESET => e
       tcp_socket.close
       Liri.logger.error("Exception(#{e}) Conexión cerrada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
       Liri.logger.error("Exception(#{e}) Conexión rechazada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     end
 
@@ -125,15 +136,15 @@ module Liri
     # Inserta el ip recibido dentro del hash si es que ya no existe en el hash
     # Nota: Se requieren imprimir datos para saber el estado de la aplicación, sería muy útil usar algo para logear
     # estas cosas en los diferentes niveles, debug, info, etc.
-    def process_manager_connection_request(manager_ip_address, user, pass, dir)
+    def process_manager_connection_request(manager_ip_address, manager_data)
       unless registered_manager?(manager_ip_address)
         register_manager(manager_ip_address)
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        if process_manager_connection_scp(manager_ip_address, user, pass, dir)
-          start_client_socket_to_process_tests(manager_ip_address)
-        else
-          unregister_manager(manager_ip_address)
-        end
+        #if get_source_code(manager_ip_address, manager_data)
+          start_client_socket_to_process_tests(manager_ip_address, manager_data)
+        #else
+          #unregister_manager(manager_ip_address)
+        #end
       end
     end
 
@@ -141,27 +152,28 @@ module Liri
     # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
     def start_client_to_close_manager_server(manager_ip_address, msg)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address}")
-      tcp_socket.print({msg: msg}.to_json)
+      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      tcp_socket.print({ msg: msg }.to_json)
       tcp_socket.close
     end
 
-    def process_manager_connection_scp(manager_ip_address, user, password, dir)
-      # puts "User: #{user} Password: #{password}"
+    def get_source_code(manager_ip_address, manager_data)
+      #puts "#{manager_data.to_h}"
       puts ''
-      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ") do
+      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ", stdout: true) do
         puts ''
-        Net::SCP.start(manager_ip_address, user, :password => password) do |scp|
-          scp.download!(dir, @source_code.compressed_file_folder_path)
+        Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
+          scp.download!(manager_data.compressed_file_path, @source_code.compressed_file_folder_path)
         end
       end
       puts ''
 
-      downloaded_file_name = dir.split('/').last
+      downloaded_file_name = manager_data.compressed_file_path.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
 
-      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ") do
+      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ", stdout: true) do
         @source_code.decompress_file(downloaded_file_path)
+        @all_tests = @source_code.all_tests
       end
       puts ''
 
@@ -180,19 +192,19 @@ module Liri
         # Se setea la versión de ruby y el gemset para el código fuente descomprimido
         # Se especifica el Gemfile del cual se van a instalar los requerimientos
         # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ") do
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
         end
         puts ''
 
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ") do
+        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate RAILS_ENV=test'")
         end
         puts ''
 
-        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ") do
+        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ", stdout: true) do
         # puts ''
         # system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate:reset RAILS_ENV=test'")
         #end
@@ -218,6 +230,34 @@ module Liri
     rescue TypeError => e
       Liri.logger.warn("Exception(#{e}) Error indeterminado")
       false
+    end
+
+    def get_manager_data(manager_data_hash)
+      Common::ManagerData.new(
+        folder_path: manager_data_hash['folder_path'],
+        compressed_file_path: manager_data_hash['compressed_file_path'],
+        user: manager_data_hash['user'],
+        password: manager_data_hash['password']
+      )
+    end
+
+    def send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
+      puts ''
+      Liri::Common::Benchmarking.start(start_msg: "Enviando archivo de resultados. Espere... ", stdout: true) do
+        Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
+          scp.upload!(tests_result_file_path, manager_data.folder_path)
+        end
+      end
+      puts ''
+    end
+
+    def get_tests(tests_batch, manager_ip_address)
+      # Se convierte "[5, 9, 13, 1]" a un arreglo [5, 9, 13, 1]
+      tests_keys = tests_batch['tests_batch_keys']
+      Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}: #{tests_keys}")
+      # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
+      # Se retorna un arreglo con los tests a ejecutar ["spec/liri_spec.rb:4", "spec/hash_spec.rb:5", "spec/hash_spec.rb:59", ..., "spec/hash_spec.rb:37"]
+      tests_keys.map { |test_key| @all_tests[test_key] }
     end
 
     def registered_manager?(manager_ip_address)

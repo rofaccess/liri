@@ -1,9 +1,11 @@
 /.idea
+/coverage
 /liri
 
 *.log
 *.gem
-*.zip
 .rspec_status
 
 *.odt#
+
+spec_credentials.yml

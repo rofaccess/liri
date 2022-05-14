@@ -25,8 +25,11 @@ gem 'coderay', '~>1'
 
 group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
-  gem 'rubocop', '~>0', require: false
+  gem 'rubocop', '~>1', require: false
 
   # A Ruby Documentation Tool. https://github.com/lsegal/yard
   gem 'yard', '~>0'
 end
+
+# SimpleCov is a code coverage analysis tool for Ruby. https://github.com/simplecov-ruby/simplecov
+gem 'simplecov', '~>0', require: false
