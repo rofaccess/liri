@@ -1,3 +1,7 @@
+# Atención: Es recomendable comentar estos tests cuando se va a ejecutar los tests de Liri usando
+# Liri desde la línea de comandos. Esto porque la ejecución de estos tests no funciona usando Liri en línea de comandos,
+# tal vez por el uso de hilos.
+=begin
 RSpec.describe Liri::Manager, '#run' do
   it 'run tests' do
     allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
@@ -33,5 +37,22 @@ RSpec.describe Liri::Manager, '#run' do
     end
 
     @threads.each(&:join)
+  end
+end
+=end
+
+# El siguiente bloque es útil para debuguear
+RSpec.describe Liri::Manager, '#run' do
+  it 'run tests' do
+    # Comentar las siguientes cuatro lineas cuando se va a debugear junto el ejecutable liri a
+    allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
+    allow(Liri).to receive(:udp_port).and_return(2001)
+    allow(Liri).to receive(:tcp_port).and_return(2501)
+    Liri::Manager.run(dummy_app_folder_path, true)
+
+    #Liri::Manager.run(liri_folder_path, false)
+
+    Liri.clear_setup
+    Liri.delete_setup
   end
 end

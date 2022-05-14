@@ -34,6 +34,10 @@ def spec_credentials_file_path
   File.expand_path('./spec_credentials.yml')
 end
 
+def liri_folder_path
+  File.expand_path('./')
+end
+
 def spec_credentials
   data = YAML.load(File.read(spec_credentials_file_path))
   [data['user'], data['password']]

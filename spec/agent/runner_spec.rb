@@ -1,3 +1,5 @@
+# Atención: Estos tests ejecutan los tests de dummy-app, es muy importante que en el archivo .ruby-gemset de dummy-app
+# se especifique liri, porque si se especifica otro gemset, entonces, la ejecución de estos tests falla.
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
     @unit_test = Liri::Common::UnitTest::Rspec.new(dummy_app_folder_path)

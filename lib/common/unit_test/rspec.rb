@@ -16,7 +16,10 @@ module Liri
           tests_hash = {}
           test_files.each do |test_file|
             File.open(test_file) do |file|
+              @inside_comment = false
               file.each_with_index do |line, index|
+                next if line_inside_comment_block(line)
+
                 if line.strip.start_with?('it')
                   absolute_file_path = file.to_path
                   relative_file_path = absolute_file_path.sub(@source_code_folder_path + '/', '')
@@ -55,8 +58,24 @@ module Liri
         end
 
         private
+
         def test_files
           Dir[@tests_folder_path + "/**/*spec.rb"]
+        end
+
+        # Revisa si la línea se encuentra dentro de un bloque comentado
+        def line_inside_comment_block(line)
+          if line.strip.start_with?('=begin')
+            @inside_comment = true
+            return true
+          end
+
+          if line.strip.start_with?('=end')
+            @inside_comment = false
+            return false
+          end
+
+          return true if @inside_comment
         end
       end
     end
