@@ -8,3 +8,5 @@
 .rspec_status
 
 *.odt#
+
+spec_credentials.yml
