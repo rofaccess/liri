@@ -79,13 +79,18 @@ module Liri
     # Inicia un cliente tcp para responder a la petición broadcast del Manager para que éste sepa donde enviar las pruebas
     def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-      agent_ip_address = tcp_socket.addr[2]
-      Liri.logger.info("Se inicia una conexión con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}
-                                     (Se establece una conexión para procesar la ejecución de las pruebas)
-      ")
 
-      tcp_socket.print("Listo para ejecutar pruebas") # Se envía un mensaje inicial al Manager
+      agent_ip_address = tcp_socket.addr[2]
+
+      tcp_socket.puts({ msg: 'Listo' }) # Se envía un mensaje inicial al Manager
+
+      Liri.logger.info("Se inicia una conexión para procesar pruebas con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       puts "\nConexión iniciada con el Manager: #{manager_ip_address}"
+
+      response = JSON.parse(tcp_socket.gets)
+      return unless response['exist_tests']
+
+      get_source_code(manager_ip_address, manager_data)
 
       # Se procesan las pruebas enviadas por el Manager
       while line = tcp_socket.gets
@@ -107,7 +112,7 @@ module Liri
       end
 
       tcp_socket.close
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
 
       Liri.clean_folder_content(@agent_folder_path)
 
@@ -118,11 +123,11 @@ module Liri
     rescue Errno::ECONNRESET => e
       tcp_socket.close
       Liri.logger.error("Exception(#{e}) Conexión cerrada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
       Liri.logger.error("Exception(#{e}) Conexión rechazada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address}")
+      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     end
 
@@ -135,11 +140,11 @@ module Liri
       unless registered_manager?(manager_ip_address)
         register_manager(manager_ip_address)
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
-        if get_source_code(manager_ip_address, manager_data)
+        #if get_source_code(manager_ip_address, manager_data)
           start_client_socket_to_process_tests(manager_ip_address, manager_data)
-        else
-          unregister_manager(manager_ip_address)
-        end
+        #else
+          #unregister_manager(manager_ip_address)
+        #end
       end
     end
 
@@ -147,8 +152,8 @@ module Liri
     # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
     def start_client_to_close_manager_server(manager_ip_address, msg)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address}")
-      tcp_socket.print({msg: msg}.to_json)
+      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      tcp_socket.print({ msg: msg }.to_json)
       tcp_socket.close
     end
 

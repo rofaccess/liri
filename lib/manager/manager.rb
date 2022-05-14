@@ -153,6 +153,12 @@ module Liri
           agent_ip_address = client.remote_address.ip_address
           response = client.recvfrom(1000).first
 
+          puts "\nConexión iniciada con el Agente: #{agent_ip_address}"
+          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}:  #{response}")
+
+          # Se le indica al agente que proceda
+          client.puts({ msg: 'Recibido', exist_tests: all_tests.any? }.to_json)
+
           if all_tests.empty?
             # No importa lo que le haga, el broadcast udp no se muere al instante y el agente sigue respondiendo
             # Las siguientes dos lineas son para que se deje de hacer el broadcast pero aun asi se llegan a hacer
@@ -162,16 +168,10 @@ module Liri
             # luego test enviados sin resultados o sino ignorar
             Thread.kill(search_agents_thread)
             agents_search_processing_enabled = false
-            Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address}")
-            Liri.logger.info(response)
+            Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address} en el puerto TCP: #{@tcp_port}: #{response}")
             client.close
             Thread.exit
           end
-
-          puts "\nConexión iniciada con el Agente: #{agent_ip_address}"
-          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}
-                                         => Agent #{agent_ip_address}: #{response}
-          ")
 
           while all_tests.any?
             tests_batch = tests_batch(agent_ip_address)
@@ -201,7 +201,7 @@ module Liri
 
           update_processing_statuses
           puts ''
-          Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address}")
+          Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address} en el puerto TCP: #{@tcp_port}")
           begin
             client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
             client.close # se desconecta el cliente
