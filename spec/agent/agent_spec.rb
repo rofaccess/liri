@@ -1,5 +1,6 @@
 # Atención: Si hay algún error que diga que la contraseña es incorrecta cuando es correcta, podría ser por haber hecho
 # varios intentos fallidos, entonces la contraseña se bloquea por 10 minutos en Manjaro.
+=begin
 RSpec.describe Liri::Agent, '#run' do
   it 'run tests' do
     # Comentar las siguientes tres lineas cuando se va a debugear junto al ejecutable liri m
@@ -13,3 +14,4 @@ RSpec.describe Liri::Agent, '#run' do
     Liri.delete_setup
   end
 end
+=end

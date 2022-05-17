@@ -3,7 +3,7 @@
 # Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicacion
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
-  VERSION = '0.3.0'
+  VERSION = '0.3.1'
 
   class << self
     def set_setup(destination_folder_path)
@@ -81,8 +81,16 @@ module Liri
       setup.ports.tcp
     end
 
-    def print_failures
-      setup.print_failures
+    def print_failures_list
+      setup.print_failures_list
+    end
+
+    def print_failed_examples
+      setup.print_failed_examples
+    end
+
+    def print_agents_detailed_summary
+      setup.print_agents_detailed_summary
     end
 
     def udp_request_delay

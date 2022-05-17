@@ -82,7 +82,7 @@ module Liri
 
       agent_ip_address = tcp_socket.addr[2]
 
-      tcp_socket.puts({ msg: 'Listo' }) # Se envía un mensaje inicial al Manager
+      tcp_socket.puts({ msg: 'Listo', hardware_model: get_hardware_model }.to_json) # Se envía un mensaje inicial al Manager
 
       Liri.logger.info("Se inicia una conexión para procesar pruebas con el Manager: #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
       Liri.logger.info("\nConexión iniciada con el Manager: #{manager_ip_address}", true)
@@ -259,6 +259,11 @@ module Liri
       # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
       # Se retorna un arreglo con los tests a ejecutar ["spec/liri_spec.rb:4", "spec/hash_spec.rb:5", "spec/hash_spec.rb:59", ..., "spec/hash_spec.rb:37"]
       tests_keys.map { |test_key| @all_tests[test_key] }
+    end
+
+    def get_hardware_model
+      hardware_model = %x|cat /sys/devices/virtual/dmi/id/product_name|
+      hardware_model.strip # remove \n from string
     end
 
     def registered_manager?(manager_ip_address)

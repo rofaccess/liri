@@ -19,7 +19,7 @@ module Liri
         manager_folder_path = setup_manager.manager_folder_path
 
         Liri.set_logger(setup_manager.logs_folder_path, 'liri-manager.log')
-        Liri.logger.info("Proceso Manager iniciado")
+        Liri.logger.info('Proceso Manager iniciado')
         Liri.logger.info("Presione Ctrl + c para terminar el proceso Manager manualmente\n", true)
 
         user, password = get_credentials(setup_manager.setup_folder_path)
@@ -35,7 +35,7 @@ module Liri
         manager.start_server_socket_to_process_tests(threads[0]) unless stop # Esperar y enviar los test unitarios a los Agents
 
         Liri.init_exit(stop, threads, 'Manager')
-        Liri.logger.info("Proceso Manager terminado")
+        Liri.logger.info('Proceso Manager terminado')
       rescue SignalException => e
         Liri.logger.info("Exception(#{e}) Proceso Manager terminado manualmente")
         Liri.kill(threads)
@@ -50,9 +50,9 @@ module Liri
         if File.exist?(File.join(Dir.pwd, 'Gemfile'))
           true
         else
-          Liri.logger.info("No se encuentra un archivo Gemfile por lo que se asume que el directorio actual no corresponde a un proyecto Ruby")
-          Liri.logger.info("Liri sólo puede ejecutarse en proyectos Ruby")
-          Liri.logger.info("Proceso Manager terminado")
+          Liri.logger.info('No se encuentra un archivo Gemfile por lo que se asume que el directorio actual no corresponde a un proyecto Ruby')
+          Liri.logger.info('Liri sólo puede ejecutarse en proyectos Ruby')
+          Liri.logger.info('Proceso Manager terminado')
           false
         end
       end
@@ -102,7 +102,7 @@ module Liri
       @all_tests = all_tests
       @all_tests_count = all_tests.size
       @all_tests_results = {}
-      @all_tests_results_count = 0
+      @tests_files_processed_count = 0
       @all_tests_processing_count = 0
       @agents = {}
 
@@ -110,7 +110,7 @@ module Liri
       @test_processing_enabled = true
 
       @tests_batch_number = 0
-      @tests_batches = {}
+      @processed_tests_batches = {}
 
       @tests_result = tests_result
       @semaphore = Mutex.new
@@ -125,7 +125,7 @@ module Liri
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
-        Liri.logger.info("Buscando Agentes... Espere")
+        Liri.logger.info('Buscando Agentes... Espere')
         Liri.logger.info("Se emite un broadcast cada #{Liri.udp_request_delay} segundos en el puerto UDP: #{@udp_port}
                                      (Se mantiene escaneando la red para encontrar Agents)
         ")
@@ -155,10 +155,11 @@ module Liri
       while test_processing_enabled
         Thread.start(tcp_socket.accept) do |client|
           agent_ip_address = client.remote_address.ip_address
-          response = client.recvfrom(1000).first
+          response = JSON.parse(client.recvfrom(1000).first)
+          hardware_model = response['hardware_model']
 
           Liri.logger.info("\nConexión iniciada con el Agente: #{agent_ip_address}")
-          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}:  #{response}")
+          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}: #{response}")
 
           # Se le indica al agente que proceda
           client.puts({ msg: 'Recibido', exist_tests: all_tests.any? }.to_json)
@@ -178,7 +179,7 @@ module Liri
           end
 
           while all_tests.any?
-            time_in_seconds = Liri::Common::Benchmarking.start(start_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", end_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Duración: ", stdout: false) do
+            batch_run_finished_in = Liri::Common::Benchmarking.start(start_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", end_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Duración: ", stdout: false) do
               tests_batch = tests_batch(agent_ip_address)
               break unless tests_batch
 
@@ -199,7 +200,7 @@ module Liri
             begin
               tests_result = JSON.parse(response)
               Liri.logger.debug("Respuesta del Agent #{agent_ip_address}: #{tests_result}")
-              process_tests_result(agent_ip_address, tests_result, time_in_seconds)
+              process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_finished_in)
             rescue JSON::ParserError => e
               Liri.logger.error("Exception(#{e}) Error de parseo JSON")
             end
@@ -213,8 +214,8 @@ module Liri
           rescue Errno::EPIPE => e
             # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
             Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-			      # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
-			      # mientras sigan pruebas pendientes
+            # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
+            # mientras sigan pruebas pendientes
             Thread.exit
           end
         end
@@ -223,7 +224,9 @@ module Liri
       Liri.clean_folder_content(@manager_folder_path)
       @tests_result.print_summary
       print_agents_summary
-      @tests_result.print_failures if Liri.print_failures
+      print_agents_detailed_summary if Liri.print_agents_detailed_summary
+      @tests_result.print_failures_list if Liri.print_failures_list
+      @tests_result.print_failed_examples if Liri.print_failed_examples
     end
 
     def all_tests
@@ -252,7 +255,7 @@ module Liri
 
     def update_processing_statuses
       @semaphore.synchronize do
-        @test_processing_enabled = false if @all_tests_count == @all_tests_results_count
+        @test_processing_enabled = false if @all_tests_count == @tests_files_processed_count
         @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
       end
     end
@@ -267,54 +270,100 @@ module Liri
         samples_keys = samples.keys # Se obtiene la clave asignada a los tests
         @all_tests_processing_count += samples_keys.size
 
-        @agents[agent_ip_address] = { agent_ip_address: agent_ip_address, tests_processed_count: 0, examples: 0, failures: 0, time_in_seconds: 0, duration: '' } unless @agents[agent_ip_address]
-
-        #@tests_batches[@tests_batch_number] = { agent_ip_address: agent_ip_address, tests_batch_keys: samples_keys } # Se guarda el lote a enviar
         tests_batch = { tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
         tests_batch
       end
     end
 
-    def process_tests_result(agent_ip_address, tests_result, time_in_seconds)
+    def process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_finished_in)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
         tests_batch_number = tests_result['tests_batch_number']
         tests_result_file_name = tests_result['tests_result_file_name']
-        tests_batch_keys_size = tests_result['tests_batch_keys_size']
+        tests_files_processed_count = tests_result['tests_batch_keys_size']
 
-        #tests_batch_keys = @tests_batches[tests_batch_number][:tests_batch_keys]
-        tests_processed_count = tests_batch_keys_size
-        @all_tests_results_count += tests_processed_count
+        @tests_files_processed_count += tests_files_processed_count
 
-        @progressbar.progress = @all_tests_results_count
+        @progressbar.progress = @tests_files_processed_count
 
-        #@tests_batches[tests_batch_number][:tests_result_file_name] = tests_result_file_name
+        tests_result = @tests_result.process(tests_result_file_name, tests_files_processed_count, batch_run_finished_in)
 
-        tests_result = @tests_result.process(tests_result_file_name)
+        @processed_tests_batches[tests_batch_number] = tests_result.clone
+        @processed_tests_batches[tests_batch_number][:agent_ip_address] = agent_ip_address
+        @processed_tests_batches[tests_batch_number][:hardware_model] = hardware_model
+        @processed_tests_batches[tests_batch_number][:tests_batch_number] = tests_batch_number
 
-        @agents[agent_ip_address][:tests_processed_count] += tests_processed_count
-        @agents[agent_ip_address][:examples] += tests_result[:example_quantity]
-        @agents[agent_ip_address][:failures] += tests_result[:failure_quantity]
-        @agents[agent_ip_address][:time_in_seconds] += time_in_seconds
-        @agents[agent_ip_address][:duration] = @agents[agent_ip_address][:time_in_seconds].to_duration
-
-        Liri.logger.info("Pruebas procesadas por Agente: #{agent_ip_address}: #{@agents[agent_ip_address][:tests_processed_count]}")
+        Liri.logger.info("Pruebas procesadas por Agente: #{agent_ip_address}: #{tests_files_processed_count}")
       end
     end
 
     def print_agents_summary
-      rows = @agents.values.map { |line| line.values }
-      headings = @agents.values.first.keys
+      processed_tests_batches_by_agent = processed_tests_batches_by_agents
+      rows = processed_tests_batches_by_agent.values.map do |value|
+        value[:finished_in] = value[:finished_in].to_duration
+        value[:files_took_to_load] = value[:files_took_to_load].to_duration
+        value[:batch_run_finished_in] = value[:batch_run_finished_in].to_duration
+        value.values
+      end
 
-      table = Terminal::Table.new title: "Resúmen", headings: headings, rows: rows
-      table.style = {padding_left: 3, border_x: "=", border_i: "x" }
-      table.align_column(1, :right)
-      table.align_column(2, :right)
-      table.align_column(3, :right)
-      table.align_column(4, :right)
-      table.align_column(5, :right)
+      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
+      rows << get_footer_values
+      header = processed_tests_batches_by_agent.values.first.keys
+
+      table = Terminal::Table.new title: 'Resúmen', headings: header, rows: rows
+      table.style = { padding_left: 3, border_x: '=', border_i: 'x'}
+      puts table
+    end
+
+    def processed_tests_batches_by_agents
+      tests_batches = {}
+      @processed_tests_batches.values.each do |processed_test_batch|
+        agent_ip_address = processed_test_batch[:agent_ip_address]
+        if tests_batches[agent_ip_address]
+          tests_batches[agent_ip_address][:examples] += processed_test_batch[:examples]
+          tests_batches[agent_ip_address][:failures] += processed_test_batch[:failures]
+          tests_batches[agent_ip_address][:pending] += processed_test_batch[:pending]
+          tests_batches[agent_ip_address][:passed] += processed_test_batch[:passed]
+          tests_batches[agent_ip_address][:finished_in] += processed_test_batch[:finished_in]
+          tests_batches[agent_ip_address][:files_took_to_load] += processed_test_batch[:files_took_to_load]
+          tests_batches[agent_ip_address][:tests_files_processed_count] += processed_test_batch[:tests_files_processed_count]
+          tests_batches[agent_ip_address][:batch_run_finished_in] += processed_test_batch[:batch_run_finished_in]
+          tests_batches[agent_ip_address][:tests_batch_number] = "#{tests_batches[agent_ip_address][:tests_batch_number]}, #{processed_test_batch[:tests_batch_number]}"
+        else
+          _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
+          _processed_test_batch.remove!(:failures_list, :failed_examples)
+          tests_batches[agent_ip_address] = _processed_test_batch
+        end
+      end
+      tests_batches
+    end
+
+    def print_agents_detailed_summary
+      puts "\n"
+      rows = @processed_tests_batches.values.map do |value|
+        value.remove!(:failures_list, :failed_examples)
+        value[:finished_in] = value[:finished_in].to_duration
+        value[:files_took_to_load] = value[:files_took_to_load].to_duration
+        value[:batch_run_finished_in] = value[:batch_run_finished_in].to_duration
+        value.values
+      end
+
+      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
+      rows << get_footer_values
+      header = @processed_tests_batches.values.first.keys
+
+      table = Terminal::Table.new title: 'Resúmen Detallado', headings: header, rows: rows
+      table.style = { padding_left: 3, border_x: '=', border_i: 'x' }
 
       puts table
+    end
+
+    def get_footer_values
+      footer = @tests_result.to_humanized_hash
+      footer[:agent_ip_address] = ''
+      footer[:hardware_model] = ''
+      footer[:tests_batch_number] = ''
+      footer.values
     end
   end
 end

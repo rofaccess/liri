@@ -1,6 +1,7 @@
 /.idea
 /coverage
 /liri
+/logs
 
 *.log
 *.gem
