@@ -90,7 +90,7 @@ module Liri
           if ['Randomized', 'Failures', ''].include?(flag) && line.strip.start_with?('Finished')
             values = finished_in_values(line)
             result_hash[:finished_in] = values[:finished_in]
-            result_hash[:files_took_to_load] = values[:finished_in]
+            result_hash[:files_took_to_load] = values[:files_took_to_load]
             flag = 'Finished'
             next
           end
