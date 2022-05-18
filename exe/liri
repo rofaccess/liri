@@ -26,7 +26,7 @@ command :manager do |c|
   c.option '-o', '--output [filename]', String, 'Especifica donde guardar los resultados de la ejecución de pruebas unitarias'
   c.action do |args, options|
     current_folder = Dir.pwd
-    Liri.set_setup(current_folder)
+    Liri.set_setup(current_folder, :manager)
     Liri::Common::Benchmarking.start(end_msg: "\nFinalizado en: ", stdout: true) do
       # Metodo que se ejecuta al llamar al comando manager
       Liri::Manager.run(current_folder)
@@ -67,7 +67,7 @@ command :tests do |c|
   c.action do |args, options|
     # Método que se ejecuta al llamar al comando tests
     current_folder = Dir.pwd
-    Liri.set_setup(current_folder)
+    Liri.set_setup(current_folder, :manager)
     tests_count = Liri::Task.tests_count(current_folder)
     puts tests_count
   end

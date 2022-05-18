@@ -19,10 +19,15 @@ module Liri
       class << self
         def start(start_msg: nil, end_msg: 'Duración: ', stdout: true)
           Liri.logger.info(start_msg, stdout)
+          start_time = Time.now
           seconds = Benchmark.realtime do
             yield
           end
+          end_time = Time.now - start_time
           Liri.logger.info("#{end_msg}#{seconds.to_duration}", stdout)
+          Liri.logger.info("#{end_msg}#{seconds}", stdout)
+          Liri.logger.info("#{end_msg}#{end_time.to_duration}", stdout)
+          Liri.logger.info("#{end_msg}#{end_time}", stdout)
           seconds
         end
       end

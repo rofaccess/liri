@@ -23,7 +23,7 @@ RSpec.describe Liri do
 
   context 'cuando el gestor de condiguración está inciado' do
     before(:all) do
-      Liri.set_setup(dummy_app_folder_path)
+      Liri.set_setup(dummy_app_folder_path, :none)
     end
 
     describe '#setup' do
@@ -38,7 +38,7 @@ RSpec.describe Liri do
       it 'borra la carpeta y archivo de configuración' do
         expect(Liri.delete_setup).to be true
         # Crea de vuelta lo que borró para que otros tests no salgan afectados
-        Liri.set_setup(dummy_app_folder_path)
+        Liri.set_setup(dummy_app_folder_path, :none)
       end
     end
 

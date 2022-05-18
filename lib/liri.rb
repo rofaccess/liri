@@ -6,8 +6,8 @@ module Liri
   VERSION = '0.3.1'
 
   class << self
-    def set_setup(destination_folder_path)
-      load_setup_manager(destination_folder_path)
+    def set_setup(destination_folder_path, program, manager_tests_results_folder_time: nil)
+      load_setup_manager(destination_folder_path, program, manager_tests_results_folder_time: manager_tests_results_folder_time)
     end
 
     # Carga las configuraciones en memoria desde un archivo de configuracion
@@ -104,8 +104,8 @@ module Liri
     private
 
     # Inicializa el objeto que gestiona las configuraciones
-    def load_setup_manager(destination_folder_path)
-      @setup_manager = Liri::Common::Setup.new(destination_folder_path)
+    def load_setup_manager(destination_folder_path, program, manager_tests_results_folder_time: nil)
+      @setup_manager = Liri::Common::Setup.new(destination_folder_path, program, manager_tests_results_folder_time: manager_tests_results_folder_time)
       @setup_manager.init
       @setup = @setup_manager.load
       @setup_manager

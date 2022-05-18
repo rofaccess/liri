@@ -14,21 +14,31 @@ module Liri
       MANAGER_FOLDER_NAME = 'manager'
       AGENT_FOLDER_NAME = 'agent'
 
-      attr_reader :setup_folder_path, :setup_file_path, :logs_folder_path, :manager_folder_path, :agent_folder_path
+      attr_reader :setup_folder_path, :setup_file_path, :logs_folder_path, :manager_folder_path,
+                  :manager_tests_results_folder_path, :agent_folder_path
 
-      def initialize(destination_folder_path)
+      def initialize(destination_folder_path, program, manager_tests_results_folder_time: nil)
         @setup_folder_path = File.join(destination_folder_path, '/', SETUP_FOLDER_NAME)
         @setup_file_path = File.join(@setup_folder_path, '/', SETUP_FILE_NAME)
         @logs_folder_path = File.join(@setup_folder_path, '/', LOGS_FOLDER_NAME)
         @manager_folder_path = File.join(@setup_folder_path, '/', MANAGER_FOLDER_NAME)
+        @manager_tests_results_folder_path = File.join(@manager_folder_path, '/', "#{manager_tests_results_folder_time}_tests_results") if manager_tests_results_folder_time
         @agent_folder_path = File.join(@setup_folder_path, '/', AGENT_FOLDER_NAME)
+        @program = program
       end
 
       def init
         create_folder(@setup_folder_path)
         create_folder(@logs_folder_path)
-        create_folder(@manager_folder_path)
-        create_folder(@agent_folder_path)
+
+        case @program
+        when :manager
+          create_folder(@manager_folder_path)
+          create_folder(@manager_tests_results_folder_path) if @manager_tests_results_folder_path
+        when :agent
+          create_folder(@agent_folder_path)
+        end
+
         create_setup_file
       end
 

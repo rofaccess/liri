@@ -8,10 +8,10 @@ module Liri
   module Common
     # Esta clase guarda los datos del Manager
     class ManagerData
-      attr_accessor :folder_path, :compressed_file_path, :user, :password
+      attr_accessor :tests_results_folder_path, :compressed_file_path, :user, :password
 
-      def initialize(folder_path:, compressed_file_path:, user:, password:)
-        @folder_path = folder_path
+      def initialize(tests_results_folder_path:, compressed_file_path:, user:, password:)
+        @tests_results_folder_path = tests_results_folder_path
         @compressed_file_path = compressed_file_path
         @user = user
         @password = password
@@ -19,7 +19,7 @@ module Liri
 
       def to_h
         {
-          folder_path: @folder_path,
+          tests_results_folder_path: @tests_results_folder_path,
           compressed_file_path: @compressed_file_path,
           user: @user,
           password: @password

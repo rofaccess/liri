@@ -59,6 +59,9 @@ unitarias de una gema X, si esta gema X requiere una versión específica de Rub
 de cosas deben configurarse de manera manual.
 
 ## Desarrollo
+La rama master siempre debe ser estable.
+Se debe crear un release cada vez que se llega a una versión estable de algún agregado nuevo.
+Agregar fixes y mejoras en ramas.
 
 ### Pruebas Unitarias
 

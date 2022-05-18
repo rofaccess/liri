@@ -2,7 +2,7 @@
 # se especifique liri, porque si se especifica otro gemset, entonces, la ejecución de estos tests falla.
 RSpec.describe Liri::Agent::Runner, '#run_tests' do
   before(:all) do
-    Liri.set_setup(dummy_app_folder_path)
+    Liri.set_setup(dummy_app_folder_path, :none)
     @unit_test = Liri::Common::UnitTest::Rspec.new(dummy_app_folder_path)
     @runner = Liri::Agent::Runner.new(unit_test_class, dummy_app_folder_path)
     @tests_result = Liri::Common::TestsResult.new(dummy_app_folder_path)

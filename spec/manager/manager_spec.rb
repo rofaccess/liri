@@ -31,7 +31,7 @@ RSpec.describe Liri::Manager, '#run' do
       end
 
       Liri.kill(@threads)
-      Liri.set_setup(dummy_app_folder_path)
+      #Liri.set_setup(dummy_app_folder_path)
       Liri.clear_setup
       Liri.delete_setup
     end

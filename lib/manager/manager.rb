@@ -15,8 +15,9 @@ module Liri
       def run(source_code_folder_path, stop = false)
         return unless valid_project
 
-        setup_manager = Liri.set_setup(source_code_folder_path)
+        setup_manager = Liri.set_setup(source_code_folder_path, :manager, manager_tests_results_folder_time: DateTime.now.strftime("%d_%m_%y_%H_%M_%S"))
         manager_folder_path = setup_manager.manager_folder_path
+        manager_tests_results_folder_path = setup_manager.manager_tests_results_folder_path
 
         Liri.set_logger(setup_manager.logs_folder_path, 'liri-manager.log')
         Liri.logger.info('Proceso Manager iniciado')
@@ -24,15 +25,17 @@ module Liri
 
         user, password = get_credentials(setup_manager.setup_folder_path)
         source_code = compress_source_code(source_code_folder_path, manager_folder_path)
-        manager_data = get_manager_data(user, password, manager_folder_path, source_code)
+        manager_data = get_manager_data(user, password, manager_tests_results_folder_path, source_code)
         all_tests = get_all_tests(source_code)
-        tests_result = Common::TestsResult.new(manager_folder_path)
+        tests_result = Common::TestsResult.new(manager_tests_results_folder_path)
 
-        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result, manager_folder_path)
+        manager = Manager.new(Liri.udp_port, Liri.tcp_port, all_tests, tests_result)
 
         threads = []
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
         manager.start_server_socket_to_process_tests(threads[0]) unless stop # Esperar y enviar los test unitarios a los Agents
+
+        source_code.delete_compressed_file
 
         Liri.init_exit(stop, threads, 'Manager')
         Liri.logger.info('Proceso Manager terminado')
@@ -73,9 +76,9 @@ module Liri
         source_code
       end
 
-      def get_manager_data(user, password, manager_folder_path, source_code)
+      def get_manager_data(user, password, tests_results_folder_path, source_code)
         Common::ManagerData.new(
-          folder_path: manager_folder_path,
+          tests_results_folder_path: tests_results_folder_path,
           compressed_file_path: source_code.compressed_file_path,
           user: user,
           password: password
@@ -94,7 +97,7 @@ module Liri
       end
     end
 
-    def initialize(udp_port, tcp_port, all_tests, tests_result, manager_folder_path)
+    def initialize(udp_port, tcp_port, all_tests, tests_result)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
@@ -114,8 +117,6 @@ module Liri
 
       @tests_result = tests_result
       @semaphore = Mutex.new
-
-      @manager_folder_path = manager_folder_path
 
       @progressbar = ProgressBar.create(starting_at: 0, total: @all_tests_count, length: 100, format: 'Progress %c/%C |%b=%i| %p%% | %a')
     end
@@ -144,84 +145,80 @@ module Liri
       rescue Errno::EADDRINUSE => e
         Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado.")
         Thread.kill(search_agents_thread)
-        Thread.exit
+        return
       end
 
-      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}
-                                     (Se espera que algún Agent se conecte para ejecutar las pruebas como respuesta al broadcast UDP)
-      ")
+      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
       while test_processing_enabled
         Thread.start(tcp_socket.accept) do |client|
           agent_ip_address = client.remote_address.ip_address
-          response = JSON.parse(client.recvfrom(1000).first)
-          hardware_model = response['hardware_model']
+          hardware_model = nil
+          run_tests_batch_time_start = nil
 
-          Liri.logger.info("\nConexión iniciada con el Agente: #{agent_ip_address}")
-          Liri.logger.info("Respuesta al broadcast recibida del Agent: #{agent_ip_address} en el puerto TCP: #{@tcp_port}: #{response}")
+          while line = client.gets
+            client_data = JSON.parse(line.chop)
 
-          # Se le indica al agente que proceda
-          client.puts({ msg: 'Recibido', exist_tests: all_tests.any? }.to_json)
-
-          if all_tests.empty?
-            # No importa lo que le haga, el broadcast udp no se muere al instante y el agente sigue respondiendo
-            # Las siguientes dos lineas son para que se deje de hacer el broadcast pero aun asi se llegan a hacer
-            # 3 a 4 broadcast antes de que se finalize el proceso, al parecer el broadcast va a tener que quedar asi
-            # y mejorar el codigo para que se envien test pendientes para eso hay que llevar una lista de test pendientes
-            # tests enviados sin resultados, tests finalizados, si se recibe respuesta al broadcast se trata de enviar primero test pendientes
-            # luego test enviados sin resultados o sino ignorar
-            Thread.kill(search_agents_thread)
-            agents_search_processing_enabled = false
-            Liri.logger.info("Se termina cualquier proceso pendiente con el Agent #{agent_ip_address} en el puerto TCP: #{@tcp_port}: #{response}")
-            client.close
-            Thread.exit
-          end
-
-          while all_tests.any?
-            batch_run_finished_in = Liri::Common::Benchmarking.start(start_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", end_msg: "Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Duración: ", stdout: false) do
-              tests_batch = tests_batch(agent_ip_address)
-              break unless tests_batch
-
-              begin
-                Liri.logger.debug("Conjunto de pruebas enviadas al Agent #{agent_ip_address}: #{tests_batch}")
-
-                client.puts(tests_batch.to_json) # Se envia el lote de tests
-                response = client.recvfrom(1000).first # Se recibe la respuesta. Cuando mas alto es el parámetro de recvfrom, mas datos se reciben osino se truncan.
-              rescue Errno::EPIPE => e
-                # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
-                Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-                # Si el Agente ya no responde es mejor romper el bucle para que no quede colgado
+            if client_data['msg'] == 'get_source_code'
+              if registered_agent?(agent_ip_address)
+                client.puts({ msg: 'already_connected' }.to_json)
+                client.close
                 break
+              else
+                register_agent(agent_ip_address)
+                hardware_model = client_data['hardware_model']
+                msg = all_tests.any? ? 'proceed_get_source_code' : 'no_exist_tests'
+                client.puts({ msg: msg }.to_json)
               end
             end
 
-            # Se captura por si acaso los errores de parseo JSON
-            begin
-              tests_result = JSON.parse(response)
+            if client_data['msg'] == 'get_tests_files'
+              Liri.logger.info("Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", false)
+              run_tests_batch_time_start = Time.now
+
+              tests_batch = tests_batch(agent_ip_address)
+              if tests_batch.empty?
+                client.puts({ msg: 'no_exist_tests' }.to_json)
+                client.close
+                break
+              else
+                client.puts(tests_batch.to_json) # Se envia el lote de tests
+              end
+            end
+
+            if client_data['msg'] == 'processed_tests'
+              tests_result = client_data
               Liri.logger.debug("Respuesta del Agent #{agent_ip_address}: #{tests_result}")
+              batch_run_finished_in = Time.now - run_tests_batch_time_start
               process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_finished_in)
-            rescue JSON::ParserError => e
-              Liri.logger.error("Exception(#{e}) Error de parseo JSON")
+
+              run_tests_batch_time_start = Time.now
+
+              tests_batch = tests_batch(agent_ip_address)
+              if tests_batch.empty?
+                client.puts({ msg: 'no_exist_tests' }.to_json)
+                client.close
+                break
+              else
+                client.puts(tests_batch.to_json) # Se envia el lote de tests
+              end
             end
           end
 
           update_processing_statuses
-          Liri.logger.info("Se termina la conexión con el Agent #{agent_ip_address} en el puerto TCP: #{@tcp_port}")
-          begin
-            client.puts('exit') # Se envía el string exit para que el Agent sepa que el proceso terminó
-            client.close # se desconecta el cliente
-          rescue Errno::EPIPE => e
-            # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
-            Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
-            # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
-            # mientras sigan pruebas pendientes
-            Thread.exit
-          end
+          Thread.kill(search_agents_thread)
+          unregister_agent(agent_ip_address)
+        rescue Errno::EPIPE => e
+          # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
+          Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+          # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
+          # mientras sigan pruebas pendientes
+          unregister_agent(agent_ip_address)
+          Thread.exit
         end
       end
 
-      Liri.clean_folder_content(@manager_folder_path)
       @tests_result.print_summary
       print_agents_summary
       print_agents_detailed_summary if Liri.print_agents_detailed_summary
@@ -263,14 +260,15 @@ module Liri
     def tests_batch(agent_ip_address)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
-        return nil if @all_tests.empty?
+        return {} if @all_tests.empty?
 
         @tests_batch_number += 1 # Se numera cada lote
         samples = @all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
         samples_keys = samples.keys # Se obtiene la clave asignada a los tests
         @all_tests_processing_count += samples_keys.size
 
-        tests_batch = { tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
+        tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
+        Liri.logger.debug("Conjunto de pruebas enviadas al Agent #{agent_ip_address}: #{tests_batch}")
         tests_batch
       end
     end
@@ -364,6 +362,19 @@ module Liri
       footer[:hardware_model] = ''
       footer[:tests_batch_number] = ''
       footer.values
+    end
+
+    def registered_agent?(agent_ip_address)
+      @agents[agent_ip_address]
+    end
+
+    def register_agent(agent_ip_address)
+      @agents[agent_ip_address] = agent_ip_address
+      Liri.logger.info("\nConexión iniciada con el Agente: #{agent_ip_address} en el puerto TCP: #{@tcp_port}")
+    end
+
+    def unregister_agent(agent_ip_address)
+      @agents.remove!(agent_ip_address)
     end
   end
 end

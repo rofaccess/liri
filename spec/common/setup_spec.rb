@@ -1,7 +1,7 @@
 RSpec.describe Liri::Common::Setup do
   context 'cuando el archivo de configuración no existe' do
     before(:all) do
-      @setup = Liri::Common::Setup.new(dummy_app_folder_path)
+      @setup = Liri::Common::Setup.new(dummy_app_folder_path, :none)
     end
 
     describe '#init' do
@@ -40,7 +40,7 @@ RSpec.describe Liri::Common::Setup do
 
   context 'cuando el archivo de configuración ya existe' do
     before(:all) do
-      @setup = Liri::Common::Setup.new(dummy_app_folder_path)
+      @setup = Liri::Common::Setup.new(dummy_app_folder_path, :none)
       @setup.init
     end
 
