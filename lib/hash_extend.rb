@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # = hash_extend.rb
 #
 # @author Rodrigo Fernández
@@ -14,8 +16,8 @@ class Hash
   #     => {dos: 'dos'}
   #   hash.sample(2)
   #     => {uno: 'uno', tres: 'tres'}
-  def sample(quantity=1)
-    sample_keys = self.keys.sample(quantity)
+  def sample(quantity = 1)
+    sample_keys = keys.sample(quantity)
     sample_values = {}
     sample_keys.each do |sample_key|
       sample_values[sample_key] = self[sample_key]
@@ -32,8 +34,8 @@ class Hash
   #     => {dos: 'dos'}
   #   hash.sample(2)
   #     => {uno: 'uno', tres: 'tres'}
-  def sample!(quantity=1)
-    samples = self.sample(quantity)
+  def sample!(quantity = 1)
+    samples = sample(quantity)
     remove!(samples.keys)
     samples
   end
@@ -51,7 +53,7 @@ class Hash
   #   hash
   #     => {}
   def remove!(*keys)
-    keys.flatten.each{|key| self.delete(key) }
+    keys.flatten.each { |key| delete(key) }
     self
   end
 end

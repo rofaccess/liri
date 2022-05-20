@@ -27,6 +27,9 @@ group :development do
   # Ruby static code analyzer and formatter, based on the community Ruby style guide. https://github.com/rubocop-hq/rubocop
   gem 'rubocop', '~>1', require: false
 
+  # RubyCritic is a gem that wraps around static analysis gems such as Reek, Flay and Flog to provide a quality report of your Ruby code.
+  gem 'rubycritic', '~>4', require: false
+
   # A Ruby Documentation Tool. https://github.com/lsegal/yard
   gem 'yard', '~>0'
 end

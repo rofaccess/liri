@@ -2,6 +2,7 @@
 /coverage
 /liri
 /logs
+/tmp
 
 *.log
 *.gem
