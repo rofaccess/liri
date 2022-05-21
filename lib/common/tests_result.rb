@@ -69,6 +69,7 @@ module Liri
         result_hash = { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
                         failures_list: '', failed_examples: '' }
         flag = ''
+        @failures_lists_count = @failures
         File.foreach(file_path) do |line|
           if flag == '' && line.strip.start_with?('Randomized')
             flag = 'Randomized'
@@ -95,6 +96,7 @@ module Liri
 
           case flag
           when 'Failures'
+            line = fix_failure_number(line)
             result_hash[:failures_list] << line
           when 'Finished'
             values = finished_summary_values(line)
@@ -104,7 +106,7 @@ module Liri
             result_hash[:pending] = values[:pending]
             flag = ''
           when 'Failed'
-            result_hash[:failed_examples] << line
+            result_hash[:failed_examples] << line if line.strip.start_with?('rspec')
           end
         end
 
@@ -127,6 +129,15 @@ module Liri
 
       def finished_summary_values(line)
         UnitTest::RspecResultParser.finished_summary_values(line)
+      end
+
+      def fix_failure_number(line)
+        line_number_regex = /(\d+\))/
+        if line.strip.start_with?(line_number_regex)
+          @failures_lists_count += 1
+          line.gsub!(line_number_regex, "#{@failures_lists_count})")
+        end
+        line
       end
     end
   end

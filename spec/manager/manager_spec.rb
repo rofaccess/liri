@@ -5,6 +5,8 @@
 RSpec.describe Liri::Manager, '#run' do
   # Cuidado: Al usar liri m dentro del proyecto Liri, el siguiente tests causa confusión en los resultados obtenidos
   # porque es un test que ejecuta tests.
+  # No conviene usar este test en algun agente porque este test requiere usuario y contraseña que esta en un archivo yml
+  # pero este usuario y contraseña no necesariamente coincidirá con otros agentes.
   it 'run tests with agent' do
     allow(Liri::Manager).to receive(:get_credentials).and_return(spec_credentials)
     allow(Liri).to receive(:udp_port).and_return(2001)
