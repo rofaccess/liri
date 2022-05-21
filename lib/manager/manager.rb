@@ -102,23 +102,18 @@ module Liri
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
 
-      @all_tests = all_tests
-      @all_tests_count = all_tests.size
-      @all_tests_results = {}
-      @files_processed = 0
-      @all_tests_processing_count = 0
-      @agents = {}
-
-      @agents_search_processing_enabled = true
-      @test_processing_enabled = true
-
       @tests_batch_number = 0
-      @processed_tests_batches = {}
+      @tests_batches = {}
+      @tests_files_count = 0
+      build_tests_batches(all_tests)
+
+      @files_processed = 0
+      @agents = {}
 
       @tests_result = tests_result
       @semaphore = Mutex.new
 
-      @progressbar = ProgressBar.create(starting_at: 0, total: @all_tests_count, length: 100, format: 'Progress %c/%C |%b=%i| %p%% | %a')
+      @progressbar = ProgressBar.create(starting_at: 0, total: @tests_files_count, length: 100, format: 'Progress %c/%C |%b=%i| %p%% | %a')
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -128,7 +123,7 @@ module Liri
       Thread.new do
         Liri.logger.info('Searching agents... Wait')
         Liri.logger.info("Sending UDP broadcast each #{Liri.udp_request_delay} seconds in UDP port: #{@udp_port}")
-        while agents_search_processing_enabled
+        while processing
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
           sleep(Liri.udp_request_delay) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
@@ -149,7 +144,7 @@ module Liri
       Liri.logger.info("Waiting Agents connection in TCP port: #{@tcp_port}")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
-      while test_processing_enabled
+      while processing
         Thread.start(tcp_socket.accept) do |client|
           agent_ip_address = client.remote_address.ip_address
           hardware_model = nil
@@ -167,7 +162,7 @@ module Liri
               else
                 register_agent(agent_ip_address)
                 hardware_model = client_data['hardware_model']
-                msg = all_tests.any? ? 'proceed_get_source_code' : 'no_exist_tests'
+                msg = processing ? 'proceed_get_source_code' : 'no_exist_tests'
                 client.puts({ msg: msg }.to_json)
               end
             end
@@ -211,7 +206,6 @@ module Liri
             end
           end
 
-          update_processing_statuses
           Thread.kill(search_agents_thread)
           unregister_agent(agent_ip_address)
         rescue Errno::EPIPE => e
@@ -231,59 +225,48 @@ module Liri
       @tests_result.print_failed_examples if Liri.print_failed_examples
     end
 
-    def all_tests
+    def processing
       @semaphore.synchronize do
-        @all_tests
-      end
-    end
-
-    def agents_search_processing_enabled=(value)
-      @semaphore.synchronize do
-        @agents_search_processing_enabled = value
-      end
-    end
-
-    def agents_search_processing_enabled
-      @semaphore.synchronize do
-        @agents_search_processing_enabled
-      end
-    end
-
-    def test_processing_enabled
-      @semaphore.synchronize do
-        @test_processing_enabled
-      end
-    end
-
-    def update_processing_statuses
-      @semaphore.synchronize do
-        @test_processing_enabled = false if @all_tests_count == @files_processed
-        @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
+        @unfinished_tests_batches.positive?
       end
     end
 
     def tests_batch(agent_ip_address)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
-        return {} if @all_tests.empty?
+        return {} if @unfinished_tests_batches == 0
+        pending_tests_batch = {}
+        sent_tests_batch = {}
 
-        @tests_batch_number += 1 # Se numera cada lote
-        samples = @all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
-        samples_keys = samples.keys # Se obtiene la clave asignada a los tests
-        @all_tests_processing_count += samples_keys.size
+        @tests_batches.each_value do |batch|
+          if batch[:status] == "pending"
+            pending_tests_batch = batch
+            batch[:status] = "sent"
+            break
+          elsif sent_tests_batch.empty? && batch[:status] == "sent"
+            sent_tests_batch = batch
+          end
+        end
 
-        tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
+        tests_batch = pending_tests_batch.any? ? pending_tests_batch : sent_tests_batch
+        return {} if tests_batch.empty?
+        tests_batch[:agent_ip_address] = agent_ip_address
+
         Liri.logger.debug("Tests batches sent to Agent #{agent_ip_address}: #{tests_batch}")
         tests_batch
       end
     end
 
-    def process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run)
+    def process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_time)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
         tests_batch_number = tests_result['tests_batch_number']
         tests_result_file_name = tests_result['tests_result_file_name']
         files_processed = tests_result['tests_batch_keys_size']
+
+        return if @tests_batches[tests_batch_number][:status] == 'finished'
+
+        @unfinished_tests_batches -= 1
 
         @files_processed += files_processed
 
@@ -291,11 +274,16 @@ module Liri
 
         tests_result = @tests_result.process(tests_result_file_name, files_processed)
 
-        @processed_tests_batches[tests_batch_number] = tests_result.clone
-        @processed_tests_batches[tests_batch_number][:batch_run] = batch_run
-        @processed_tests_batches[tests_batch_number][:agent_ip_address] = agent_ip_address
-        @processed_tests_batches[tests_batch_number][:hardware_model] = hardware_model
-        @processed_tests_batches[tests_batch_number][:tests_batch_number] = tests_batch_number
+        @tests_batches[tests_batch_number][:examples] = tests_result[:examples]
+        @tests_batches[tests_batch_number][:failures] = tests_result[:failures]
+        @tests_batches[tests_batch_number][:pending] = tests_result[:pending]
+        @tests_batches[tests_batch_number][:passed] = tests_result[:passed]
+        @tests_batches[tests_batch_number][:finish_in] = tests_result[:finish_in]
+        @tests_batches[tests_batch_number][:files_load] = tests_result[:files_load]
+        @tests_batches[tests_batch_number][:files_processed] = tests_result[:files_processed]
+        @tests_batches[tests_batch_number][:batch_run] = batch_run_time
+        @tests_batches[tests_batch_number][:hardware_model] = hardware_model
+        @tests_batches[tests_batch_number][:status] = 'finished'
 
         Liri.logger.info("Processed unit tests by Agent: #{agent_ip_address}: #{files_processed}")
       end
@@ -321,7 +309,7 @@ module Liri
 
     def processed_tests_batches_by_agents
       tests_batches = {}
-      @processed_tests_batches.values.each do |processed_test_batch|
+      @tests_batches.each_value do |processed_test_batch|
         agent_ip_address = processed_test_batch[:agent_ip_address]
         if tests_batches[agent_ip_address]
           tests_batches[agent_ip_address][:examples] += processed_test_batch[:examples]
@@ -334,7 +322,8 @@ module Liri
           tests_batches[agent_ip_address][:batch_run] += processed_test_batch[:batch_run]
         else
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
-          _processed_test_batch.remove!(:failures_list, :failed_examples, :agent_ip_address, :tests_batch_number)
+          _processed_test_batch.remove!(:msg, :tests_batch_number, :tests_batch_keys, :status, :failures_list,
+                                        :failed_examples, :agent_ip_address)
           tests_batches[agent_ip_address] = _processed_test_batch
         end
       end
@@ -343,8 +332,9 @@ module Liri
 
     def print_agents_detailed_summary
       puts "\n"
-      rows = @processed_tests_batches.values.map do |value|
-        value.remove!(:failures_list, :failed_examples, :agent_ip_address, :tests_batch_number)
+      rows = @tests_batches.values.map do |value|
+        value.remove!(:msg, :tests_batch_number, :tests_batch_keys, :status, :failures_list,
+                      :failed_examples, :agent_ip_address)
         value[:finish_in] = value[:finish_in].to_duration
         value[:files_load] = value[:files_load].to_duration
         value[:batch_run] = value[:batch_run].to_duration
@@ -353,7 +343,7 @@ module Liri
 
       rows << Array.new(9) # Se agrega una linea vacia antes de mostrar los totales
       rows << get_footer_values
-      header = @processed_tests_batches.values.first.keys
+      header = @tests_batches.values.first.keys
 
       table = Terminal::Table.new title: 'Detailed Summary', headings: header, rows: rows
       table.style = { padding_left: 3, border_x: '=', border_i: 'x' }
@@ -379,6 +369,19 @@ module Liri
 
     def unregister_agent(agent_ip_address)
       @agents.remove!(agent_ip_address)
+    end
+
+    def build_tests_batches(all_tests)
+      while all_tests.any?
+        @tests_batch_number += 1 # Se numera cada lote
+        samples = all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
+        samples_keys = samples.keys # Se obtiene la clave asignada a los tests
+        @tests_files_count += samples.size
+        tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys, status: 'pending' } # Se construye el lote a enviar
+        @tests_batches[@tests_batch_number] = tests_batch
+      end
+
+      @unfinished_tests_batches = @tests_batch_number
     end
   end
 end
