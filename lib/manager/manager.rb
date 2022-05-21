@@ -20,8 +20,8 @@ module Liri
         manager_tests_results_folder_path = setup_manager.manager_tests_results_folder_path
 
         Liri.set_logger(setup_manager.logs_folder_path, 'liri-manager.log')
-        Liri.logger.info('Proceso Manager iniciado')
-        Liri.logger.info("Presione Ctrl + c para terminar el proceso Manager manualmente\n", true)
+        Liri.logger.info('Manager process started')
+        Liri.logger.info("Press Ctrl + c to finish Manager process manually\n", true)
 
         user, password = get_credentials(setup_manager.setup_folder_path)
         source_code = compress_source_code(source_code_folder_path, manager_folder_path)
@@ -38,9 +38,9 @@ module Liri
         source_code.delete_compressed_file
 
         Liri.init_exit(stop, threads, 'Manager')
-        Liri.logger.info('Proceso Manager terminado')
+        Liri.logger.info('Manager process finished')
       rescue SignalException => e
-        Liri.logger.info("Exception(#{e}) Proceso Manager terminado manualmente")
+        Liri.logger.info("Exception(#{e}) Proceso Manager process finished manually")
         Liri.kill(threads)
       end
 
@@ -53,9 +53,9 @@ module Liri
         if File.exist?(File.join(Dir.pwd, 'Gemfile'))
           true
         else
-          Liri.logger.info('No se encuentra un archivo Gemfile por lo que se asume que el directorio actual no corresponde a un proyecto Ruby')
-          Liri.logger.info('Liri sólo puede ejecutarse en proyectos Ruby')
-          Liri.logger.info('Proceso Manager terminado')
+          Liri.logger.info('Not found Gemfile. Assuming run Manager in not Ruby project')
+          Liri.logger.info('Liri can be run only in Ruby projects')
+          Liri.logger.info('Manager process finished')
           false
         end
       end
@@ -68,7 +68,7 @@ module Liri
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
 
-        Common::Progressbar.start(total: nil, length: 100, format: 'Comprimiendo Código Fuente |%B| %a') do
+        Common::Progressbar.start(total: nil, length: 100, format: 'Compressing source code |%B| %a') do
           source_code.compress_folder
         end
         puts "\n\n"
@@ -88,7 +88,7 @@ module Liri
       def get_all_tests(source_code)
         all_tests = {}
 
-        Common::Progressbar.start(total: nil, length: 100, format: 'Extrayendo Pruebas Unitarias |%B| %a') do
+        Common::Progressbar.start(total: nil, length: 100, format: 'Getting unit tests |%B| %a') do
           all_tests = source_code.all_tests
         end
         puts "\n\n"
@@ -105,7 +105,7 @@ module Liri
       @all_tests = all_tests
       @all_tests_count = all_tests.size
       @all_tests_results = {}
-      @tests_files_processed_count = 0
+      @files_processed = 0
       @all_tests_processing_count = 0
       @agents = {}
 
@@ -126,10 +126,8 @@ module Liri
       # El cliente udp se ejecuta en bucle dentro de un hilo, esto permite realizar otras tareas mientras este hilo sigue sondeando
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
-        Liri.logger.info('Buscando Agentes... Espere')
-        Liri.logger.info("Se emite un broadcast cada #{Liri.udp_request_delay} segundos en el puerto UDP: #{@udp_port}
-                                     (Se mantiene escaneando la red para encontrar Agents)
-        ")
+        Liri.logger.info('Searching agents... Wait')
+        Liri.logger.info("Sending UDP broadcast each #{Liri.udp_request_delay} seconds in UDP port: #{@udp_port}")
         while agents_search_processing_enabled
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
@@ -143,12 +141,12 @@ module Liri
       begin
         tcp_socket = TCPServer.new(@tcp_port) # se hace un bind al puerto dado
       rescue Errno::EADDRINUSE => e
-        Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado.")
+        Liri.logger.error("Exception(#{e}) Busy UDP port #{@tcp_port}.")
         Thread.kill(search_agents_thread)
         return
       end
 
-      Liri.logger.info("En espera para establecer conexión con los Agents en el puerto TCP: #{@tcp_port}")
+      Liri.logger.info("Waiting Agents connection in TCP port: #{@tcp_port}")
       # El siguiente bucle permite que varios clientes es decir Agents se conecten
       # De: http://www.w3big.com/es/ruby/ruby-socket-programming.html
       while test_processing_enabled
@@ -181,7 +179,7 @@ module Liri
             end
 
             if msg == 'get_tests_files'
-              Liri.logger.info("Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", false)
+              Liri.logger.info("Running unit tests. Agent: #{agent_ip_address}. Wait... ", false)
               run_tests_batch_time_start = Time.now
 
               tests_batch = tests_batch(agent_ip_address)
@@ -196,9 +194,9 @@ module Liri
 
             if msg == 'processed_tests'
               tests_result = client_data
-              Liri.logger.debug("Respuesta del Agent #{agent_ip_address}: #{tests_result}")
-              batch_run_finished_in = Time.now - run_tests_batch_time_start
-              process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_finished_in)
+              Liri.logger.debug("Agent response #{agent_ip_address}: #{tests_result}")
+              batch_run = Time.now - run_tests_batch_time_start
+              process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run)
 
               run_tests_batch_time_start = Time.now
 
@@ -218,7 +216,7 @@ module Liri
           unregister_agent(agent_ip_address)
         rescue Errno::EPIPE => e
           # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
-          Liri.logger.error("Exception(#{e}) El Agent #{agent_ip_address} ya terminó la conexión")
+          Liri.logger.error("Exception(#{e}) Agent #{agent_ip_address} already finished connection")
           # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
           # mientras sigan pruebas pendientes
           unregister_agent(agent_ip_address)
@@ -259,7 +257,7 @@ module Liri
 
     def update_processing_statuses
       @semaphore.synchronize do
-        @test_processing_enabled = false if @all_tests_count == @tests_files_processed_count
+        @test_processing_enabled = false if @all_tests_count == @files_processed
         @agents_search_processing_enabled = false if @all_tests_count == @all_tests_processing_count
       end
     end
@@ -275,47 +273,47 @@ module Liri
         @all_tests_processing_count += samples_keys.size
 
         tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys } # Se construye el lote a enviar
-        Liri.logger.debug("Conjunto de pruebas enviadas al Agent #{agent_ip_address}: #{tests_batch}")
+        Liri.logger.debug("Tests batches sent to Agent #{agent_ip_address}: #{tests_batch}")
         tests_batch
       end
     end
 
-    def process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run_finished_in)
+    def process_tests_result(agent_ip_address, hardware_model, tests_result, batch_run)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
         tests_batch_number = tests_result['tests_batch_number']
         tests_result_file_name = tests_result['tests_result_file_name']
-        tests_files_processed_count = tests_result['tests_batch_keys_size']
+        files_processed = tests_result['tests_batch_keys_size']
 
-        @tests_files_processed_count += tests_files_processed_count
+        @files_processed += files_processed
 
-        @progressbar.progress = @tests_files_processed_count
+        @progressbar.progress = @files_processed
 
-        tests_result = @tests_result.process(tests_result_file_name, tests_files_processed_count, batch_run_finished_in)
+        tests_result = @tests_result.process(tests_result_file_name, files_processed, batch_run)
 
         @processed_tests_batches[tests_batch_number] = tests_result.clone
         @processed_tests_batches[tests_batch_number][:agent_ip_address] = agent_ip_address
         @processed_tests_batches[tests_batch_number][:hardware_model] = hardware_model
         @processed_tests_batches[tests_batch_number][:tests_batch_number] = tests_batch_number
 
-        Liri.logger.info("Pruebas procesadas por Agente: #{agent_ip_address}: #{tests_files_processed_count}")
+        Liri.logger.info("Processed unit tests by Agent: #{agent_ip_address}: #{files_processed}")
       end
     end
 
     def print_agents_summary
       processed_tests_batches_by_agent = processed_tests_batches_by_agents
       rows = processed_tests_batches_by_agent.values.map do |value|
-        value[:finished_in] = value[:finished_in].to_duration
-        value[:files_took_to_load] = value[:files_took_to_load].to_duration
-        value[:batch_run_finished_in] = value[:batch_run_finished_in].to_duration
+        value[:finish_in] = value[:finish_in].to_duration
+        value[:files_load] = value[:files_load].to_duration
+        value[:batch_run] = value[:batch_run].to_duration
         value.values
       end
 
-      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(9) # Se agrega una linea vacia antes de mostrar los totales
       rows << get_footer_values
       header = processed_tests_batches_by_agent.values.first.keys
 
-      table = Terminal::Table.new title: 'Resúmen', headings: header, rows: rows
+      table = Terminal::Table.new title: 'Summary', headings: header, rows: rows
       table.style = { padding_left: 3, border_x: '=', border_i: 'x'}
       puts table
     end
@@ -329,14 +327,14 @@ module Liri
           tests_batches[agent_ip_address][:failures] += processed_test_batch[:failures]
           tests_batches[agent_ip_address][:pending] += processed_test_batch[:pending]
           tests_batches[agent_ip_address][:passed] += processed_test_batch[:passed]
-          tests_batches[agent_ip_address][:finished_in] += processed_test_batch[:finished_in]
-          tests_batches[agent_ip_address][:files_took_to_load] += processed_test_batch[:files_took_to_load]
-          tests_batches[agent_ip_address][:tests_files_processed_count] += processed_test_batch[:tests_files_processed_count]
-          tests_batches[agent_ip_address][:batch_run_finished_in] += processed_test_batch[:batch_run_finished_in]
+          tests_batches[agent_ip_address][:finish_in] += processed_test_batch[:finish_in]
+          tests_batches[agent_ip_address][:files_load] += processed_test_batch[:files_load]
+          tests_batches[agent_ip_address][:files_processed] += processed_test_batch[:files_processed]
+          tests_batches[agent_ip_address][:batch_run] += processed_test_batch[:batch_run]
           tests_batches[agent_ip_address][:tests_batch_number] = "#{tests_batches[agent_ip_address][:tests_batch_number]}, #{processed_test_batch[:tests_batch_number]}"
         else
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
-          _processed_test_batch.remove!(:failures_list, :failed_examples)
+          _processed_test_batch.remove!(:failures_list, :failed_examples, :agent_ip_address, :tests_batch_number)
           tests_batches[agent_ip_address] = _processed_test_batch
         end
       end
@@ -346,18 +344,18 @@ module Liri
     def print_agents_detailed_summary
       puts "\n"
       rows = @processed_tests_batches.values.map do |value|
-        value.remove!(:failures_list, :failed_examples)
-        value[:finished_in] = value[:finished_in].to_duration
-        value[:files_took_to_load] = value[:files_took_to_load].to_duration
-        value[:batch_run_finished_in] = value[:batch_run_finished_in].to_duration
+        value.remove!(:failures_list, :failed_examples, :agent_ip_address, :tests_batch_number)
+        value[:finish_in] = value[:finish_in].to_duration
+        value[:files_load] = value[:files_load].to_duration
+        value[:batch_run] = value[:batch_run].to_duration
         value.values
       end
 
-      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(9) # Se agrega una linea vacia antes de mostrar los totales
       rows << get_footer_values
       header = @processed_tests_batches.values.first.keys
 
-      table = Terminal::Table.new title: 'Resúmen Detallado', headings: header, rows: rows
+      table = Terminal::Table.new title: 'Detailed Summary', headings: header, rows: rows
       table.style = { padding_left: 3, border_x: '=', border_i: 'x' }
 
       puts table
@@ -365,9 +363,7 @@ module Liri
 
     def get_footer_values
       footer = @tests_result.to_humanized_hash
-      footer[:agent_ip_address] = ''
       footer[:hardware_model] = ''
-      footer[:tests_batch_number] = ''
       footer.values
     end
 
@@ -377,7 +373,7 @@ module Liri
 
     def register_agent(agent_ip_address)
       @agents[agent_ip_address] = agent_ip_address
-      Liri.logger.info("\nConexión iniciada con el Agente: #{agent_ip_address} en el puerto TCP: #{@tcp_port}")
+      Liri.logger.info("\nStarted connection with Agent: #{agent_ip_address} in TCP port: #{@tcp_port}")
     end
 
     def unregister_agent(agent_ip_address)

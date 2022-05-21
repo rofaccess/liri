@@ -37,7 +37,7 @@ module Liri
             # raw_tests_result = %x|bundle exec rspec #{tests.join(' ')} --format progress|
             # Descomentar para el entorno de producción
             raw_tests_result = ''
-            Liri::Common::Benchmarking.start(start_msg: "Ejecutando conjunto de pruebas. Espere... ") do
+            Liri::Common::Benchmarking.start(start_msg: "Running tests batch. Wait... ") do
               raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')}'|
             end
 

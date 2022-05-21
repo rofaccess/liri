@@ -1,24 +1,24 @@
 RSpec.describe Liri::Common::UnitTest::RspecResultParser do
-  describe '#finished_in_values' do
+  describe '#finish_in_values' do
     it 'la línea tiene valores en segundos y decimales' do
       line = 'Finished in 0.00342 seconds (files took 0.22366 seconds to load)'
-      values = Liri::Common::UnitTest::RspecResultParser.finished_in_values(line)
-      expect(values[:finished_in]).to eq 0.00342
-      expect(values[:files_took_to_load]).to eq 0.22366
+      values = Liri::Common::UnitTest::RspecResultParser.finish_in_values(line)
+      expect(values[:finish_in]).to eq 0.00342
+      expect(values[:files_load]).to eq 0.22366
     end
 
     it 'la línea tiene valores en minutos, segundos y decimales' do
       line = 'Finished in 12 minutes 51 seconds (files took 8.24 seconds to load)'
-      values = Liri::Common::UnitTest::RspecResultParser.finished_in_values(line)
-      expect(values[:finished_in]).to eq 771
-      expect(values[:files_took_to_load]).to eq 8.24
+      values = Liri::Common::UnitTest::RspecResultParser.finish_in_values(line)
+      expect(values[:finish_in]).to eq 771
+      expect(values[:files_load]).to eq 8.24
     end
 
     it 'la línea tiene valores en horas, minutos, segundos y decimales' do
       line = 'Finished in 1 hour 50 seconds (files took 1.24 minutes to load)'
-      values = Liri::Common::UnitTest::RspecResultParser.finished_in_values(line)
-      expect(values[:finished_in]).to eq 3650
-      expect(values[:files_took_to_load]).to eq 74.4
+      values = Liri::Common::UnitTest::RspecResultParser.finish_in_values(line)
+      expect(values[:finish_in]).to eq 3650
+      expect(values[:files_load]).to eq 74.4
     end
   end
 

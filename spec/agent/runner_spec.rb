@@ -22,8 +22,8 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     expect(tests_result[:failures]).to eq(1)
     expect(tests_result[:pending]).to eq(0)
     expect(tests_result[:passed]).to eq(1)
-    expect(tests_result[:finished_in]).to be > 0
-    expect(tests_result[:files_took_to_load]).to be > 0
+    expect(tests_result[:finish_in]).to be > 0
+    expect(tests_result[:files_load]).to be > 0
     expect(tests_result[:failures_list]).not_to be_empty
     expect(tests_result[:failed_examples]).not_to be_empty
     delete_file(test_results_file_path)
@@ -40,8 +40,8 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
     expect(tests_result[:failures]).to eq(2)
     expect(tests_result[:pending]).to eq(0)
     expect(tests_result[:passed]).to eq(2)
-    expect(tests_result[:finished_in]).to be > 0
-    expect(tests_result[:files_took_to_load]).to be > 0
+    expect(tests_result[:finish_in]).to be > 0
+    expect(tests_result[:files_load]).to be > 0
     expect(tests_result[:failures_list]).not_to be_empty
     expect(tests_result[:failed_examples]).not_to be_empty
     delete_file(test_results_file_path)
