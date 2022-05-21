@@ -1,0 +1,38 @@
+leslie@leslie:~/discourse$ liri m
+
+Press Ctrl + c to finish Manager process manually
+Compressing source code |--=---=---=---=---=---=---=---=---=---=---=---=---=---=---=| Time: 00:00:36
+
+Getting unit tests |=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---| Time: 00:00:00
+
+Progress 816/816 |===========================================================| 100% | Time: 00:07:350:01:05
+
+16341 examples, 10 failures, 9 pending
+
+x=====================================================================================================================================x
+|                                                                Summary                                                              |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   examples |   failures |   pending |   passed |   finish_in  |   files_load |   files_processed |   batch_run  |   hardware_model  |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   2736     |   0        |   2       |   2736   |   5 m y 19 s |   44 s       |   140             |   6 m y 34 s |   HP ENVY x360 m6 |
+|   2840     |   0        |   2       |   2840   |   4 m y 54 s |   52 s       |   166             |   6 m y 25 s |   X510UAR         |
+|   7030     |   2        |   3       |   7028   |   5 m y 6 s  |   50 s       |   230             |   6 m y 37 s |   X570 I AORUS PR |
+|   3735     |   8        |   2       |   3727   |   4 m y 16 s |   1 m        |   280             |   6 m y 8 s  |   GF65 Thin 9SEXR |
+
+|   16341    |   10       |   9       |   16331  |              |              |   816             |              |                   |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+
+Failed examples: 
+rspec ./spec/lib/rate_limiter_spec.rb:115 # RateLimiter enabled handles readonly does not explode
+rspec ./spec/jobs/clean_up_crawler_stats_spec.rb:17 # Jobs::CleanUpCrawlerStats keeps only the top records from the previous day
+rspec ./spec/lib/middleware/request_tracker_spec.rb:105 # Middleware::RequestTracker log_request can log Discourse user agent requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:55 # Middleware::RequestTracker log_request can exclude/include based on custom header
+rspec ./spec/lib/middleware/request_tracker_spec.rb:66 # Middleware::RequestTracker log_request can log requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:153 # Middleware::RequestTracker log_request ignore_anonymous_pageviews does not ignore anonymous requests for public sites
+rspec ./spec/lib/middleware/request_tracker_spec.rb:168 # Middleware::RequestTracker log_request ignore_anonymous_pageviews ignores anonymous requests for private sites
+rspec ./spec/models/web_crawler_request_spec.rb:13 # WebCrawlerRequest can log crawler requests
+rspec ./spec/models/application_request_spec.rb:19 # ApplicationRequest can log app requests
+rspec ./spec/lib/distributed_mutex_spec.rb:88 # DistributedMutex readonly redis works even if redis is in readonly
+
+Finalizado en: 8 m y 13 s
+
