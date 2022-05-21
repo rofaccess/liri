@@ -38,10 +38,14 @@ module Liri
         source_code.delete_compressed_file
 
         Liri.init_exit(stop, threads, 'Manager')
+
+        manager.print_results
+
         Liri.logger.info('Manager process finished')
       rescue SignalException => e
+        manager.print_results if manager
         Liri.logger.info("Exception(#{e}) Proceso Manager process finished manually")
-        Liri.kill(threads)
+        Liri.kill(threads) if threads && threads.any?
       end
 
       def test_files_by_runner
@@ -217,12 +221,6 @@ module Liri
           Thread.exit
         end
       end
-
-      @tests_result.print_summary
-      print_agents_summary
-      print_agents_detailed_summary if Liri.print_agents_detailed_summary
-      @tests_result.print_failures_list if Liri.print_failures_list
-      @tests_result.print_failed_examples if Liri.print_failed_examples
     end
 
     def processing
@@ -289,12 +287,20 @@ module Liri
       end
     end
 
+    def print_results
+      @tests_result.print_summary
+      print_agents_summary
+      print_agents_detailed_summary if Liri.print_agents_detailed_summary
+      @tests_result.print_failures_list if Liri.print_failures_list
+      @tests_result.print_failed_examples if Liri.print_failed_examples
+    end
+
     def print_agents_summary
       processed_tests_batches_by_agent = processed_tests_batches_by_agents
       rows = processed_tests_batches_by_agent.values.map do |value|
-        value[:finish_in] = value[:finish_in].to_duration
-        value[:files_load] = value[:files_load].to_duration
-        value[:batch_run] = value[:batch_run].to_duration
+        value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
+        value[:files_load] = value[:files_load].to_duration if value[:files_load]
+        value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
         value.values
       end
 
@@ -312,17 +318,17 @@ module Liri
       @tests_batches.each_value do |processed_test_batch|
         agent_ip_address = processed_test_batch[:agent_ip_address]
         if tests_batches[agent_ip_address]
-          tests_batches[agent_ip_address][:examples] += processed_test_batch[:examples]
-          tests_batches[agent_ip_address][:failures] += processed_test_batch[:failures]
-          tests_batches[agent_ip_address][:pending] += processed_test_batch[:pending]
-          tests_batches[agent_ip_address][:passed] += processed_test_batch[:passed]
-          tests_batches[agent_ip_address][:finish_in] += processed_test_batch[:finish_in]
-          tests_batches[agent_ip_address][:files_load] += processed_test_batch[:files_load]
-          tests_batches[agent_ip_address][:files_processed] += processed_test_batch[:files_processed]
-          tests_batches[agent_ip_address][:batch_run] += processed_test_batch[:batch_run]
+          tests_batches[agent_ip_address][:examples] += processed_test_batch[:examples] if tests_batches[agent_ip_address][:examples] && processed_test_batch[:examples]
+          tests_batches[agent_ip_address][:failures] += processed_test_batch[:failures] if tests_batches[agent_ip_address][:failures] && processed_test_batch[:failures]
+          tests_batches[agent_ip_address][:pending] += processed_test_batch[:pending] if tests_batches[agent_ip_address][:pending] && processed_test_batch[:failures]
+          tests_batches[agent_ip_address][:passed] += processed_test_batch[:passed] if tests_batches[agent_ip_address][:passed] && processed_test_batch[:passed]
+          tests_batches[agent_ip_address][:finish_in] += processed_test_batch[:finish_in] if tests_batches[agent_ip_address][:finish_in] && processed_test_batch[:finish_in]
+          tests_batches[agent_ip_address][:files_load] += processed_test_batch[:files_load] if tests_batches[agent_ip_address][:files_load] && processed_test_batch[:files_load]
+          tests_batches[agent_ip_address][:files_processed] += processed_test_batch[:files_processed] if tests_batches[agent_ip_address][:files_processed] && processed_test_batch[:files_processed]
+          tests_batches[agent_ip_address][:batch_run] += processed_test_batch[:batch_run] if tests_batches[agent_ip_address][:batch_run] && processed_test_batch[:batch_run]
         else
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
-          _processed_test_batch.remove!(:msg, :tests_batch_number, :tests_batch_keys, :status, :failures_list,
+          _processed_test_batch.remove!(:msg, :tests_batch_number, :tests_batch_keys, :failures_list,
                                         :failed_examples, :agent_ip_address)
           tests_batches[agent_ip_address] = _processed_test_batch
         end
@@ -333,11 +339,11 @@ module Liri
     def print_agents_detailed_summary
       puts "\n"
       rows = @tests_batches.values.map do |value|
-        value.remove!(:msg, :tests_batch_number, :tests_batch_keys, :status, :failures_list,
+        value.remove!(:msg, :tests_batch_number, :tests_batch_keys, :failures_list,
                       :failed_examples, :agent_ip_address)
-        value[:finish_in] = value[:finish_in].to_duration
-        value[:files_load] = value[:files_load].to_duration
-        value[:batch_run] = value[:batch_run].to_duration
+        value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
+        value[:files_load] = value[:files_load].to_duration if value[:files_load]
+        value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
         value.values
       end
 
@@ -352,7 +358,7 @@ module Liri
     end
 
     def get_footer_values
-      footer = { examples: @tests_result.examples, failures: @tests_result.failures, pending: @tests_result.pending,
+      footer = { status: '', examples: @tests_result.examples, failures: @tests_result.failures, pending: @tests_result.pending,
                  passed: @tests_result.passed, finish_in: "", files_load: "",
                  files_processed: @tests_result.files_processed, batch_run: "", hardware_model: "" }
       footer.values
@@ -377,7 +383,9 @@ module Liri
         samples = all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
         samples_keys = samples.keys # Se obtiene la clave asignada a los tests
         @tests_files_count += samples.size
-        tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys, status: 'pending' } # Se construye el lote a enviar
+        tests_batch = { msg: 'process_tests', tests_batch_number: @tests_batch_number, tests_batch_keys: samples_keys,
+                        status: 'pending', examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
+                        files_processed: 0, batch_run: 0, hardware_model: '' } # Se construye el lote a enviar
         @tests_batches[@tests_batch_number] = tests_batch
       end
 
