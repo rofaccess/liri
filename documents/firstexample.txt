@@ -1,0 +1,176 @@
+leslie@leslie:~/discourse$ liri m
+
+Press Ctrl + c to finish Manager process manually
+Compressing source code |--=---=---=---=---=---=---=---=---=---=---=---=---=---=---=| Time: 00:00:36
+
+Getting unit tests |=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---| Time: 00:00:00
+
+Progress 816/816 |===========================================================| 100% | Time: 00:07:38
+
+16342 examples, 11 failures, 9 pending
+
+x=====================================================================================================================================x
+|                                                                Summary                                                              |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   examples |   failures |   pending |   passed |   finish_in  |   files_load |   files_processed |   batch_run  |   hardware_model  |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   4778     |   1        |   4       |   4777   |   4 m y 47 s |   52 s       |   246             |   6 m y 25 s |   X570 I AORUS PR |
+|   2606     |   7        |   2       |   2599   |   5 m y 25 s |   52 s       |   160             |   6 m y 52 s |   HP ENVY x360 m6 |
+|   2674     |   1        |   1       |   2673   |   4 m y 42 s |   46 s       |   150             |   6 m y 3 s  |   X510UAR         |
+|   6284     |   2        |   2       |   6282   |   4 m y 40 s |   58 s       |   260             |   6 m y 27 s |   GF65 Thin 9SEXR |
+
+|   16342    |   11       |   9       |   16331  |              |              |   816             |              |                   |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+
+Failures: 
+
+  1) Middleware::RequestTracker log_request can exclude/include based on custom header
+     Failure/Error: expect(ApplicationRequest.page_view_anon.first.count).to eq(2)
+
+       expected: 2
+            got: 13
+
+       (compared using ==)
+     # ./spec/lib/middleware/request_tracker_spec.rb:63:in `block (3 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+  2) Middleware::RequestTracker log_request can log Discourse user agent requests correctly
+     Failure/Error: expect(ApplicationRequest.page_view_crawler.first.count).to eq(1)
+
+       expected: 1
+            got: 5
+
+       (compared using ==)
+     # ./spec/lib/middleware/request_tracker_spec.rb:116:in `block (3 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+  3) Middleware::RequestTracker log_request can log requests correctly
+     Failure/Error: expect(ApplicationRequest.http_total.first.count).to eq(4)
+
+       expected: 4
+            got: 31
+
+       (compared using ==)
+     # ./spec/lib/middleware/request_tracker_spec.rb:95:in `block (3 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+  4) Middleware::RequestTracker log_request ignore_anonymous_pageviews does not ignore anonymous requests for public sites
+     Failure/Error: expect(ApplicationRequest.http_total.first.count).to eq(2)
+
+       expected: 2
+            got: 29
+
+       (compared using ==)
+     # ./spec/lib/middleware/request_tracker_spec.rb:161:in `block (4 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+  5) Middleware::RequestTracker log_request ignore_anonymous_pageviews ignores anonymous requests for private sites
+     Failure/Error: expect(ApplicationRequest.http_total.first.count).to eq(2)
+
+       expected: 2
+            got: 29
+
+       (compared using ==)
+     # ./spec/lib/middleware/request_tracker_spec.rb:176:in `block (4 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  6) ApplicationRequest can log app requests
+     Failure/Error: expect(ApplicationRequest.find_by(date: d1, req_type: "http_2xx").count).to eq(4)
+
+       expected: 4
+            got: 39
+
+       (compared using ==)
+     # ./spec/models/application_request_spec.rb:37:in `block (2 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  7) OptimizedImage.crop .downsize should downsize logo (requires ImageMagick 7)
+     Failure/Error: expect(File.size(tmp_path)).to be < 2300
+
+       expected: < 2300
+            got:   2335
+     # ./spec/models/optimized_image_spec.rb:191:in `block (4 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/rofaccess/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  8) Jobs::CleanUpCrawlerStats keeps only the top records from the previous day
+     Failure/Error: expect(WebCrawlerRequest.all).to contain_exactly(req1, req2, req3)
+
+       expected collection contained:  [#<WebCrawlerRequest id: 49, date: "2022-05-20", user_agent: "Googlebot 0.0", count: 100>, #<WebCrawl...count: 40>, #<WebCrawlerRequest id: 52, date: "2022-05-20", user_agent: "Googlebot 3.0", count: 50>]
+       actual collection contained:    [#<WebCrawlerRequest id: 11, date: "2022-05-21", user_agent: "Googlebot", count: 16>, #<WebCrawlerReq...count: 40>, #<WebCrawlerRequest id: 52, date: "2022-05-20", user_agent: "Googlebot 3.0", count: 50>]
+       the extra elements were:        [#<WebCrawlerRequest id: 11, date: "2022-05-21", user_agent: "Googlebot", count: 16>, #<WebCrawlerReq...WebCrawlerRequest id: 32, date: "2022-05-21", user_agent: "DiscourseAPI Ruby Gem 0.19.0", count: 1>]
+     # ./spec/jobs/clean_up_crawler_stats_spec.rb:29:in `block (2 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/rofaccess/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  9) DistributedMutex readonly redis works even if redis is in readonly
+     Failure/Error: DiscourseRedis.ignore_readonly { @redis.public_send(meth, *args, **kwargs, &block) }
+
+     Redis::CommandError:
+       ERR Invalid master port
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis/client.rb:163:in `call'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:374:in `block in slaveof'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:72:in `block in synchronize'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:72:in `synchronize'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:373:in `slaveof'
+     # ./lib/discourse_redis.rb:42:in `public_send'
+     # ./lib/discourse_redis.rb:42:in `block in method_missing'
+     # ./lib/discourse_redis.rb:29:in `ignore_readonly'
+     # ./lib/discourse_redis.rb:42:in `method_missing'
+     # ./spec/lib/distributed_mutex_spec.rb:81:in `block (3 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/leslie/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  10) RateLimiter enabled handles readonly does not explode
+     Failure/Error: Discourse.redis.without_namespace.slaveof '10.0.0.1', '99999'
+
+     Redis::CommandError:
+       ERR Invalid master port
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis/client.rb:163:in `call'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:374:in `block in slaveof'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:72:in `block in synchronize'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:72:in `synchronize'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/redis-4.5.1/lib/redis.rb:373:in `slaveof'
+     # ./spec/lib/rate_limiter_spec.rb:108:in `block (4 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+  11) WebCrawlerRequest can log crawler requests
+     Failure/Error: expect(WebCrawlerRequest.find_by(date: d2, user_agent: "Googlebot").count).to eq(1)
+
+       expected: 1
+            got: 4
+
+       (compared using ==)
+     # ./spec/models/web_crawler_request_spec.rb:31:in `block (2 levels) in <main>'
+     # ./spec/rails_helper.rb:277:in `block (2 levels) in <top (required)>'
+     # /home/magali/.rvm/gems/ruby-2.7.2@discourse/gems/webmock-3.14.0/lib/webmock/rspec.rb:37:in `block (2 levels) in <top (required)>'
+
+
+Failed examples: 
+rspec ./spec/lib/middleware/request_tracker_spec.rb:55 # Middleware::RequestTracker log_request can exclude/include based on custom header
+rspec ./spec/lib/middleware/request_tracker_spec.rb:105 # Middleware::RequestTracker log_request can log Discourse user agent requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:66 # Middleware::RequestTracker log_request can log requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:153 # Middleware::RequestTracker log_request ignore_anonymous_pageviews does not ignore anonymous requests for public sites
+rspec ./spec/lib/middleware/request_tracker_spec.rb:168 # Middleware::RequestTracker log_request ignore_anonymous_pageviews ignores anonymous requests for private sites
+rspec ./spec/models/application_request_spec.rb:19 # ApplicationRequest can log app requests
+rspec ./spec/models/optimized_image_spec.rb:179 # OptimizedImage.crop .downsize should downsize logo (requires ImageMagick 7)
+rspec ./spec/jobs/clean_up_crawler_stats_spec.rb:17 # Jobs::CleanUpCrawlerStats keeps only the top records from the previous day
+rspec ./spec/lib/distributed_mutex_spec.rb:88 # DistributedMutex readonly redis works even if redis is in readonly
+rspec ./spec/lib/rate_limiter_spec.rb:115 # RateLimiter enabled handles readonly does not explode
+rspec ./spec/models/web_crawler_request_spec.rb:13 # WebCrawlerRequest can log crawler requests
+
+Finalizado en: 8 m y 16 s
+
