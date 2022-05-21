@@ -8,6 +8,8 @@ module Liri
   module Common
     # Esta clase se encarga de guardar y procesar el archivo de resultados
     class TestsResult
+      attr_reader :examples, :failures, :pending, :passed, :files_processed
+
       def initialize(folder_path)
         @folder_path = folder_path
         @examples = 0
@@ -17,7 +19,6 @@ module Liri
         @finish_in = 0
         @files_load = 0
         @files_processed = 0
-        @batch_run = 0
         @failures_list = ''
         @failed_examples = ''
       end
@@ -36,11 +37,10 @@ module Liri
       # Ejemplo del hash retornado:
       # { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
       #   failures_list: '', failed_examples: '' }
-      def process(tests_result_file_name, files_processed, batch_run)
+      def process(tests_result_file_name, files_processed)
         file_path = File.join(@folder_path, '/', tests_result_file_name)
         result_hash = process_tests_result_file(file_path)
         result_hash[:files_processed] = files_processed
-        result_hash[:batch_run] = batch_run
         update_partial_result(result_hash)
         result_hash
       end
@@ -57,12 +57,6 @@ module Liri
       def print_failed_examples
         puts "\nFailed examples: " unless @failed_examples.empty?
         puts @failed_examples
-      end
-
-      def to_humanized_hash
-        { examples: @examples, failures: @failures, pending: @pending, passed: @passed,
-          finish_in: @finish_in.to_duration, files_load: @files_load.to_duration,
-          files_processed: @files_processed, batch_run: @batch_run.to_duration }
       end
 
       private

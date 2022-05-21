@@ -35,7 +35,7 @@ module Liri
 
       def ask_credentials
         local_user = get_local_user
-        password = ask("Ingrese contraseña del usuario #{local_user}: ") { |q| q.echo = "*" }
+        password = ask("Enter password of user #{local_user}: ") { |q| q.echo = "*" }
         return local_user, password
       end
 

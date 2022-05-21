@@ -289,9 +289,10 @@ module Liri
 
         @progressbar.progress = @files_processed
 
-        tests_result = @tests_result.process(tests_result_file_name, files_processed, batch_run)
+        tests_result = @tests_result.process(tests_result_file_name, files_processed)
 
         @processed_tests_batches[tests_batch_number] = tests_result.clone
+        @processed_tests_batches[tests_batch_number][:batch_run] = batch_run
         @processed_tests_batches[tests_batch_number][:agent_ip_address] = agent_ip_address
         @processed_tests_batches[tests_batch_number][:hardware_model] = hardware_model
         @processed_tests_batches[tests_batch_number][:tests_batch_number] = tests_batch_number
@@ -331,7 +332,6 @@ module Liri
           tests_batches[agent_ip_address][:files_load] += processed_test_batch[:files_load]
           tests_batches[agent_ip_address][:files_processed] += processed_test_batch[:files_processed]
           tests_batches[agent_ip_address][:batch_run] += processed_test_batch[:batch_run]
-          tests_batches[agent_ip_address][:tests_batch_number] = "#{tests_batches[agent_ip_address][:tests_batch_number]}, #{processed_test_batch[:tests_batch_number]}"
         else
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
           _processed_test_batch.remove!(:failures_list, :failed_examples, :agent_ip_address, :tests_batch_number)
@@ -362,8 +362,9 @@ module Liri
     end
 
     def get_footer_values
-      footer = @tests_result.to_humanized_hash
-      footer[:hardware_model] = ''
+      footer = { examples: @tests_result.examples, failures: @tests_result.failures, pending: @tests_result.pending,
+                 passed: @tests_result.passed, finish_in: "", files_load: "",
+                 files_processed: @tests_result.files_processed, batch_run: "", hardware_model: "" }
       footer.values
     end
 
