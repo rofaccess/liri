@@ -15,9 +15,9 @@ module Liri
         setup_manager = Liri.set_setup(work_folder_path, :agent)
         agent_folder_path = setup_manager.agent_folder_path
 
-        Liri.set_logger(setup_manager.logs_folder_path, 'liri-agent.log')
-        Liri.logger.info("Proceso Agent iniciado")
-        Liri.logger.info("Presione Ctrl + c para terminar el proceso Agent manualmente\n", true)
+        Liri.set_logger(setup_manager.logs_folder_path, 'liriagent.log')
+        Liri.logger.info("Agent process started")
+        Liri.logger.info("Press Ctrl + c to finish Agent process manually\n", true)
 
         decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
         source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
@@ -28,9 +28,9 @@ module Liri
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
         Liri.init_exit(stop, threads, 'Agent')
-        Liri.logger.info("Proceso Agent terminado")
+        Liri.logger.info("Agent process finished")
       rescue SignalException => e
-        Liri.logger.info("Exception(#{e}) Proceso Agent terminado manualmente")
+        Liri.logger.info("Exception(#{e}) Agent process finished manually")
         Liri.kill(threads)
       end
     end
@@ -60,12 +60,10 @@ module Liri
         begin
           @udp_socket.bind('0.0.0.0', @udp_port)
         rescue Errno::EADDRINUSE => e
-          Liri.logger.error("Exception(#{e}) Puerto UDP #{@udp_port} ocupado")
+          Liri.logger.error("Exception(#{e}) Busy UDP port #{@udp_port}")
           Thread.exit
         end
-        Liri.logger.info("En espera de peticiones de Managers en el puerto UDP #{@udp_port}
-                                     (Se espera que algún Manager se contacte por primera vez para establecer una conexión TCP)
-        ")
+        Liri.logger.info("Waiting managers request in UDP port #{@udp_port}")
 
         loop do
           @manager_request = @udp_socket.recvfrom(1024)
@@ -80,21 +78,22 @@ module Liri
     def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       agent_ip_address = tcp_socket.addr[2]
-
       tcp_socket.puts({ msg: 'get_source_code', hardware_model: get_hardware_model }.to_json)
 
       while line = tcp_socket.gets
         tcp_socket_data = JSON.parse(line.chop)
-        if tcp_socket_data['msg'] == 'already_connected' || tcp_socket_data['msg'] == 'no_exist_tests'
+        msg = tcp_socket_data['msg']
+
+        if msg == 'already_connected' || msg == 'no_exist_tests' || msg == 'finish_agent'
           break
         end
 
-        if tcp_socket_data['msg'] == 'proceed_get_source_code'
-          get_source_code(manager_ip_address, manager_data)
-          tcp_socket.puts({ msg: 'get_tests_files' }.to_json)
+        if msg == 'proceed_get_source_code'
+          result = get_source_code(manager_ip_address, manager_data)
+          tcp_socket.puts({ msg: result }.to_json)
         end
 
-        if tcp_socket_data['msg'] == 'process_tests'
+        if msg == 'process_tests'
           tests_batch = tcp_socket_data
           tests = get_tests(tests_batch, manager_ip_address)
           raw_tests_result = @runner.run_tests(tests)
@@ -108,21 +107,21 @@ module Liri
         end
       end
 
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
       tcp_socket.close
       Liri.clean_folder_content(@agent_folder_path)
 
       unregister_manager(manager_ip_address)
     rescue Errno::EADDRINUSE => e
-      Liri.logger.error("Exception(#{e}) Puerto TCP #{@tcp_port} ocupado")
+      Liri.logger.error("Exception(#{e}) Busy UDP port #{@udp_port}")
     rescue Errno::ECONNRESET => e
       tcp_socket.close
-      Liri.logger.error("Exception(#{e}) Conexión cerrada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Closed connection in TCP port #{@tcp_port}")
+      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Exception(#{e}) Conexión rechazada en el puerto TCP #{@tcp_port}")
-      Liri.logger.info("Se termina la conexión con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Rejected connection in TCP port #{@tcp_port}")
+      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
       unregister_manager(manager_ip_address)
     end
 
@@ -134,24 +133,14 @@ module Liri
     def process_manager_connection_request(manager_ip_address, manager_data)
       unless registered_manager?(manager_ip_address)
         register_manager(manager_ip_address)
-        Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
+        Liri.logger.info("Broadcast request received from Manager: #{manager_ip_address} in UDP port: #{@udp_port}")
         start_client_socket_to_process_tests(manager_ip_address, manager_data)
       end
     end
 
-    # Se establece una nueva comunicación con el servidor TCP del Manager con el único objetivo de cerrar el servidor
-    # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
-    def start_client_to_close_manager_server(manager_ip_address, msg)
-      tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
-      tcp_socket.print({ msg: msg }.to_json)
-      tcp_socket.close
-    end
-
     def get_source_code(manager_ip_address, manager_data)
-      #puts "#{manager_data.to_h}"
       puts ''
-      Liri::Common::Benchmarking.start(start_msg: "Obteniendo código fuente. Espere... ", stdout: true) do
+      Liri::Common::Benchmarking.start(start_msg: "Getting source code. Wait... ", stdout: true) do
         puts ''
         Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
           scp.download!(manager_data.compressed_file_path, @source_code.compressed_file_folder_path)
@@ -162,7 +151,7 @@ module Liri
       downloaded_file_name = manager_data.compressed_file_path.split('/').last
       downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
 
-      Liri::Common::Benchmarking.start(start_msg: "Descomprimiendo código fuente. Espere... ", stdout: true) do
+      Liri::Common::Benchmarking.start(start_msg: "Uncompressing source code. Wait... ", stdout: true) do
         @source_code.decompress_file(downloaded_file_path)
         @all_tests = @source_code.all_tests
       end
@@ -183,44 +172,39 @@ module Liri
         # Se setea la versión de ruby y el gemset para el código fuente descomprimido
         # Se especifica el Gemfile del cual se van a instalar los requerimientos
         # Esto se hace porque por defecto se usa la versión de Ruby de Liri y su Gemset y por ello hay que cambiarlos explicitamente aquí
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando bundle install. Espere... ", end_msg: "Ejecución de bundle install. Duración: ", stdout: true) do
+        Liri::Common::Benchmarking.start(start_msg: "Running bundle install. Wait... ", end_msg: "Running bundle install. Duration: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; BUNDLE_GEMFILE=Gemfile bundle install'")
         end
         puts ''
 
-        Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate RAILS_ENV=test. Duración: ", stdout: true) do
+        Liri::Common::Benchmarking.start(start_msg: "Running rake db:migrate RAILS_ENV=test. Wait... ", end_msg: "Running rake db:migrate RAILS_ENV=test. Duration: ", stdout: true) do
           puts ''
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate RAILS_ENV=test'")
         end
         puts ''
-
-        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ", stdout: true) do
-        # puts ''
-        # system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate:reset RAILS_ENV=test'")
-        #end
-        #puts ''
       end
-      true
+      'get_tests_files'
+    rescue Liri::FileNotFoundError => e
+      Liri.logger.error("Exception(#{e}) Not found file to decompress in Agent")
+      'get_source_code_fail'
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Exception(#{e}) Conexión rechazada por #{manager_ip_address}. Posiblemente ssh no esté ejecutandose en #{manager_ip_address}")
-      false
+      Liri.logger.error("Exception(#{e}) Rejected connection by #{manager_ip_address}. Maybe ssh is not running in #{manager_ip_address}")
+      'get_source_code_fail'
     rescue Errno::ENOTTY => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
-      Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
-      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
-      false
+      Liri.logger.error("Exception(#{e}) Invalid password received in #{manager_ip_address} for ssh connection")
+      'get_source_code_fail'
     rescue Net::SSH::AuthenticationFailed => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
-      Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
-      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
-      false
+      Liri.logger.error("Exception(#{e}) Invalid password received in #{manager_ip_address} for ssh connection")
+      'get_source_code_fail'
     rescue Net::SCP::Error => e
-      Liri.logger.warn("Exception(#{e}) Archivo no encontrado en #{manager_ip_address} a través de scp")
-      false
+      Liri.logger.warn("Exception(#{e}) File not found in #{manager_ip_address} through scp")
+      'get_source_code_fail'
     rescue TypeError => e
-      Liri.logger.warn("Exception(#{e}) Error indeterminado")
-      false
+      Liri.logger.warn("Exception(#{e}) Undetermined error")
+      'get_source_code_fail'
     end
 
     def get_manager_data(manager_data_hash)
@@ -234,7 +218,7 @@ module Liri
 
     def send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
       puts ''
-      Liri::Common::Benchmarking.start(start_msg: "Enviando archivo de resultados. Espere... ", stdout: true) do
+      Liri::Common::Benchmarking.start(start_msg: "Sending test files results. Wait... ", stdout: true) do
         Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
           scp.upload!(tests_result_file_path, manager_data.tests_results_folder_path)
         end
@@ -245,7 +229,7 @@ module Liri
     def get_tests(tests_batch, manager_ip_address)
       # Se convierte "[5, 9, 13, 1]" a un arreglo [5, 9, 13, 1]
       tests_keys = tests_batch['tests_batch_keys']
-      Liri.logger.debug("Claves de pruebas recibidas del Manager #{manager_ip_address}: #{tests_keys}")
+      Liri.logger.debug("Tests keys received from Manager #{manager_ip_address}: #{tests_keys}")
       # Se buscan obtienen los tests que coincidan con las claves recibidas de @all_tests = {1=>"spec/hash_spec.rb:2", 2=>"spec/hash_spec.rb:13", 3=>"spec/hash_spec.rb:24", ..., 29=>"spec/liri_spec.rb:62"}
       # Se retorna un arreglo con los tests a ejecutar ["spec/liri_spec.rb:4", "spec/hash_spec.rb:5", "spec/hash_spec.rb:59", ..., "spec/hash_spec.rb:37"]
       tests_keys.map { |test_key| @all_tests[test_key] }
@@ -253,7 +237,7 @@ module Liri
 
     def get_hardware_model
       hardware_model = %x|cat /sys/devices/virtual/dmi/id/product_name|
-      hardware_model.strip # remove \n from string
+      hardware_model.strip[0..14] # remove \n from string
     end
 
     def registered_manager?(manager_ip_address)

@@ -1,7 +1,7 @@
 es:
   to_duration:
     and: y
-    less_than_one_second: Menos de un segundo
+    less_than_one_second: < 1s
     year:
       one: año
       other: años
@@ -12,14 +12,14 @@ es:
       one: semana
       other: semanas
     day:
-      one: día
-      other: dias
+      one: d
+      other: d
     hour:
-      one: hora
-      other: horas
+      one: h
+      other: h
     minute:
-      one: minuto
-      other: minutos
+      one: m
+      other: m
     second:
-      one: segundo
-      other: segundos
+      one: s
+      other: s

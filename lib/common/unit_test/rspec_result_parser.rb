@@ -10,11 +10,11 @@ module Liri
       # Esta clase parsea texto de resultado en rspec a volores numéricos
       class RspecResultParser
         class << self
-          def finished_in_values(finished_in_line)
-            values = finished_in_line.to_s.match(/Finished in (.+)\(files took (.+) to load\)/)
-            finished_in_text = values[1]
-            files_took_to_load_text = values[2]
-            { finished_in: text_value_to_seconds(finished_in_text), files_took_to_load: text_value_to_seconds(files_took_to_load_text) }
+          def finish_in_values(finish_in_line)
+            values = finish_in_line.to_s.match(/Finished in (.+)\(files took (.+) to load\)/)
+            finish_in_text = values[1]
+            files_load_text = values[2]
+            { finish_in: text_value_to_seconds(finish_in_text), files_load: text_value_to_seconds(files_load_text) }
           end
 
           def finished_summary_values(finished_summary_line)

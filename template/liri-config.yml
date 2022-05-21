@@ -9,9 +9,9 @@ print_failures_list: false
 # Configuración para imprimir la lista resumida de tests fallidos
 print_failed_examples: false
 # Configuración para imprimir un resumen detallado del proceso realizado por los agentes
-print_agents_detailed_summary: true
+print_agents_detailed_summary: false
 # Configuración para definir cada cuantos segundo el Manager enviará un broadcast UDP a la red para sondear agentes
-udp_request_delay: 10
+udp_request_delay: 3
 log:
   stdout:
     # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.

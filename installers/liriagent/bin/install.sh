@@ -198,7 +198,7 @@ cat << EOF > $AGENT_SERVICE_FILE_PATH
   WorkingDirectory=$WORK_HOME
 
   #ExecStart=$BIN_HOME/startup.sh $RUBY__VERSION
-  ExecStart=/bin/bash -ce "exec $BIN_HOME/startup.sh $RUBY__VERSION >> $WORK_HOME/liri/logs/liri-agent-service.log 2>&1"
+  ExecStart=/bin/bash -ce "exec $BIN_HOME/startup.sh $RUBY__VERSION >> $WORK_HOME/liri/logs/liriagent-service.log 2>&1"
   ExecStop=$BIN_HOME/shutdown.sh
 
   [Install]

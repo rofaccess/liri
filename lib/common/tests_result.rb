@@ -8,16 +8,17 @@ module Liri
   module Common
     # Esta clase se encarga de guardar y procesar el archivo de resultados
     class TestsResult
+      attr_reader :examples, :failures, :pending, :passed, :files_processed
+
       def initialize(folder_path)
         @folder_path = folder_path
         @examples = 0
         @failures = 0
         @pending = 0
         @passed = 0
-        @finished_in = 0
-        @files_took_to_load = 0
-        @tests_files_processed_count = 0
-        @batch_run_finished_in = 0
+        @finish_in = 0
+        @files_load = 0
+        @files_processed = 0
         @failures_list = ''
         @failed_examples = ''
       end
@@ -34,13 +35,12 @@ module Liri
 
       # Procesa el resultado crudo de las pruebas unitarias y lo devuelve en formato hash manejable
       # Ejemplo del hash retornado:
-      # { examples: 0, failures: 0, pending: 0, passed: 0, finished_in: 0, files_took_to_load: 0,
+      # { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
       #   failures_list: '', failed_examples: '' }
-      def process(tests_result_file_name, tests_files_processed_count, batch_run_finished_in)
+      def process(tests_result_file_name, files_processed)
         file_path = File.join(@folder_path, '/', tests_result_file_name)
         result_hash = process_tests_result_file(file_path)
-        result_hash[:tests_files_processed_count] = tests_files_processed_count
-        result_hash[:batch_run_finished_in] = batch_run_finished_in
+        result_hash[:files_processed] = files_processed
         update_partial_result(result_hash)
         result_hash
       end
@@ -59,13 +59,6 @@ module Liri
         puts @failed_examples
       end
 
-      def to_humanized_hash
-        { examples: @examples, failures: @failures, pending: @pending, passed: @passed,
-          finished_in: @finished_in.to_duration, files_took_to_load: @files_took_to_load.to_duration,
-          tests_files_processed_count: @tests_files_processed_count,
-          batch_run_finished_in: @batch_run_finished_in.to_duration }
-      end
-
       private
 
       # Recibe el resultado crudo de las pruebas unitarias
@@ -73,9 +66,10 @@ module Liri
       # Ejemplo del hash retornado:
       # {result: '.F', failures: '', examples: 2, failures: 1, failed_examples: ''}
       def process_tests_result_file(file_path)
-        result_hash = { examples: 0, failures: 0, pending: 0, passed: 0, finished_in: 0, files_took_to_load: 0,
+        result_hash = { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
                         failures_list: '', failed_examples: '' }
         flag = ''
+        @failures_lists_count = @failures
         File.foreach(file_path) do |line|
           if flag == '' && line.strip.start_with?('Randomized')
             flag = 'Randomized'
@@ -88,9 +82,9 @@ module Liri
           end
 
           if ['Randomized', 'Failures', ''].include?(flag) && line.strip.start_with?('Finished')
-            values = finished_in_values(line)
-            result_hash[:finished_in] = values[:finished_in]
-            result_hash[:files_took_to_load] = values[:files_took_to_load]
+            values = finish_in_values(line)
+            result_hash[:finish_in] = values[:finish_in]
+            result_hash[:files_load] = values[:files_load]
             flag = 'Finished'
             next
           end
@@ -102,6 +96,7 @@ module Liri
 
           case flag
           when 'Failures'
+            line = fix_failure_number(line)
             result_hash[:failures_list] << line
           when 'Finished'
             values = finished_summary_values(line)
@@ -111,7 +106,7 @@ module Liri
             result_hash[:pending] = values[:pending]
             flag = ''
           when 'Failed'
-            result_hash[:failed_examples] << line
+            result_hash[:failed_examples] << line if line.strip.start_with?('rspec')
           end
         end
 
@@ -123,20 +118,26 @@ module Liri
         @failures += hash_result[:failures]
         @pending += hash_result[:pending]
         @passed += hash_result[:passed]
-        @finished_in += hash_result[:finished_in]
-        @files_took_to_load += hash_result[:files_took_to_load]
-        @tests_files_processed_count += hash_result[:tests_files_processed_count]
-        @batch_run_finished_in += hash_result[:batch_run_finished_in]
+        @files_processed += hash_result[:files_processed]
         @failures_list << hash_result[:failures_list]
         @failed_examples << hash_result[:failed_examples]
       end
 
-      def finished_in_values(line)
-        UnitTest::RspecResultParser.finished_in_values(line)
+      def finish_in_values(line)
+        UnitTest::RspecResultParser.finish_in_values(line)
       end
 
       def finished_summary_values(line)
         UnitTest::RspecResultParser.finished_summary_values(line)
+      end
+
+      def fix_failure_number(line)
+        line_number_regex = /(\d+\))/
+        if line.strip.start_with?(line_number_regex)
+          @failures_lists_count += 1
+          line.gsub!(line_number_regex, "#{@failures_lists_count})")
+        end
+        line
       end
     end
   end
