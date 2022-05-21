@@ -57,13 +57,32 @@ end
 # Define el alias m para el comando agent
 alias_command :a, :agent
 
+# Define el comando y los parámetros para obtener los archivos de tests
+command :tests_files do |c|
+  c.syntax = 'Liri tests_files [options]'
+  c.summary = 'Retorna los archivos de tests'
+  c.description = 'Ejecuta el comando para obtener la cantidad total de tests del proyecto'
+  c.example 'Ejecuta el comando tests', 'liri tf'
+  c.example 'Ejecuta el comando tests', 'liri tests_files'
+  c.action do |args, options|
+    # Método que se ejecuta al llamar al comando tests
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder, :manager)
+    tests_count = Liri::Task.tests_files(current_folder)
+    puts tests_count
+  end
+end
+
+# Define el alias t para el comando tests
+alias_command :tf, :tests_files
+
 # Define el comando y los parámetros para obtener la cantidad de tests
-command :tests do |c|
-  c.syntax = 'Liri tests [options]'
+command :tests_count do |c|
+  c.syntax = 'Liri tests_count [options]'
   c.summary = 'Retorna la cantidad total de tests'
   c.description = 'Ejecuta el comando para obtener la cantidad total de tests del proyecto'
-  c.example 'Ejecuta el comando tests', 'liri t'
-  c.example 'Ejecuta el comando tests', 'liri tests'
+  c.example 'Ejecuta el comando tests', 'liri tc'
+  c.example 'Ejecuta el comando tests', 'liri tests_count'
   c.action do |args, options|
     # Método que se ejecuta al llamar al comando tests
     current_folder = Dir.pwd
@@ -74,5 +93,5 @@ command :tests do |c|
 end
 
 # Define el alias t para el comando tests
-alias_command :t, :tests
+alias_command :tc, :tests_count
 

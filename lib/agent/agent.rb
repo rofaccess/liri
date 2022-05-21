@@ -15,7 +15,7 @@ module Liri
         setup_manager = Liri.set_setup(work_folder_path, :agent)
         agent_folder_path = setup_manager.agent_folder_path
 
-        Liri.set_logger(setup_manager.logs_folder_path, 'liri-agent.log')
+        Liri.set_logger(setup_manager.logs_folder_path, 'liriagent.log')
         Liri.logger.info("Proceso Agent iniciado")
         Liri.logger.info("Presione Ctrl + c para terminar el proceso Agent manualmente\n", true)
 
@@ -80,21 +80,22 @@ module Liri
     def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       agent_ip_address = tcp_socket.addr[2]
-
       tcp_socket.puts({ msg: 'get_source_code', hardware_model: get_hardware_model }.to_json)
 
       while line = tcp_socket.gets
         tcp_socket_data = JSON.parse(line.chop)
-        if tcp_socket_data['msg'] == 'already_connected' || tcp_socket_data['msg'] == 'no_exist_tests'
+        msg = tcp_socket_data['msg']
+
+        if msg == 'already_connected' || msg == 'no_exist_tests' || msg == 'finish_agent'
           break
         end
 
-        if tcp_socket_data['msg'] == 'proceed_get_source_code'
-          get_source_code(manager_ip_address, manager_data)
-          tcp_socket.puts({ msg: 'get_tests_files' }.to_json)
+        if msg == 'proceed_get_source_code'
+          result = get_source_code(manager_ip_address, manager_data)
+          tcp_socket.puts({ msg: result }.to_json)
         end
 
-        if tcp_socket_data['msg'] == 'process_tests'
+        if msg == 'process_tests'
           tests_batch = tcp_socket_data
           tests = get_tests(tests_batch, manager_ip_address)
           raw_tests_result = @runner.run_tests(tests)
@@ -137,15 +138,6 @@ module Liri
         Liri.logger.info("Petición broadcast UDP recibida del Manager: #{manager_ip_address} en el puerto UDP: #{@udp_port}")
         start_client_socket_to_process_tests(manager_ip_address, manager_data)
       end
-    end
-
-    # Se establece una nueva comunicación con el servidor TCP del Manager con el único objetivo de cerrar el servidor
-    # Esta conexión permitirá al Manager cerrar sus hilos pendientes con servidores TCP en espera y terminar el proceso
-    def start_client_to_close_manager_server(manager_ip_address, msg)
-      tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
-      Liri.logger.info("Se termina cualquier proceso pendiente con el Manager #{manager_ip_address} en el puerto TCP: #{@tcp_port}")
-      tcp_socket.print({ msg: msg }.to_json)
-      tcp_socket.close
     end
 
     def get_source_code(manager_ip_address, manager_data)
@@ -194,33 +186,28 @@ module Liri
           system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate RAILS_ENV=test'")
         end
         puts ''
-
-        #Liri::Common::Benchmarking.start(start_msg: "Ejecutando rake db:migrate:reset RAILS_ENV=test. Espere... ", end_msg: "Ejecución de rake db:migrate:reset RAILS_ENV=test. Duración: ", stdout: true) do
-        # puts ''
-        # system("bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rake db:migrate:reset RAILS_ENV=test'")
-        #end
-        #puts ''
       end
-      true
+      'get_tests_files'
+    rescue Liri::FileNotFoundError => e
+      Liri.logger.error("Exception(#{e}) No se encuentra el archivo a descomprimir en el Agent")
+      'get_source_code_fail'
     rescue Errno::ECONNREFUSED => e
       Liri.logger.error("Exception(#{e}) Conexión rechazada por #{manager_ip_address}. Posiblemente ssh no esté ejecutandose en #{manager_ip_address}")
-      false
+      'get_source_code_fail'
     rescue Errno::ENOTTY => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
       Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
-      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
-      false
+      'get_source_code_fail'
     rescue Net::SSH::AuthenticationFailed => e
       # Este rescue es temporal, hay que ver una mejor manera de detectar si la contraseña es incorrecta
       Liri.logger.error("Exception(#{e}) Contraseña incorrecta recibida de #{manager_ip_address} para la conexión ssh")
-      start_client_to_close_manager_server(manager_ip_address, "No se puede obtener el archivo de código fuente. Posiblemente se envío una contraseña incorrencta desde #{manager_ip_address}")
-      false
+      'get_source_code_fail'
     rescue Net::SCP::Error => e
       Liri.logger.warn("Exception(#{e}) Archivo no encontrado en #{manager_ip_address} a través de scp")
-      false
+      'get_source_code_fail'
     rescue TypeError => e
       Liri.logger.warn("Exception(#{e}) Error indeterminado")
-      false
+      'get_source_code_fail'
     end
 
     def get_manager_data(manager_data_hash)

@@ -14,7 +14,8 @@ module Liri
         def all_tests
           tests_count = 1
           tests_hash = {}
-          test_files.each do |test_file|
+          sorted_test_files = test_files.sort
+          sorted_test_files.each do |test_file|
             tests_hash[tests_count] = test_file.sub(@source_code_folder_path + '/', '')
             tests_count += 1
           end
@@ -37,7 +38,7 @@ module Liri
             # Descomentar para el entorno de producción
             raw_tests_result = ''
             Liri::Common::Benchmarking.start(start_msg: "Ejecutando conjunto de pruebas. Espere... ") do
-              raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')} --format progress'|
+              raw_tests_result = %x|bash -lc 'rvm use #{Liri.current_folder_ruby_and_gemset}; rspec #{tests.join(' ')}'|
             end
 
             return raw_tests_result

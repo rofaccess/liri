@@ -159,8 +159,9 @@ module Liri
 
           while line = client.gets
             client_data = JSON.parse(line.chop)
+            msg = client_data['msg']
 
-            if client_data['msg'] == 'get_source_code'
+            if msg == 'get_source_code'
               if registered_agent?(agent_ip_address)
                 client.puts({ msg: 'already_connected' }.to_json)
                 client.close
@@ -173,7 +174,13 @@ module Liri
               end
             end
 
-            if client_data['msg'] == 'get_tests_files'
+            if msg == 'get_source_code_fail'
+              client.puts({ msg: 'finish_agent' }.to_json)
+              client.close
+              break
+            end
+
+            if msg == 'get_tests_files'
               Liri.logger.info("Proceso de Ejecución de pruebas. Agent: #{agent_ip_address}. Espere... ", false)
               run_tests_batch_time_start = Time.now
 
@@ -187,7 +194,7 @@ module Liri
               end
             end
 
-            if client_data['msg'] == 'processed_tests'
+            if msg == 'processed_tests'
               tests_result = client_data
               Liri.logger.debug("Respuesta del Agent #{agent_ip_address}: #{tests_result}")
               batch_run_finished_in = Time.now - run_tests_batch_time_start
