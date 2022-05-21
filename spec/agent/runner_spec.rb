@@ -57,7 +57,7 @@ def run_tests(test_files)
   raw_tests_result = @runner.run_tests(test_files.values)
   tests_result_file_name = @tests_result.build_file_name('0.0.0.0', 1)
   tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
-  tests_result = @tests_result.process(tests_result_file_name, test_files.size, 0)
+  tests_result = @tests_result.process(tests_result_file_name, test_files.size)
   [tests_result_file_path, tests_result]
 end
 
