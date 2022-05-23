@@ -80,6 +80,12 @@ module Liri
       agent_ip_address = tcp_socket.addr[2]
       tcp_socket.puts({ msg: 'get_source_code', hardware_model: get_hardware_model }.to_json)
 
+      # Las siguientes variables se usan para guardar momentaneamente los resultados mientras se hace un chequeo de que
+      # el Manager siga ejecutandose o que ya no haya procesado los mismos tests ya ejecutados por otro agente
+      tests_result_file_name = ""
+      tests_result_file_path = ""
+      tests_result = {}
+
       while line = tcp_socket.gets
         tcp_socket_data = JSON.parse(line.chop)
         msg = tcp_socket_data['msg']
@@ -97,13 +103,14 @@ module Liri
           tests_batch = tcp_socket_data
           tests = get_tests(tests_batch, manager_ip_address)
           raw_tests_result = @runner.run_tests(tests)
-          tests_batch_number = tests_batch['tests_batch_number']
-          tests_result_file_name = @tests_result.build_file_name(agent_ip_address, tests_batch_number)
+          batch_num = tests_batch['batch_num']
+          tests_result_file_name = @tests_result.build_file_name(agent_ip_address, batch_num)
           tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
-
+          # TODO No se debería enviar el resultado si otro agente ya lo procesó, porque osinó reemplazaría el archivo de resultados
+          # ya procesado
           send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
-          result = { msg: 'processed_tests', tests_batch_number: tests_batch_number, tests_result_file_name: tests_result_file_name, tests_batch_keys_size: tests_batch['tests_batch_keys'].size}
-          tcp_socket.puts(result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
+          tests_result = { msg: 'processed_tests', batch_num: batch_num, tests_result_file_name: tests_result_file_name, tests_batch_keys_size: tests_batch['tests_batch_keys'].size}
+          tcp_socket.puts(tests_result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
         end
       end
 
