@@ -242,12 +242,13 @@ module Liri
             pending_tests_batch = batch
             batch[:status] = "sent"
             break
-          elsif sent_tests_batch.empty? && batch[:status] == "sent"
-            sent_tests_batch = batch
+            #elsif sent_tests_batch.empty? && batch[:status] == "sent"
+            #sent_tests_batch = batch
           end
         end
 
-        tests_batch = pending_tests_batch.any? ? pending_tests_batch : sent_tests_batch
+        #tests_batch = pending_tests_batch.any? ? pending_tests_batch : sent_tests_batch
+        tests_batch = pending_tests_batch
         return {} if tests_batch.empty?
 
         tests_batch[:agent_ip_address] = agent_ip_address
