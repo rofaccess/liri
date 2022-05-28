@@ -1,0 +1,37 @@
+leslie@leslie:~/discourse$ liri m
+
+Press Ctrl + c to finish Manager process manually
+Compressing source code |---=---=---=---=---=---=---=---=---=---=---=---=---=---=---| Time: 00:00:36
+
+Getting unit tests |=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---| Time: 00:00:00
+
+Progress 816/816 |===========================================================| 100% | Time: 00:07:31
+
+16342 examples, 10 failures, 9 pending
+
+x=====================================================================================================================================x
+|                                                                Summary                                                              |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   examples |   failures |   pending |   passed |   finish_in  |   files_load |   files_processed |   batch_run  |   hardware_model  |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+|   2597     |   6        |   3       |   2591   |   5 m y 22 s |   55 s       |   170             |   6 m y 55 s |   HP ENVY x360 m6 |
+|   4659     |   4        |   5       |   4655   |   4 m y 46 s |   1 m y 1 s  |   286             |   6 m y 38 s |   X570 I AORUS PR |
+|   4356     |   0        |   0       |   4356   |   4 m y 36 s |   48 s       |   220             |   6 m y 5 s  |   GF65 Thin 9SEXR |
+|   4730     |   0        |   1       |   4730   |   4 m y 52 s |   45 s       |   140             |   6 m y 8 s  |   X510UAR         |
+
+|   16342    |   10       |   9       |   16332  |              |              |   816             |              |                   |
+x============x============x===========x==========x==============x==============x===================x==============x===================x
+
+Failed examples: 
+rspec ./spec/jobs/clean_up_crawler_stats_spec.rb:17 # Jobs::CleanUpCrawlerStats keeps only the top records from the previous day
+rspec ./spec/lib/distributed_mutex_spec.rb:88 # DistributedMutex readonly redis works even if redis is in readonly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:55 # Middleware::RequestTracker log_request can exclude/include based on custom header
+rspec ./spec/lib/middleware/request_tracker_spec.rb:66 # Middleware::RequestTracker log_request can log requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:105 # Middleware::RequestTracker log_request can log Discourse user agent requests correctly
+rspec ./spec/lib/middleware/request_tracker_spec.rb:168 # Middleware::RequestTracker log_request ignore_anonymous_pageviews ignores anonymous requests for private sites
+rspec ./spec/lib/middleware/request_tracker_spec.rb:153 # Middleware::RequestTracker log_request ignore_anonymous_pageviews does not ignore anonymous requests for public sites
+rspec ./spec/lib/rate_limiter_spec.rb:115 # RateLimiter enabled handles readonly does not explode
+rspec ./spec/models/application_request_spec.rb:19 # ApplicationRequest can log app requests
+rspec ./spec/models/web_crawler_request_spec.rb:13 # WebCrawlerRequest can log crawler requests
+
+Finalizado en: 8 m y 10 s
