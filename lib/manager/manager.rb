@@ -128,9 +128,12 @@ module Liri
 
       @bars = TTY::ProgressBar::Multi.new("Tests Running Progress")
       @bar1 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
-      @bar2 = @bars.register("Connected Agents: :current")
+      @bar2 = @bars.register("Working Agents: :current")
       @bar3 = @bars.register("Examples: :examples, Passed: :passed, Failures: :failures")
       @bars.start
+      @bar1.advance(0)
+      @bar2.advance(0)
+      @bar3.advance(0, examples: "0", passed: "0", failures: "0" )
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -200,6 +203,7 @@ module Liri
                 client.close
                 break
               else
+                update_agents_bar(agent_ip_address)
                 client.puts(tests_batch.to_json) # Se envia el lote de tests
               end
             end
@@ -288,7 +292,6 @@ module Liri
         @files_processed += files_count
 
         @bar1.advance(files_count)
-        update_agents_bar(agent_ip_address)
         @bar3.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
 
         @tests_batches[batch_num][:status] = 'processed'
