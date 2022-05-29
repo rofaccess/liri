@@ -8,7 +8,7 @@ module Liri
   module Common
     # Esta clase se encarga de guardar y procesar el archivo de resultados
     class TestsResult
-      attr_reader :examples, :failures, :pending, :passed, :files_processed
+      attr_reader :examples, :failures, :pending, :passed
 
       def initialize(folder_path)
         @folder_path = folder_path
@@ -18,9 +18,9 @@ module Liri
         @passed = 0
         @finish_in = 0
         @files_load = 0
-        @files_processed = 0
         @failures_list = ''
         @failed_examples = ''
+        @failed_files = ''
       end
 
       def save(file_name, raw_tests_result)
@@ -37,13 +37,12 @@ module Liri
       # Ejemplo del hash retornado:
       # { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
       #   failures_list: '', failed_examples: '' }
-      def process(tests_result_file_name, files_processed)
+      def process(tests_result_file_name)
         file_path = File.join(@folder_path, '/', tests_result_file_name)
         # A veces no se encuentra el archivo de resultados, la siguiente condicional es para evitar errores relativos a esto
         return {} unless File.exist?(file_path)
 
         result_hash = process_tests_result_file(file_path)
-        result_hash[:files_processed] = files_processed
         update_partial_result(result_hash)
         result_hash
       end
@@ -70,7 +69,7 @@ module Liri
       # {result: '.F', failures: '', examples: 2, failures: 1, failed_examples: ''}
       def process_tests_result_file(file_path)
         result_hash = { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
-                        failures_list: '', failed_examples: '' }
+                        failures_list: '', failed_examples: '', failed_files: '' }
         flag = ''
         @failures_lists_count = @failures
         File.foreach(file_path) do |line|
@@ -121,9 +120,9 @@ module Liri
         @failures += hash_result[:failures]
         @pending += hash_result[:pending]
         @passed += hash_result[:passed]
-        @files_processed += hash_result[:files_processed]
         @failures_list << hash_result[:failures_list]
         @failed_examples << hash_result[:failed_examples]
+        @failed_files << hash_result[:failed_files]
       end
 
       def finish_in_values(line)

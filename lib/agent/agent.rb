@@ -109,7 +109,7 @@ module Liri
           # TODO No se debería enviar el resultado si otro agente ya lo procesó, porque osinó reemplazaría el archivo de resultados
           # ya procesado
           send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
-          tests_result = { msg: 'processed_tests', batch_num: batch_num, tests_result_file_name: tests_result_file_name, tests_batch_keys_size: tests_batch['tests_batch_keys'].size}
+          tests_result = { msg: 'processed_tests', batch_num: batch_num, tests_result_file_name: tests_result_file_name}
           tcp_socket.puts(tests_result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
         end
       end
