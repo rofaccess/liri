@@ -49,7 +49,7 @@ module Liri
       end
 
       def print_summary
-        Liri.logger.info("\n#{@examples} examples, #{@failures} failures, #{@passed} passed, #{@pending} pending\n\n", true)
+        Liri.logger.info("\n#{@examples} examples, #{@passed} passed, #{@failures} failures\n", true)
       end
 
       def print_failures_list

@@ -78,7 +78,7 @@ module Liri
     def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       agent_ip_address = tcp_socket.addr[2]
-      tcp_socket.puts({ msg: 'get_source_code', hardware_model: get_hardware_model }.to_json)
+      tcp_socket.puts({ msg: 'get_source_code', hardware_specs: get_hardware_specs }.to_json)
 
       # Las siguientes variables se usan para guardar momentaneamente los resultados mientras se hace un chequeo de que
       # el Manager siga ejecutandose o que ya no haya procesado los mismos tests ya ejecutados por otro agente
@@ -242,9 +242,9 @@ module Liri
       tests_keys.map { |test_key| @all_tests[test_key] }
     end
 
-    def get_hardware_model
-      hardware_model = %x|cat /sys/devices/virtual/dmi/id/product_name|
-      hardware_model.strip[0..14] # remove \n from string
+    def get_hardware_specs
+      hardware_specs = %x|cat /sys/devices/virtual/dmi/id/product_name|
+      hardware_specs.strip[0..14] # remove \n from string
     end
 
     def registered_manager?(manager_ip_address)
