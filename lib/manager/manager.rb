@@ -338,7 +338,7 @@ module Liri
           tests_batches[key][:examples] += processed_test_batch[:examples]
           tests_batches[key][:passed] += processed_test_batch[:passed]
           tests_batches[key][:failures] += processed_test_batch[:failures]
-          tests_batches[key][:failed_files] << processed_test_batch[:failed_files]
+          tests_batches[key][:failed_files] +=  processed_test_batch[:failed_files]
           tests_batches[key][:files_load] += processed_test_batch[:files_load]
           tests_batches[key][:finish_in] += processed_test_batch[:finish_in]
           tests_batches[key][:batch_run] += processed_test_batch[:batch_run]
@@ -365,7 +365,7 @@ module Liri
         value.values
       end
 
-      rows << Array.new(9) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(10) # Se agrega una linea vacia antes de mostrar los totales
       rows << summary_footer.values
       header = @tests_batches.values.first.keys
 

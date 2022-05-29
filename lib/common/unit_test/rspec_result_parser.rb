@@ -25,6 +25,14 @@ module Liri
             { examples: examples.to_i, failures: failures.to_i, pending: pending.to_i }
           end
 
+          # Received string like this "rspec ./spec/failed_spec.rb:4 # Liri debería fallar a propósito" and
+          # return string like this "/spec/failed_spec.rb:4"
+          def failed_example(failed_example_line)
+            values = failed_example_line.to_s.match(/(\/.+.rb:\d+)/)
+            failed_example = values[1]
+            failed_example
+          end
+
           private
 
           def text_value_to_seconds(text)

@@ -108,7 +108,10 @@ module Liri
             result_hash[:pending] = values[:pending]
             flag = ''
           when 'Failed'
-            result_hash[:failed_examples] << line if line.strip.start_with?('rspec')
+            if line.strip.start_with?('rspec')
+              result_hash[:failed_examples] << line
+              result_hash[:failed_files] << "#{failed_example(line)}\n"
+            end
           end
         end
 
@@ -131,6 +134,13 @@ module Liri
 
       def finished_summary_values(line)
         UnitTest::RspecResultParser.finished_summary_values(line)
+      end
+
+      def failed_example(line)
+        # get string like this "/spec/failed_spec.rb:4"
+        failed_example = UnitTest::RspecResultParser.failed_example(line)
+        # return "failed_spec.rb:4"
+        failed_example.split("/").last
       end
 
       def fix_failure_number(line)
