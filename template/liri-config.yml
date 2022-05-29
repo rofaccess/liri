@@ -3,7 +3,9 @@
 # Obs.: Puede que no sea útil para el usuario poder cambiar este nombre
 compressed_file_name: compressed_source_code
 # Configuración de la cantidad de archivos de tests a ejecutar en cada tanda
-test_files_by_runner: 10
+test_files_by_runner: 30
+# Configuración para especificar si se desea o no mostrar el progreso de envío de código fuente a los agentes
+show_sharing_source_code_bar: true
 # Configuración para imprimir la lista detallada de tests fallidos
 print_failures_list: false
 # Configuración para imprimir la lista resumida de tests fallidos

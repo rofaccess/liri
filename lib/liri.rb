@@ -78,6 +78,10 @@ module Liri
       setup.ports.tcp
     end
 
+    def show_sharing_source_code_bar
+      setup.show_sharing_source_code_bar
+    end
+
     def print_failures_list
       setup.print_failures_list
     end
