@@ -96,10 +96,10 @@ module Liri
         all_tests = {}
 
         #Common::TtyProgressbar.start("Getting unit tests |:bar|   Time::elapsed", total: nil, width: 100) do
-        Common::Progressbar.start(total: nil, length: 120, format: 'Getting unit tests |%B| %a') do
+        #Common::Progressbar.start(total: nil, length: 120, format: 'Getting unit tests |%B| %a') do
           all_tests = source_code.all_tests
-        end
-        puts "\n\n"
+        #end
+        #puts "\n\n"
 
         all_tests
       rescue SignalException => e
@@ -122,18 +122,25 @@ module Liri
       @files_processed = 0
       @agents = {}
       @connected_agents = {}
+      @working_agents = {}
 
       @tests_result = tests_result
       @semaphore = Mutex.new
 
-      @bars = TTY::ProgressBar::Multi.new("Tests Running Progress")
-      @bar1 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
-      @bar2 = @bars.register("Working Agents: :current")
-      @bar3 = @bars.register("Examples: :examples, Passed: :passed, Failures: :failures")
-      @bars.start
-      @bar1.advance(0)
-      @bar2.advance(0)
-      @bar3.advance(0, examples: "0", passed: "0", failures: "0" )
+      #@source_code_sharing_progress_bar = @source_code_sharing_bar.register("Sharing with :agent |:bar| Time: :elapsed", total: nil, width: 80)
+
+
+      @tests_processing_bar = TTY::ProgressBar::Multi.new("Tests Running Progress")
+      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
+      @agents_bar = @tests_processing_bar.register("Agents: Connected: :connected, Working: :working")
+      @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
+
+      @tests_processing_bar.start # Se inician la barra de progreso
+
+      # Se establece el estado inicial de la barra de progreso
+      @tests_running_progress_bar.advance(0)
+      @agents_bar.advance(0, connected: "0", working: "0")
+      @tests_result_bar.advance(0, examples: "0", passed: "0", failures: "0" )
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -196,14 +203,14 @@ module Liri
             if msg == 'get_tests_files'
               Liri.logger.info("Running unit tests. Agent: #{agent_ip_address}. Wait... ", false)
               run_tests_batch_time_start = Time.now
-
+              update_working_agents(agent_ip_address)
               tests_batch = tests_batch(agent_ip_address, hardware_specs)
               if tests_batch.empty?
                 client.puts({ msg: 'no_exist_tests' }.to_json)
                 client.close
                 break
               else
-                update_agents_bar(agent_ip_address)
+                update_connected_agents(agent_ip_address)
                 client.puts(tests_batch.to_json) # Se envia el lote de tests
               end
             end
@@ -291,8 +298,8 @@ module Liri
         files_count = @tests_batches[batch_num][:files_count]
         @files_processed += files_count
 
-        @bar1.advance(files_count)
-        @bar3.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
+        @tests_running_progress_bar.advance(files_count)
+        @tests_result_bar.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
 
         @tests_batches[batch_num][:status] = 'processed'
         @tests_batches[batch_num][:examples] = tests_result[:examples]
@@ -310,7 +317,7 @@ module Liri
     end
 
     def print_results
-      @bars.stop if @bars
+      @tests_processing_bar.stop if @tests_processing_bar
       print_agents_summary
       print_agents_detailed_summary if Liri.print_agents_detailed_summary
       @tests_result.print_failures_list if Liri.print_failures_list
@@ -414,11 +421,22 @@ module Liri
       @agents.remove!(agent_ip_address)
     end
 
-    def update_agents_bar(agent_ip_address)
+    def update_connected_agents(agent_ip_address)
       unless @connected_agents[agent_ip_address]
         @connected_agents[agent_ip_address] = agent_ip_address
-        @bar2.advance
+        update_agents_bar
       end
+    end
+
+    def update_working_agents(agent_ip_address)
+      unless @working_agents[agent_ip_address]
+        @working_agents[agent_ip_address] = agent_ip_address
+        update_agents_bar
+      end
+    end
+
+    def update_agents_bar
+      @agents_bar.advance(1, connected: @connected_agents.size.to_s, working: @working_agents.size.to_s)
     end
 
     def build_tests_batches(all_tests)
