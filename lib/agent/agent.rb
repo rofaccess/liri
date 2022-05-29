@@ -243,8 +243,19 @@ module Liri
     end
 
     def get_hardware_specs
-      hardware_specs = %x|cat /sys/devices/virtual/dmi/id/product_name|
-      hardware_specs.strip[0..14] # remove \n from string
+      "#{get_cpu} #{get_memory}GB"
+    end
+
+    def get_cpu
+      cpu = %x|inxi -C|
+      cpu = cpu.to_s.match(/model:(.+)bits/)
+      cpu[1]
+    end
+
+    def get_memory
+      memory = %x|grep MemTotal /proc/meminfo|
+      memory = memory.to_s.match(/(\d+)/)
+      (memory[1].to_i * 0.000001).round
     end
 
     def registered_manager?(manager_ip_address)
