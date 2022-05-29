@@ -248,8 +248,10 @@ module Liri
 
     def get_cpu
       cpu = %x|inxi -C|
-      cpu = cpu.to_s.match(/model:(.+)bits/)
-      cpu[1]
+      cpu = cpu.to_s.match(/model(.+)bits/)
+      cpu = cpu[1].gsub("  12", "")
+      cpu = cpu.gsub(": ", "")
+      cpu
     end
 
     def get_memory

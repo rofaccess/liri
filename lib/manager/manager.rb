@@ -120,8 +120,8 @@ module Liri
       @semaphore = Mutex.new
 
       @bars = TTY::ProgressBar::Multi.new("Progress")
-      @bar1 = @bars.register("Connected Agents: :current")
-      @bar2 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
+      @bar1 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
+      @bar2 = @bars.register("Connected Agents: :current")
       @bar3 = @bars.register("Examples: :examples, Passed: :passed, Failures: :failures")
       @bars.start
     end
@@ -280,7 +280,8 @@ module Liri
         files_count = @tests_batches[batch_num][:files_count]
         @files_processed += files_count
 
-        @bar2.advance(files_count)
+        @bar1.advance(files_count)
+        update_agents_bar(agent_ip_address)
         @bar3.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
 
         @tests_batches[batch_num][:status] = 'processed'
@@ -395,17 +396,19 @@ module Liri
     end
 
     def register_agent(agent_ip_address)
-      unless @connected_agents[agent_ip_address]
-        @connected_agents[agent_ip_address] = agent_ip_address
-        @bar1.advance
-      end
-
       @agents[agent_ip_address] = agent_ip_address
       Liri.logger.info("\nStarted connection with Agent: #{agent_ip_address} in TCP port: #{@tcp_port}")
     end
 
     def unregister_agent(agent_ip_address)
       @agents.remove!(agent_ip_address)
+    end
+
+    def update_agents_bar(agent_ip_address)
+      unless @connected_agents[agent_ip_address]
+        @connected_agents[agent_ip_address] = agent_ip_address
+        @bar2.advance
+      end
     end
 
     def build_tests_batches(all_tests)
