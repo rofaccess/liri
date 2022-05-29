@@ -37,15 +37,14 @@ module Liri
 
         source_code.delete_compressed_file
 
-        Liri.init_exit(stop, threads, 'Manager')
-
-        manager.print_results
-
-        Liri.logger.info('Manager process finished')
-      rescue SignalException => e
-        manager.print_results if manager
-        Liri.logger.info("Exception(#{e}) Proceso Manager process finished manually")
+        Liri.init_exit(stop, threads)
+      rescue SignalException
+        Liri.logger.info("Manager process finished manually", true)
+      ensure
+        # Siempre se ejecutan estos comandos, haya o no excepción
         Liri.kill(threads) if threads && threads.any?
+        manager.print_results if manager
+        Liri.logger.info("\nManager process finished")
       end
 
       def test_files_by_runner
@@ -78,6 +77,10 @@ module Liri
         puts "\n\n"
 
         source_code
+      rescue SignalException => e
+        # Se captura la excepción sólo para imprimir espacios despues de la barra de progreso
+        puts "\n\n"
+        raise e
       end
 
       def get_manager_data(user, password, tests_results_folder_path, source_code)
@@ -99,6 +102,10 @@ module Liri
         puts "\n\n"
 
         all_tests
+      rescue SignalException => e
+        # Se captura la excepción sólo para imprimir espacios despues de la barra de progreso
+        puts "\n\n"
+        raise e
       end
     end
 
@@ -119,7 +126,7 @@ module Liri
       @tests_result = tests_result
       @semaphore = Mutex.new
 
-      @bars = TTY::ProgressBar::Multi.new("Progress")
+      @bars = TTY::ProgressBar::Multi.new("Tests Running Progress")
       @bar1 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
       @bar2 = @bars.register("Connected Agents: :current")
       @bar3 = @bars.register("Examples: :examples, Passed: :passed, Failures: :failures")

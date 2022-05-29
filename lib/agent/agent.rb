@@ -27,11 +27,16 @@ module Liri
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
-        Liri.init_exit(stop, threads, 'Agent')
-        Liri.logger.info("Agent process finished")
-      rescue SignalException => e
-        Liri.logger.info("Exception(#{e}) Agent process finished manually")
-        Liri.kill(threads)
+        Liri.init_exit(stop, threads)
+      rescue SignalException
+        Liri.logger.info("Agent process finished manually", true)
+      rescue InxiCommandNotFoundError => e
+        Liri.logger.error("Exception(#{e}) Please, install inxi in your operating system", true)
+      ensure
+        # Siempre se ejecutan estos comandos, haya o no excepción
+        Liri.kill(threads) if threads && threads.any?
+        Liri.clean_folder_content(agent_folder_path)
+        Liri.logger.info("Agent process finished", true)
       end
     end
 
@@ -49,6 +54,10 @@ module Liri
       @managers = {}
 
       @agent_folder_path = agent_folder_path
+
+      @processing = true
+
+      @hardware_specs = hardware_specs
     end
 
     # Inicia un servidor udp que se mantiene en espera de la primera petición de conexión del Manager
@@ -60,12 +69,12 @@ module Liri
         begin
           @udp_socket.bind('0.0.0.0', @udp_port)
         rescue Errno::EADDRINUSE => e
-          Liri.logger.error("Exception(#{e}) Busy UDP port #{@udp_port}")
+          Liri.logger.error("Exception(#{e}) Busy UDP port #{@udp_port}", true)
           Thread.exit
         end
         Liri.logger.info("Waiting managers request in UDP port #{@udp_port}")
 
-        loop do
+        while @processing
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
           manager_data = get_manager_data(JSON.parse(@manager_request.first))
@@ -78,7 +87,7 @@ module Liri
     def start_client_socket_to_process_tests(manager_ip_address, manager_data)
       tcp_socket = TCPSocket.open(manager_ip_address, @tcp_port)
       agent_ip_address = tcp_socket.addr[2]
-      tcp_socket.puts({ msg: 'get_source_code', hardware_specs: get_hardware_specs }.to_json)
+      tcp_socket.puts({ msg: 'get_source_code', hardware_specs: @hardware_specs }.to_json)
 
       # Las siguientes variables se usan para guardar momentaneamente los resultados mientras se hace un chequeo de que
       # el Manager siga ejecutandose o que ya no haya procesado los mismos tests ya ejecutados por otro agente
@@ -114,21 +123,17 @@ module Liri
         end
       end
 
-      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
       tcp_socket.close
-      Liri.clean_folder_content(@agent_folder_path)
-
       unregister_manager(manager_ip_address)
     rescue Errno::EADDRINUSE => e
       Liri.logger.error("Exception(#{e}) Busy UDP port #{@udp_port}")
+      @processing = false
     rescue Errno::ECONNRESET => e
       tcp_socket.close
-      Liri.logger.error("Exception(#{e}) Closed connection in TCP port #{@tcp_port}")
-      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Closed connection in TCP port #{@tcp_port}", true)
       unregister_manager(manager_ip_address)
     rescue Errno::ECONNREFUSED => e
-      Liri.logger.error("Exception(#{e}) Rejected connection in TCP port #{@tcp_port}")
-      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
+      Liri.logger.error("Exception(#{e}) Rejected connection in TCP port #{@tcp_port}", true)
       unregister_manager(manager_ip_address)
     end
 
@@ -242,22 +247,8 @@ module Liri
       tests_keys.map { |test_key| @all_tests[test_key] }
     end
 
-    def get_hardware_specs
-      "#{get_cpu} #{get_memory}GB"
-    end
-
-    def get_cpu
-      cpu = %x|inxi -C|
-      cpu = cpu.to_s.match(/model(.+)bits/)
-      cpu = cpu[1].gsub("  12", "")
-      cpu = cpu.gsub(": ", "")
-      cpu
-    end
-
-    def get_memory
-      memory = %x|grep MemTotal /proc/meminfo|
-      memory = memory.to_s.match(/(\d+)/)
-      (memory[1].to_i * 0.000001).round
+    def hardware_specs
+      "#{Common::Hardware.cpu} #{Common::Hardware.memory}GB"
     end
 
     def registered_manager?(manager_ip_address)
@@ -270,6 +261,7 @@ module Liri
 
     def unregister_manager(manager_ip_address)
       @managers.remove!(manager_ip_address)
+      Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
     end
   end
 end

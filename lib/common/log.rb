@@ -27,37 +27,37 @@ module Liri
       end
 
       def debug(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.debug(text)) if stdout
         @stdout_logger.debug(text) if @stdout
         @file_logger.debug(text)
       end
 
       def info(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.default(text)) if stdout
         @stdout_logger.info(text) if @stdout
         @file_logger.info(text)
       end
 
       def warn(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.warn(text)) if stdout
         @stdout_logger.warn(text) if @stdout
         @file_logger.warn(text)
       end
 
       def error(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.error(text)) if stdout
         @stdout_logger.error(text) if @stdout
         @file_logger.error(text)
       end
 
       def fatal(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.fatal(text)) if stdout
         @stdout_logger.fatal(text) if @stdout
         @file_logger.fatal(text)
       end
 
       def unknown(text, stdout = false)
-        puts(text) if stdout
+        puts(ColorizeText.unknown(text)) if stdout
         @stdout_logger.unknown(text) if @stdout
         @file_logger.unknown(text)
       end
@@ -78,18 +78,58 @@ module Liri
       end
     end
 
+    class ColorizeText
+      COLORS = {
+        DEBUG: '0;36',  # cyan
+        ERROR: '0;31',  # red
+        INFO: '0;32',   # green
+        WARN: '0;33',   # orange
+        FATAL: '0;35',  # pink
+        ANY: '0;36',    # cyan
+        DEFAULT: '1;0'  # white
+      }
+
+      class << self
+        def default(text)
+          colorize(text, :DEFAULT)
+        end
+
+        def debug(text)
+          colorize(text, :DEBUG)
+        end
+
+        def info(text)
+          colorize(text, :INFO)
+        end
+
+        def warn(text)
+          colorize(text, :WARN)
+        end
+
+        def error(text)
+          colorize(text, :ERROR)
+        end
+
+        def fatal(text)
+          colorize(text, :FATAL)
+        end
+
+        def unknown(text)
+          colorize(text, :ANY)
+        end
+
+        private
+
+        def colorize(text, color)
+          "\e[#{COLORS[color]}m#{text}\e[0m"
+        end
+      end
+    end
+
     class LogFormatter
       DATETIME_FORMAT = "%d-%m-%Y %H:%M"
 
-      SEVERITY_COLORS = {
-          DEBUG: '0;36',  # cyan
-          ERROR: '0;31',  # red
-          INFO: '0;32',   # green
-          WARN: '0;33',   # orange
-          FATAL: '0;35',  # pink
-          ANY: '0;36',    # cyan
-          DEFAULT: '1;0'  # white
-      }
+      SEVERITY_COLORS = ColorizeText::COLORS
 
       class << self
         def colorize(type)

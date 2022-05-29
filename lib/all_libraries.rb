@@ -19,6 +19,7 @@ require 'agent/agent'
 require 'agent/runner'
 
 require 'common/benchmarking'
+require 'common/hardware'
 require 'common/log'
 require 'common/manager_data'
 require 'common/progressbar'

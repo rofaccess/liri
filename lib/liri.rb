@@ -44,16 +44,13 @@ module Liri
       @setup_manager ? @setup_manager.delete_setup_folder : false
     end
 
-    def init_exit(stop, threads, program)
+    def init_exit(stop, threads)
       threads = threads.compact
       kill(threads) if stop
 
       # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
       # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
       threads.each{|thread| thread.join}
-      #rescue SignalException => e
-      #puts "\nEjecución del #{program} terminada manualmente\n"
-      #kill(threads)
     end
 
     def kill(threads)
@@ -121,7 +118,14 @@ module Liri
   # EXCEPTIONS
   class FileNotFoundError < StandardError
     def initialize(file_path)
-      msg = "No se encuentra el archivo #{file_path}"
+      msg = "File not found #{file_path}"
+      super(msg)
+    end
+  end
+
+  class InxiCommandNotFoundError < StandardError
+    def initialize
+      msg = "Inxi command not found"
       super(msg)
     end
   end
