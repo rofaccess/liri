@@ -264,13 +264,11 @@ module Liri
           end
 
           Thread.kill(search_agents_thread)
-          unregister_agent(agent_ip_address)
         rescue Errno::EPIPE => e
           # Esto al parecer se da cuando el Agent ya cerró las conexiones y el Manager intenta contactar
           Liri.logger.error("Exception(#{e}) Agent #{agent_ip_address} already finished connection")
           # Si el Agente ya no responde es mejor terminar el hilo. Aunque igual quedará colgado el Manager
           # mientras sigan pruebas pendientes
-          unregister_agent(agent_ip_address)
           Thread.exit
         end
       end
@@ -450,10 +448,6 @@ module Liri
     def register_agent(agent_ip_address)
       @agents[agent_ip_address] = agent_ip_address
       Liri.logger.info("\nStarted connection with Agent: #{agent_ip_address} in TCP port: #{@tcp_port}")
-    end
-
-    def unregister_agent(agent_ip_address)
-      @agents.remove!(agent_ip_address)
     end
 
     def update_connected_agents(agent_ip_address)
