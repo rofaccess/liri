@@ -20,7 +20,7 @@ module Liri
         manager_tests_results_folder_path = setup_manager.manager_tests_results_folder_path
 
         Liri.set_logger(setup_manager.logs_folder_path, 'lirimanager.log')
-        Liri.logger.info('Manager process started')
+        Liri.logger.info('Manager process started', true)
         Liri.logger.info("Press Ctrl + c to finish Manager process manually\n", true)
 
         user, password = get_credentials(setup_manager.setup_folder_path)
@@ -71,8 +71,8 @@ module Liri
 
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
-
-        Common::Progressbar.start(total: nil, length: 100, format: 'Compressing source code |%B| %a') do
+        Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
+        #Common::TtyProgressbar.start("Compressing source code |:bar|   Time::elapsed", total: nil, width: 100) do
           source_code.compress_folder
         end
         puts "\n\n"
@@ -92,7 +92,8 @@ module Liri
       def get_all_tests(source_code)
         all_tests = {}
 
-        Common::Progressbar.start(total: nil, length: 100, format: 'Getting unit tests |%B| %a') do
+        #Common::TtyProgressbar.start("Getting unit tests |:bar|   Time::elapsed", total: nil, width: 100) do
+        Common::Progressbar.start(total: nil, length: 120, format: 'Getting unit tests |%B| %a') do
           all_tests = source_code.all_tests
         end
         puts "\n\n"
@@ -117,7 +118,13 @@ module Liri
       @tests_result = tests_result
       @semaphore = Mutex.new
 
-      @progressbar = ProgressBar.create(starting_at: 0, total: @tests_files_count, length: 100, format: 'Progress %c/%C |%b=%i| %p%% | %a')
+      #@progressbar = ProgressBar.create(starting_at: 0, total: @tests_files_count, length: 120, format: 'Progress %c/%C |%b=%i| %p%% | %a %e')
+
+      @bars = TTY::ProgressBar::Multi.new("Progress | Time: :elapsed")
+      @bar1 = @bars.register("Connected Agents: :current")
+      @bar2 = @bars.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
+      @bar3 = @bars.register("Examples: :examples, Passed: :passed, Failures: :failures | Time: :elapsed")
+      @bars.start
     end
 
     # Inicia un cliente udp que hace un broadcast en toda la red para iniciar una conexión con los Agent que estén escuchando
@@ -274,7 +281,9 @@ module Liri
 
         @files_processed += files_processed
 
-        @progressbar.progress = @files_processed
+        #@progressbar.progress = @files_processed
+        @bar2.advance(@files_processed)
+        @bar3.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
 
         @tests_batches[batch_num][:examples] = tests_result[:examples]
         @tests_batches[batch_num][:failures] = tests_result[:failures]
@@ -292,6 +301,7 @@ module Liri
     end
 
     def print_results
+      @bars.stop if @bars
       @tests_result.print_summary
       print_agents_summary
       print_agents_detailed_summary if Liri.print_agents_detailed_summary
@@ -371,6 +381,7 @@ module Liri
     end
 
     def register_agent(agent_ip_address)
+      @bar1.advance unless @agents[agent_ip_address]
       @agents[agent_ip_address] = agent_ip_address
       Liri.logger.info("\nStarted connection with Agent: #{agent_ip_address} in TCP port: #{@tcp_port}")
     end

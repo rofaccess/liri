@@ -60,6 +60,10 @@ Gem::Specification.new do |spec|
   # Para mostrar barras de progreso
   spec.add_runtime_dependency('ruby-progressbar', '~> 1')
 
+  # A flexible and extensible progress bar for terminal applications. https://github.com/piotrmurach/tty-progressbar
+  # Para mostrar barras de progreso
+  spec.add_runtime_dependency('tty-progressbar', '~> 0')
+
   # Terminal Table is a fast and simple, yet feature rich table generator written in Ruby. https://github.com/tj/terminal-table
   # Para mostrar resumen de resultados
   spec.add_runtime_dependency('terminal-table', '~> 3')

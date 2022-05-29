@@ -16,7 +16,7 @@ module Liri
         agent_folder_path = setup_manager.agent_folder_path
 
         Liri.set_logger(setup_manager.logs_folder_path, 'liriagent.log')
-        Liri.logger.info("Agent process started")
+        Liri.logger.info("Agent process started", true)
         Liri.logger.info("Press Ctrl + c to finish Agent process manually\n", true)
 
         decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
