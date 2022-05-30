@@ -70,8 +70,8 @@ module Liri
 
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
-        Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
-        #Common::TtyProgressbar.start("Compressing source code |:bar|   Time::elapsed", total: nil, width: 100) do
+        #Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
+        Common::TtyProgressbar.start("Compressing source code |:bar| Time: :elapsed", total: nil, width: 80) do
           source_code.compress_folder
         end
         puts "\n\n"
@@ -128,15 +128,17 @@ module Liri
       @semaphore = Mutex.new
 
       @tests_processing_bar = TTY::ProgressBar::Multi.new("Tests Running Progress")
-      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent | Time: :elapsed ETA: :eta", total: @tests_files_count, width: 80)
+      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent |", total: @tests_files_count, width: 80)
+      @tests_runtime_bar = @tests_processing_bar.register("Tests Runtime: :time")
       @agents_bar = @tests_processing_bar.register("Agents: Connected: :connected, Working: :working")
       @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
 
       @tests_processing_bar.start # Se inician la barra de progreso
+      @tests_runtime_start = nil
 
       # Se establece el estado inicial de la barra de progreso
       @tests_running_progress_bar.advance(0) # Esto obliga a que esta barra se muestre antes que los siguientes
-      @tests_running_progress_bar.pause # Pausa el progreso para que el contador de tiempo no avance, ya que se requiere iniciarlo mas adelante recien
+      @tests_runtime_bar.advance(0, time: "0")
       @agents_bar.advance(0, connected: "0", working: "0")
       @tests_result_bar.advance(0, examples: "0", passed: "0", failures: "0")
     end
@@ -194,11 +196,18 @@ module Liri
                 source_code_sharing_time_start = Time.now
 
                 if msg == 'proceed_get_source_code' && Liri.show_sharing_source_code_bar
-                  sharing_source_code_progress = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :elapsed", total: nil, width: 10, unknown: "=---=")
-                  sharing_source_code_progress.advance(1, agent: hardware_specs)
+                  sharing_source_code_progress = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :elapsed", total: nil, width: 20)
+                  sharing_source_code_progress.start
+                  sharing_source_code_progress.advance(0, agent: hardware_specs)
                   Thread.new do
+                    animation_count = 0
                     while !sharing_source_code_progress.stopped?
                       sharing_source_code_progress.advance(1, agent: hardware_specs)
+
+                      sharing_source_code_progress.update(unknown: Common::TtyProgressbar::ANIMATION2[animation_count])
+                      animation_count += 1
+                      animation_count = 0 if animation_count == 3
+
                       sleep(0.1)
                     end
                   end
@@ -229,8 +238,8 @@ module Liri
               source_code_sharing_time_end = Time.now - source_code_sharing_time_start
 
               Liri.logger.info("Running unit tests. Agent: #{agent_ip_address}. Wait... ", false)
-              @tests_running_progress_bar.resume if @tests_running_progress_bar.paused?
               run_tests_batch_time_start = Time.now
+              start_tests_runtime_bar
               update_working_agents(agent_ip_address)
               tests_batch = tests_batch(agent_ip_address, hardware_specs)
               tests_batch[:source_code_sharing] = source_code_sharing_time_end
@@ -322,6 +331,11 @@ module Liri
         return if tests_result.empty?
 
         @unfinished_tests_batches -= 1
+
+        if @unfinished_tests_batches.zero?
+          @tests_runtime_bar.stop
+        end
+
         files_count = @tests_batches[batch_num][:files_count]
         @files_processed += files_count
 
@@ -466,6 +480,20 @@ module Liri
 
     def update_agents_bar
       @agents_bar.advance(1, connected: @connected_agents.size.to_s, working: @working_agents.size.to_s)
+    end
+
+    def start_tests_runtime_bar
+      @semaphore.synchronize do
+        return if @tests_runtime_start
+
+        @tests_runtime_start = Time.now
+        Thread.new do
+          while !@tests_runtime_bar.stopped?
+            @tests_runtime_bar.advance(1, time: (Time.now - @tests_runtime_start).to_duration)
+            sleep(1)
+          end
+        end
+      end
     end
 
     def build_tests_batches(all_tests)

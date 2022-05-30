@@ -11,9 +11,9 @@ module Liri
         def cpu
           cpu = %x|inxi -C|
           cpu = cpu.to_s.match(/model(.+)bits/)
-          cpu = cpu[1].gsub("  12", "")
-          cpu = cpu.gsub(": ", "")
-          cpu
+          cpu = cpu[1].gsub("12", "")
+          cpu = cpu.gsub(":", "")
+          cpu.strip
         rescue Errno::ENOENT
           raise InxiCommandNotFoundError.new
         end
