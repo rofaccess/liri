@@ -375,10 +375,11 @@ module Liri
         value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
         value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
         value[:source_code_sharing] = value[:source_code_sharing].to_duration if value[:source_code_sharing]
+        value[:tests_runtime] = value[:tests_runtime].to_duration if value[:tests_runtime]
         value.values
       end
 
-      rows << Array.new(10) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
       rows << summary_footer.remove!(:batch_num).values
       header = processed_tests_batches_by_agent.values.first.keys
 
@@ -406,6 +407,7 @@ module Liri
           tests_batches[key][:finish_in] += processed_test_batch[:finish_in]
           tests_batches[key][:batch_run] += processed_test_batch[:batch_run]
           tests_batches[key][:source_code_sharing] += processed_test_batch[:source_code_sharing]
+          tests_batches[key][:tests_runtime] += (processed_test_batch[:batch_run] + processed_test_batch[:source_code_sharing])
         else
           files_count[key] = processed_test_batch[:files_count]
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
@@ -422,15 +424,17 @@ module Liri
       rows = @tests_batches.values.map do |value|
         value[:files_status] = "#{value[:files_count]} #{value[:status]}"
         value.remove!(:msg, :tests_batch_keys, :failures_list, :failed_examples, :agent_ip_address, :pending,
-                      :files_count, :status, :source_code_sharing)
+                      :files_count, :status)
         value[:files_load] = value[:files_load].to_duration if value[:files_load]
         value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
+        value[:tests_runtime] = (value[:batch_run] + value[:source_code_sharing])
         value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
+        value[:source_code_sharing] = value[:source_code_sharing].to_duration if value[:source_code_sharing]
         value.values
       end
 
-      rows << Array.new(10) # Se agrega una linea vacia antes de mostrar los totales
-      rows << summary_footer.remove!(:source_code_sharing).values
+      rows << Array.new(12) # Se agrega una linea vacia antes de mostrar los totales
+      rows << summary_footer.values
       header = @tests_batches.values.first.keys
 
       table = Terminal::Table.new title: 'Detailed Summary', headings: header, rows: rows
@@ -451,6 +455,7 @@ module Liri
           finish_in: "",
           batch_run: "",
           source_code_sharing: "",
+          tests_runtime: "",
           hardware_specs: ""
       }
     end
@@ -520,6 +525,7 @@ module Liri
             finish_in: 0,
             batch_run: 0,
             source_code_sharing: 0,
+            tests_runtime: 0,
             hardware_specs: ""
         }
         @tests_batches[@batch_num] = tests_batch
