@@ -17,14 +17,14 @@ manager:
       # Configuración para imprimir un resumen detallado del proceso realizado por los agentes
       detailed: true
     column:
-      failed_files: true
-      files_load: true
-      finish_in: true
-      batch_run: true
-      share_source_code: true
+      failed_files: true # Muestra los archivos fallados en la tabla
+      files_load: true # Muestra el tiempo que tardó Rspec en cargar los archivos de tests
+      finish_in: true # Muestra el tiempo que tardó el Agent en ejecutar los tests
+      batch_run: true # Muestra el tiempo que pasó desde que el Manager obtiene las pruebas a ejecutar, las envía y recibe los resultados
+      share_source_code: true # Muestra el tiempo que tardan los Agents en obtener el código fuente y descomprimirlo
     failures:
-      detailed: true
-      summary: true
+      summary: true # Muestra una tabla que resume los tiempos de ejecución por cada Agent
+      detailed: true  # Muestra una tabla detallada de los tiempo de ejecución de cada tanda enviada a los Agents
 # Configuraciones compartidas entre Manager y Agent
 general:
   # Configuración del nombre del archivo de código fuente comprimido enviado a los agentes

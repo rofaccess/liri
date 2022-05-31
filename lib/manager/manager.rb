@@ -353,22 +353,35 @@ module Liri
       @semaphore.synchronize do
         return {} if @unfinished_tests_batches.zero?
 
+        tests_batch = {}
         pending_tests_batch = {}
         sent_tests_batch = {}
 
         @tests_batches.each_value do |batch|
           if batch[:status] == "pending"
             pending_tests_batch = batch
-            batch[:status] = "sent"
-            batch[:hardware_specs] = hardware_specs
             break
-            #elsif sent_tests_batch.empty? && batch[:status] == "sent"
-            #sent_tests_batch = batch
+          elsif batch[:status] == "sent"
+            sent_tests_batch = batch # Es importante que este no tenga un break para guardar el ultimo enviado
+            # el cual tiene menos probabilidades de terminar de ejecutarse rapido
           end
         end
 
-        #tests_batch = pending_tests_batch.any? ? pending_tests_batch : sent_tests_batch
-        tests_batch = pending_tests_batch
+        # Es importante setear el status y el hardware_spec solo si los hashes no estan vacios
+        # Porque si estan vacios significa que ya no hay tests que ejecutar, y si seteamos algun valor en el hash
+        # estando este vacio entonces se tratara de ejecutar algo sin los datos suficientes y fallara
+        if pending_tests_batch.any?
+          tests_batch = pending_tests_batch
+          tests_batch[:status] = "sent"
+          tests_batch[:agent_ip_address] = agent_ip_address
+          tests_batch[:hardware_specs] = hardware_specs
+        elsif sent_tests_batch.any?
+          tests_batch = sent_tests_batch
+          tests_batch[:status] = "resent"
+          tests_batch[:agent_ip_address] = agent_ip_address
+          tests_batch[:hardware_specs] = hardware_specs
+        end
+
         return {} if tests_batch.empty?
 
         tests_batch[:agent_ip_address] = agent_ip_address
@@ -388,7 +401,7 @@ module Liri
         batch_num = tests_result['batch_num']
         tests_result_file_name = tests_result['tests_result_file_name']
         status = "processed"
-        # Sólo se procesan las pruebas en estado sent, caso contrario no se avanza con el procesamiento
+        # Sólo se procesan las pruebas en estado sent o resent, caso contrario no se avanza con el procesamiento
         return if (["pending", status]).include?(@tests_batches[batch_num][:status])
 
         tests_result = @tests_result.process(tests_result_file_name)
@@ -407,6 +420,7 @@ module Liri
 
         @tests_batches[batch_num][:status] = status
         @tests_batches[batch_num][:files_status] = "#{files_count} #{status}"
+        @tests_batches[batch_num][:agent_ip_address] = agent_ip_address
         @tests_batches[batch_num][:examples] = tests_result[:examples]
         @tests_batches[batch_num][:passed] = tests_result[:passed]
         @tests_batches[batch_num][:failures] = tests_result[:failures]
@@ -442,7 +456,7 @@ module Liri
       end
 
       rows << Array.new(rows.size) # Se agrega una linea vacia antes de mostrar los totales
-      rows << summary_footer.remove!(:batch_num).values
+      rows << summary_footer.remove(:batch_num).values
       header = processed_tests_batches_by_agent.values.first.keys
 
       table = Terminal::Table.new title: 'Summary', headings: header, rows: rows
@@ -492,7 +506,6 @@ module Liri
 
     def print_detailed_table
       rows = @tests_batches.values.map do |value|
-        #value[:files_status] = "#{value[:files_count]} #{value[:status]}"
         value.remove!(:tests_batch_keys, :msg, :files_count, :status, :agent_ip_address, :pending)
 
         value.remove!(:failed_files) unless Manager.show_failed_files_column
@@ -505,7 +518,7 @@ module Liri
         value[:finish_in] = to_duration(value[:finish_in]) if value[:finish_in]
         value[:batch_run] = to_duration(value[:batch_run]) if value[:batch_run]
         value[:share_source_code] = to_duration(value[:share_source_code]) if value[:share_source_code]
-        value[:tests_runtime] = to_duration(value[:tests_runtime]) #if value[:tests_runtime]
+        value[:tests_runtime] = to_duration(value[:tests_runtime])
         value.values
       end
 
