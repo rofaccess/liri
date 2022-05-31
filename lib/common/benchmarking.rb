@@ -4,13 +4,8 @@
 #
 # @author Rodrigo Fernández
 
-require 'benchmark'
-require 'i18n' # requerimiento de la gema to_duration
-require 'to_duration'
-
-# Se configura la ubicación del archivo de internacionalización de la gema to_duration
-I18n.load_path << Dir["#{File.join(File.dirname(File.dirname(File.dirname(__FILE__))), 'config/locales')}/*.yml"]
-I18n.default_locale = :es
+require "benchmark"
+require "chronic_duration"
 
 module Liri
   module Common
@@ -23,7 +18,7 @@ module Liri
 
           seconds = Benchmark.realtime(&block)
 
-          Liri.logger.info("#{end_msg}#{seconds.to_duration}", stdout)
+          Liri.logger.info("#{end_msg}#{ChronicDuration.output(seconds.to_i, format: :short, keep_zero: true)}", stdout)
           seconds
         end
       end

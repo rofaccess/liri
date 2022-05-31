@@ -6,6 +6,7 @@
 
 require 'all_libraries'
 require 'terminal-table'
+require "chronic_duration"
 
 module Liri
   class Manager
@@ -33,22 +34,68 @@ module Liri
 
         threads = []
         threads << manager.start_client_socket_to_search_agents(manager_data) # Enviar peticiones broadcast a toda la red para encontrar Agents
-        manager.start_server_socket_to_process_tests(threads[0]) unless stop # Esperar y enviar los test unitarios a los Agents
-
-        source_code.delete_compressed_file
+        unless stop
+          # Esperar y enviar los test unitarios a los Agents
+          manager.start_server_socket_to_process_tests(threads[0])
+        end
 
         Liri.init_exit(stop, threads)
       rescue SignalException
-        Liri.logger.info("\nManager process finished manually", true)
+        # Liri.logger.info("\nManager process finished manually", true)
       ensure
         # Siempre se ejecutan estos comandos, haya o no excepción
-        Liri.kill(threads) if threads && threads.any?
-        manager.print_results if manager
-        Liri.logger.info("\nManager process finished")
+        Liri.kill(threads) if threads&.any?
+        manager&.print_results
+        source_code.delete_compressed_file
+        Liri.logger.info("Manager process finished", true)
+      end
+
+      def udp_request_delay
+        Liri.setup.manager.udp_request_delay
       end
 
       def test_files_by_runner
-        Liri.setup.test_files_by_runner
+        Liri.setup.manager.test_files_by_runner
+      end
+
+      def show_share_source_code_progress_bar
+        Liri.setup.manager.bar.share_source_code
+      end
+
+      def print_summary_table
+        Liri.setup.manager.print.table.summary
+      end
+
+      def print_detailed_table
+        Liri.setup.manager.print.table.detailed
+      end
+
+      def print_summary_failures
+        Liri.setup.manager.print.failures.summary
+      end
+
+      def print_detailed_failures
+        Liri.setup.manager.print.failures.detailed
+      end
+
+      def show_failed_files_column
+        Liri.setup.manager.print.column.failed_files
+      end
+
+      def show_files_load_column
+        Liri.setup.manager.print.column.files_load
+      end
+
+      def show_finish_in_column
+        Liri.setup.manager.print.column.finish_in
+      end
+
+      def show_batch_run_column
+        Liri.setup.manager.print.column.batch_run
+      end
+
+      def show_share_source_code_column
+        Liri.setup.manager.print.column.share_source_code
       end
 
       private
@@ -129,7 +176,7 @@ module Liri
 
       @tests_processing_bar = TTY::ProgressBar::Multi.new("Tests Running Progress")
       @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent |", total: @tests_files_count, width: 80)
-      @tests_runtime_bar = @tests_processing_bar.register("Tests Runtime: :time")
+      @tests_runtime_bar = @tests_processing_bar.register("Tests files process runtime: :time")
       @agents_bar = @tests_processing_bar.register("Agents: Connected: :connected, Working: :working")
       @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
 
@@ -149,11 +196,11 @@ module Liri
       # la red para obtener mas Agents. Una vez que los tests terminan de ejecutarse, este hilo será finalizado.
       Thread.new do
         Liri.logger.info('Searching agents... Wait')
-        Liri.logger.info("Sending UDP broadcast each #{Liri.udp_request_delay} seconds in UDP port: #{@udp_port}")
+        Liri.logger.info("Sending UDP broadcast each #{Manager.udp_request_delay} seconds in UDP port: #{@udp_port}")
         while processing
           @udp_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_BROADCAST, true)
           @udp_socket.send(manager_data.to_h.to_json, 0, '<broadcast>', @udp_port)
-          sleep(Liri.udp_request_delay) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
+          sleep(Manager.udp_request_delay) # Se pausa un momento antes de efectuar nuevamente la petición broadcast
         end
       end
     end
@@ -176,8 +223,8 @@ module Liri
           agent_ip_address = client.remote_address.ip_address
           hardware_specs = nil
           run_tests_batch_time_start = nil
-          source_code_sharing_time_start = nil
-          sharing_source_code_progress = nil
+          share_source_code_time_start = nil
+          share_source_code_progress_bar = nil
 
           while line = client.gets
             client_data = JSON.parse(line.chop)
@@ -193,35 +240,16 @@ module Liri
                 update_connected_agents(agent_ip_address)
                 hardware_specs = client_data['hardware_specs']
                 msg = processing ? 'proceed_get_source_code' : 'no_exist_tests'
-                source_code_sharing_time_start = Time.now
+                share_source_code_time_start = Time.now
 
-                if msg == 'proceed_get_source_code' && Liri.show_sharing_source_code_bar
-                  sharing_source_code_progress = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :elapsed", total: nil, width: 20)
-                  sharing_source_code_progress.start
-                  sharing_source_code_progress.advance(0, agent: hardware_specs)
-                  Thread.new do
-                    animation_count = 0
-                    while !sharing_source_code_progress.stopped?
-                      sharing_source_code_progress.advance(1, agent: hardware_specs)
-
-                      sharing_source_code_progress.update(unknown: Common::TtyProgressbar::ANIMATION2[animation_count])
-                      animation_count += 1
-                      animation_count = 0 if animation_count == 3
-
-                      sleep(0.1)
-                    end
-                  end
-                end
+                share_source_code_progress_bar = start_share_source_code_progress_bar(hardware_specs, msg)
 
                 client.puts({ msg: msg }.to_json)
               end
             end
 
             if msg == 'get_source_code_fail'
-              if Liri.show_sharing_source_code_bar
-                sharing_source_code_progress.update(total: 1, agent: hardware_specs)
-                sharing_source_code_progress.finish
-              end
+              stop_share_source_code_progress_bar(hardware_specs, share_source_code_progress_bar)
 
               client.puts({ msg: 'finish_agent' }.to_json)
               client.close
@@ -230,19 +258,15 @@ module Liri
 
             # Primera ejecucion de pruebas
             if msg == 'get_tests_files'
-              if Liri.show_sharing_source_code_bar
-                sharing_source_code_progress.update(total: 1, agent: hardware_specs)
-                sharing_source_code_progress.finish
-              end
+              stop_share_source_code_progress_bar(hardware_specs, share_source_code_progress_bar)
 
-              source_code_sharing_time_end = Time.now - source_code_sharing_time_start
+              share_source_code_time_end = Time.now - share_source_code_time_start
 
               Liri.logger.info("Running unit tests. Agent: #{agent_ip_address}. Wait... ", false)
               run_tests_batch_time_start = Time.now
               start_tests_runtime_bar
               update_working_agents(agent_ip_address)
-              tests_batch = tests_batch(agent_ip_address, hardware_specs)
-              tests_batch[:source_code_sharing] = source_code_sharing_time_end
+              tests_batch = tests_batch(agent_ip_address, hardware_specs, share_source_code_time_end)
 
               if tests_batch.empty?
                 client.puts({ msg: 'no_exist_tests' }.to_json)
@@ -261,7 +285,7 @@ module Liri
 
               run_tests_batch_time_start = Time.now
 
-              tests_batch = tests_batch(agent_ip_address, hardware_specs)
+              tests_batch = tests_batch(agent_ip_address, hardware_specs, 0)
               if tests_batch.empty?
                 client.puts({ msg: 'no_exist_tests' }.to_json)
                 client.close
@@ -289,7 +313,42 @@ module Liri
       end
     end
 
-    def tests_batch(agent_ip_address, hardware_specs)
+    def build_tests_batches(all_tests)
+      while all_tests.any?
+        @batch_num += 1 # Se numera cada lote
+        samples = all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
+        samples_keys = samples.keys # Se obtiene la clave asignada a los tests
+        files_count = samples.size
+        status = "pending"
+        @tests_files_count += files_count
+        # Se construye el lote a enviar
+        tests_batch = {
+          batch_num: @batch_num,
+          tests_batch_keys: samples_keys,
+          msg: "process_tests",
+          files_count: files_count,
+          status: status,
+          files_status: "#{files_count} #{status}",
+          agent_ip_address: "",
+          examples: 0,
+          passed: 0,
+          failures: 0,
+          pending: 0,
+          failed_files: "",
+          files_load: 0,
+          finish_in: 0,
+          batch_run: 0,
+          share_source_code: 0,
+          tests_runtime: 0,
+          hardware_specs: ""
+        }
+        @tests_batches[@batch_num] = tests_batch
+      end
+
+      @unfinished_tests_batches = @batch_num
+    end
+
+    def tests_batch(agent_ip_address, hardware_specs, share_source_code_time_end)
       # Se inicia un semáforo para evitar que varios hilos actualicen variables compartidas
       @semaphore.synchronize do
         return {} if @unfinished_tests_batches.zero?
@@ -313,9 +372,13 @@ module Liri
         return {} if tests_batch.empty?
 
         tests_batch[:agent_ip_address] = agent_ip_address
+        tests_batch[:share_source_code] = share_source_code_time_end
 
         Liri.logger.debug("Tests batches sent to Agent #{agent_ip_address}: #{tests_batch}")
-        tests_batch
+        # se devuelve el hash con los datos que se enviarán al agente, por eso, primero se remueven los datos innecesarios
+        tests_batch.remove(:files_count, :status, :files_status, :agent_ip_address, :examples, :passed, :failures,
+                           :pending, :failed_files, :files_load, :finish_in, :batch_run, :share_source_code,
+                           :tests_runtime, :hardware_specs)
       end
     end
 
@@ -324,28 +387,26 @@ module Liri
       @semaphore.synchronize do
         batch_num = tests_result['batch_num']
         tests_result_file_name = tests_result['tests_result_file_name']
-
-        return if @tests_batches[batch_num][:status] == 'processed'
+        status = "processed"
+        # Sólo se procesan las pruebas en estado sent, caso contrario no se avanza con el procesamiento
+        return if (["pending", status]).include?(@tests_batches[batch_num][:status])
 
         tests_result = @tests_result.process(tests_result_file_name)
         return if tests_result.empty?
 
         @unfinished_tests_batches -= 1
 
-        if @unfinished_tests_batches.zero?
-          @tests_runtime_bar.stop
-        end
-
         files_count = @tests_batches[batch_num][:files_count]
         @files_processed += files_count
 
-        batch_run_time = Time.now - run_tests_batch_time_start
+        batch_runtime = Time.now - run_tests_batch_time_start
 
         @tests_running_progress_bar.advance(files_count)
-
         @tests_result_bar.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
+        @tests_runtime_bar.stop if @unfinished_tests_batches.zero?
 
-        @tests_batches[batch_num][:status] = 'processed'
+        @tests_batches[batch_num][:status] = status
+        @tests_batches[batch_num][:files_status] = "#{files_count} #{status}"
         @tests_batches[batch_num][:examples] = tests_result[:examples]
         @tests_batches[batch_num][:passed] = tests_result[:passed]
         @tests_batches[batch_num][:failures] = tests_result[:failures]
@@ -353,7 +414,8 @@ module Liri
         @tests_batches[batch_num][:failed_files] = tests_result[:failed_files]
         @tests_batches[batch_num][:files_load] = tests_result[:files_load]
         @tests_batches[batch_num][:finish_in] = tests_result[:finish_in]
-        @tests_batches[batch_num][:batch_run] = batch_run_time
+        @tests_batches[batch_num][:batch_run] = batch_runtime
+        @tests_batches[batch_num][:tests_runtime] = @tests_batches[batch_num][:batch_run] + @tests_batches[batch_num][:share_source_code]
         @tests_batches[batch_num][:hardware_specs] = hardware_specs
 
         Liri.logger.info("Processed unit tests by Agent: #{agent_ip_address}: #{files_count}")
@@ -361,25 +423,25 @@ module Liri
     end
 
     def print_results
-      @tests_processing_bar.stop if @tests_processing_bar
-      print_agents_summary
-      print_agents_detailed_summary if Liri.print_agents_detailed_summary
-      @tests_result.print_failures_list if Liri.print_failures_list
-      @tests_result.print_failed_examples if Liri.print_failed_examples
+      @tests_processing_bar&.stop
+      print_summary_table if Manager.print_summary_table
+      print_detailed_table if Manager.print_detailed_table
+      @tests_result.print_summary_failures if Manager.print_summary_failures
+      @tests_result.print_detailed_failures if Manager.print_detailed_failures
     end
 
-    def print_agents_summary
+    def print_summary_table
       processed_tests_batches_by_agent = processed_tests_batches_by_agents
       rows = processed_tests_batches_by_agent.values.map do |value|
-        value[:files_load] = value[:files_load].to_duration if value[:files_load]
-        value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
-        value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
-        value[:source_code_sharing] = value[:source_code_sharing].to_duration if value[:source_code_sharing]
-        value[:tests_runtime] = value[:tests_runtime].to_duration if value[:tests_runtime]
+        value[:files_load] = to_duration(value[:files_load]) if value[:files_load]
+        value[:finish_in] = to_duration(value[:finish_in]) if value[:finish_in]
+        value[:batch_run] = to_duration(value[:batch_run]) if value[:batch_run]
+        value[:share_source_code] = to_duration(value[:share_source_code]) if value[:share_source_code]
+        value[:tests_runtime] = to_duration(value[:tests_runtime]) if value[:tests_runtime]
         value.values
       end
 
-      rows << Array.new(11) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(rows.size) # Se agrega una linea vacia antes de mostrar los totales
       rows << summary_footer.remove!(:batch_num).values
       header = processed_tests_batches_by_agent.values.first.keys
 
@@ -402,38 +464,52 @@ module Liri
           tests_batches[key][:examples] += processed_test_batch[:examples]
           tests_batches[key][:passed] += processed_test_batch[:passed]
           tests_batches[key][:failures] += processed_test_batch[:failures]
-          tests_batches[key][:failed_files] += processed_test_batch[:failed_files]
-          tests_batches[key][:files_load] += processed_test_batch[:files_load]
-          tests_batches[key][:finish_in] += processed_test_batch[:finish_in]
-          tests_batches[key][:batch_run] += processed_test_batch[:batch_run]
-          tests_batches[key][:source_code_sharing] += processed_test_batch[:source_code_sharing]
-          tests_batches[key][:tests_runtime] += (processed_test_batch[:batch_run] + processed_test_batch[:source_code_sharing])
+          tests_batches[key][:failed_files] += processed_test_batch[:failed_files] if Manager.show_failed_files_column
+          tests_batches[key][:files_load] += processed_test_batch[:files_load] if Manager.show_files_load_column
+          tests_batches[key][:finish_in] += processed_test_batch[:finish_in] if Manager.show_finish_in_column
+          tests_batches[key][:batch_run] += processed_test_batch[:batch_run] if Manager.show_batch_run_column
+          tests_batches[key][:share_source_code] += processed_test_batch[:share_source_code] if Manager.show_share_source_code_column
+          tests_batches[key][:tests_runtime] += processed_test_batch[:tests_runtime]
         else
           files_count[key] = processed_test_batch[:files_count]
+
           _processed_test_batch = processed_test_batch.clone # Clone to change values in other hash
-          _processed_test_batch.remove!(:batch_num, :msg, :tests_batch_keys, :failures_list, :failed_examples,
-                                        :agent_ip_address, :pending, :files_count, :status)
+          _processed_test_batch.remove!(:batch_num, :tests_batch_keys, :msg, :files_count, :status, :agent_ip_address,
+                                        :pending)
+
+          _processed_test_batch.remove!(:failed_files) unless Manager.show_failed_files_column
+          _processed_test_batch.remove!(:files_load) unless Manager.show_files_load_column
+          _processed_test_batch.remove!(:finish_in) unless Manager.show_finish_in_column
+          _processed_test_batch.remove!(:batch_run) unless Manager.show_batch_run_column
+          _processed_test_batch.remove!(:share_source_code) unless Manager.show_share_source_code_column
+          _processed_test_batch[:files_status] = "#{files_count[key]} #{status}"
+
           tests_batches[key] = _processed_test_batch
-          tests_batches[key][:files_status] = "#{files_count[key]} #{status}"
         end
       end
       tests_batches
     end
 
-    def print_agents_detailed_summary
+    def print_detailed_table
       rows = @tests_batches.values.map do |value|
-        value[:files_status] = "#{value[:files_count]} #{value[:status]}"
-        value.remove!(:msg, :tests_batch_keys, :failures_list, :failed_examples, :agent_ip_address, :pending,
-                      :files_count, :status)
-        value[:files_load] = value[:files_load].to_duration if value[:files_load]
-        value[:finish_in] = value[:finish_in].to_duration if value[:finish_in]
-        value[:tests_runtime] = (value[:batch_run] + value[:source_code_sharing])
-        value[:batch_run] = value[:batch_run].to_duration if value[:batch_run]
-        value[:source_code_sharing] = value[:source_code_sharing].to_duration if value[:source_code_sharing]
+        #value[:files_status] = "#{value[:files_count]} #{value[:status]}"
+        value.remove!(:tests_batch_keys, :msg, :files_count, :status, :agent_ip_address, :pending)
+
+        value.remove!(:failed_files) unless Manager.show_failed_files_column
+        value.remove!(:files_load) unless Manager.show_files_load_column
+        value.remove!(:finish_in) unless Manager.show_finish_in_column
+        value.remove!(:batch_run) unless Manager.show_batch_run_column
+        value.remove!(:share_source_code) unless Manager.show_share_source_code_column
+
+        value[:files_load] = to_duration(value[:files_load]) if value[:files_load]
+        value[:finish_in] = to_duration(value[:finish_in]) if value[:finish_in]
+        value[:batch_run] = to_duration(value[:batch_run]) if value[:batch_run]
+        value[:share_source_code] = to_duration(value[:share_source_code]) if value[:share_source_code]
+        value[:tests_runtime] = to_duration(value[:tests_runtime]) #if value[:tests_runtime]
         value.values
       end
 
-      rows << Array.new(12) # Se agrega una linea vacia antes de mostrar los totales
+      rows << Array.new(rows.size) # Se agrega una linea vacia antes de mostrar los totales
       rows << summary_footer.values
       header = @tests_batches.values.first.keys
 
@@ -444,20 +520,20 @@ module Liri
     end
 
     def summary_footer
-      {
-          batch_num: "",
-          files_status: "#{@tests_files_count} in total",
-          examples: @tests_result.examples,
-          passed: @tests_result.passed,
-          failures: @tests_result.failures,
-          failed_files: "",
-          files_load: "",
-          finish_in: "",
-          batch_run: "",
-          source_code_sharing: "",
-          tests_runtime: "",
-          hardware_specs: ""
-      }
+      hash = {}
+      hash[:batch_num] = ""
+      hash[:files_status] = "#{@tests_files_count} in total"
+      hash[:examples] = @tests_result.examples
+      hash[:passed] = @tests_result.passed
+      hash[:failures] = @tests_result.failures
+      hash[:failed_files] = "" if Manager.show_failed_files_column
+      hash[:files_load] = "" if Manager.show_files_load_column
+      hash[:finish_in] = "" if Manager.show_finish_in_column
+      hash[:batch_run] = "" if Manager.show_batch_run_column
+      hash[:share_source_code] = "" if Manager.show_share_source_code_column
+      hash[:tests_runtime] = ""
+      hash[:hardware_specs] = ""
+      hash
     end
 
     def registered_agent?(agent_ip_address)
@@ -487,6 +563,34 @@ module Liri
       @agents_bar.advance(1, connected: @connected_agents.size.to_s, working: @working_agents.size.to_s)
     end
 
+    def start_share_source_code_progress_bar(hardware_specs, msg)
+      if msg == 'proceed_get_source_code' && Manager.show_share_source_code_progress_bar
+        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :elapsed", total: nil, width: 20)
+        share_source_code_progress_bar.start
+        share_source_code_progress_bar.advance(0, agent: hardware_specs)
+        Thread.new do
+          animation_count = 0
+          while !share_source_code_progress_bar.stopped?
+            share_source_code_progress_bar.advance(1, agent: hardware_specs)
+
+            share_source_code_progress_bar.update(unknown: Common::TtyProgressbar::ANIMATION2[animation_count])
+            animation_count += 1
+            animation_count = 0 if animation_count == 3
+
+            sleep(0.1)
+          end
+        end
+      end
+      share_source_code_progress_bar
+    end
+
+    def stop_share_source_code_progress_bar(hardware_specs, share_source_code_progress_bar)
+      if Manager.show_share_source_code_progress_bar
+        share_source_code_progress_bar.update(total: 1, agent: hardware_specs)
+        share_source_code_progress_bar.finish
+      end
+    end
+
     def start_tests_runtime_bar
       @semaphore.synchronize do
         return if @tests_runtime_start
@@ -494,44 +598,15 @@ module Liri
         @tests_runtime_start = Time.now
         Thread.new do
           while !@tests_runtime_bar.stopped?
-            @tests_runtime_bar.advance(1, time: (Time.now - @tests_runtime_start).to_duration)
+            @tests_runtime_bar.advance(1, time: to_duration(Time.now - @tests_runtime_start))
             sleep(1)
           end
         end
       end
     end
 
-    def build_tests_batches(all_tests)
-      while all_tests.any?
-        @batch_num += 1 # Se numera cada lote
-        samples = all_tests.sample!(Manager.test_files_by_runner) # Se obtiene algunos tests
-        samples_keys = samples.keys # Se obtiene la clave asignada a los tests
-        files_count = samples.size
-        @tests_files_count += files_count
-        # Se construye el lote a enviar
-        tests_batch = {
-            msg: 'process_tests',
-            batch_num: @batch_num,
-            tests_batch_keys: samples_keys,
-            files_count: files_count,
-            status: 'pending',
-            files_status: "",
-            examples: 0,
-            passed: 0,
-            failures: 0,
-            pending: 0,
-            failed_files: "",
-            files_load: 0,
-            finish_in: 0,
-            batch_run: 0,
-            source_code_sharing: 0,
-            tests_runtime: 0,
-            hardware_specs: ""
-        }
-        @tests_batches[@batch_num] = tests_batch
-      end
-
-      @unfinished_tests_batches = @batch_num
+    def to_duration(value)
+      ChronicDuration.output(value.to_i, format: :short, keep_zero: true)
     end
   end
 end

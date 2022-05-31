@@ -65,12 +65,12 @@ module Liri
       private
       def create_stdout_logger
         @stdout_logger = Logger.new(STDOUT, @shift_age)
-        @stdout_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.log.stdout.colorize)
+        @stdout_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.general.log.stdout.colorize)
       end
 
       def create_file_logger
         @file_logger = Logger.new(@file_path, @shift_age)
-        @file_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.log.file.colorize)
+        @file_logger.formatter = Liri::Common::LogFormatter.colorize(Liri.setup.general.log.file.colorize)
       end
 
       def create_log_folder

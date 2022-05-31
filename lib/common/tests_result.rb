@@ -51,12 +51,12 @@ module Liri
         Liri.logger.info("\n#{@examples} examples, #{@passed} passed, #{@failures} failures\n", true)
       end
 
-      def print_failures_list
+      def print_detailed_failures
         Liri.logger.info("\nFailures: ", true) unless @failures_list.empty?
         Liri.logger.info(@failures_list, true)
       end
 
-      def print_failed_examples
+      def print_summary_failures
         Liri.logger.info("\nFailed examples: ", true) unless @failed_examples.empty?
         Liri.logger.info(@failed_examples, true)
       end

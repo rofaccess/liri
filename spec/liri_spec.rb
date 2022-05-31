@@ -28,9 +28,9 @@ RSpec.describe Liri do
 
     describe '#setup' do
       it 'carga los datos del archivo de configuración' do
-        expect(Liri.setup.library.compression).to eq('Zip')
-        expect(Liri.setup.library.unit_test).to eq('Rspec')
-        expect(Liri.setup.compressed_file_name).to eq('compressed_source_code')
+        expect(Liri.setup.general.library.compression).to eq('Zip')
+        expect(Liri.setup.general.library.unit_test).to eq('Rspec')
+        expect(Liri.setup.general.compressed_file_name).to eq('compressed_source_code')
       end
     end
 

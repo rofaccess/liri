@@ -56,9 +56,9 @@ RSpec.describe Liri::Common::Setup do
       it 'retorna los datos del archivo de configuración' do
         setup = @setup.load
         expect(setup).to be_an_instance_of(OpenStruct)
-        expect(setup.library.compression).to eq('Zip')
-        expect(setup.library.unit_test).to eq('Rspec')
-        expect(setup.compressed_file_name).to eq('compressed_source_code')
+        expect(setup.general.library.compression).to eq('Zip')
+        expect(setup.general.library.unit_test).to eq('Rspec')
+        expect(setup.general.compressed_file_name).to eq('compressed_source_code')
       end
     end
 

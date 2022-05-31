@@ -48,13 +48,9 @@ Gem::Specification.new do |spec|
   # Se usa para obtener el código fuente del Manager desde el Agent
   spec.add_runtime_dependency('net-scp', '~> 3')
 
-  # A Ruby gem for converting seconds into human-readable format. https://github.com/digaev/to_duration
+  # A simple Ruby natural language parser for elapsed time. https://github.com/henrypoydar/chronic_duration
   # Se usa para convertir un tiempo en segundos a un formato más legible
-  spec.add_runtime_dependency('to_duration', '~> 1')
-
-  # Ruby internationalization and localization (i18n) solution. https://github.com/ruby-i18n/i18n
-  # Este es un requerimiento de la gema to_duration
-  spec.add_runtime_dependency('i18n', '~> 1')
+  spec.add_runtime_dependency('chronic_duration', '~> 0')
 
   # The ultimate text progress bar library for Ruby!. https://github.com/jfelchner/ruby-progressbar
   # Para mostrar barras de progreso
