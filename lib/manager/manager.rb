@@ -46,7 +46,7 @@ module Liri
         # Siempre se ejecutan estos comandos, haya o no excepción
         Liri.kill(threads) if threads&.any?
         manager&.print_results
-        source_code.delete_compressed_file
+        source_code&.delete_compressed_file
         Liri.logger.info("Manager process finished", true)
       end
 
@@ -116,7 +116,7 @@ module Liri
       end
 
       def compress_source_code(source_code_folder_path, manager_folder_path)
-        source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.compression_class, Liri.unit_test_class)
+        source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.ignored_folders_in_compress, Liri.compression_class, Liri.unit_test_class)
         #Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
         Common::TtyProgressbar.start("Compressing source code |:bar| Time: :elapsed", total: nil, width: 80) do
           source_code.compress_folder

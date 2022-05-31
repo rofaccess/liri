@@ -82,6 +82,10 @@ module Liri
       "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
     end
 
+    def ignored_folders_in_compress
+      setup.general.ignored_folders_in_compress
+    end
+
     private
 
     # Inicializa el objeto que gestiona las configuraciones

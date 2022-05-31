@@ -30,6 +30,10 @@ def test_files_by_runner
   1
 end
 
+def ignored_folders_in_compress
+  ".git,some_folder"
+end
+
 def spec_credentials_file_path
   File.expand_path('./spec_credentials.yml')
 end

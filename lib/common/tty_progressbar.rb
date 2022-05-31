@@ -30,6 +30,7 @@ module Liri
         #   end
         def start(format, params = {})
           @progressing = true # posiblemente no debiera ser una variable global, tal vez meter dentro del thread
+          params[:unknown] = ANIMATION[0]
           progressbar = TTY::ProgressBar.new(format, params)
           Thread.new do
             animation_count = 0

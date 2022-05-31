@@ -8,15 +8,16 @@ module Liri
     module Compressor
       class Zip
         # Inicializa la carpeta a comprimir y la ubicación en donde se guardará el archivo comprimido
-        def initialize(input_dir, output_file)
+        def initialize(input_dir, output_file, ignored_folders)
           @input_dir = input_dir
           @output_file = output_file
+          @ignored_folders = ignored_folders.split(",")
         end
 
         # Comprime el directorio de entrada @input_dir en un archivo con extensión zip.
         def compress
           clear_output_file
-          entries = Dir.entries(@input_dir) - %w[. ..]
+          entries = Dir.entries(@input_dir) - (%w[. ..] + @ignored_folders)
 
           ::Zip::File.open(@output_file, ::Zip::File::CREATE) do |zipfile|
             write_entries(entries, '', zipfile)

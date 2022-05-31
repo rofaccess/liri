@@ -30,6 +30,9 @@ general:
   # Configuración del nombre del archivo de código fuente comprimido enviado a los agentes
   # Obs.: Puede que NO sea útil para el usuario poder cambiar este nombre
   compressed_file_name: compressed_source_code
+  # Define las carpetas que deben ignorarse en la compresión del código fuente. Debe ir separado por comas
+  # y debe haber un espacio después de ignored_folders_in_compress:
+  ignored_folders_in_compress: .git,liri,documents,installers,log,logs
   # Configuraciones de logs
   log:
     # Configuración del log mostrado en la terminal

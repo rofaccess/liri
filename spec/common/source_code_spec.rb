@@ -1,7 +1,7 @@
 RSpec.describe Liri::Common::SourceCode do
   context 'cuando el codigo fuente comprimido no existe' do
     before(:all) do
-      @source_code = Liri::Common::SourceCode.new(dummy_app_folder_path, dummy_app_folder_path, compression_class, unit_test_class)
+      @source_code = Liri::Common::SourceCode.new(dummy_app_folder_path, dummy_app_folder_path, ignored_folders_in_compress, compression_class, unit_test_class)
     end
 
     describe '#compress_folder' do
@@ -35,7 +35,7 @@ RSpec.describe Liri::Common::SourceCode do
 
   context 'cuando el codigo fuente comprimido ya existe' do
     before(:all) do
-      @source_code = Liri::Common::SourceCode.new(dummy_app_folder_path, dummy_app_folder_path, compression_class, unit_test_class)
+      @source_code = Liri::Common::SourceCode.new(dummy_app_folder_path, dummy_app_folder_path, ignored_folders_in_compress, compression_class, unit_test_class)
       @source_code.compress_folder
     end
 

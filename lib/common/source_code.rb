@@ -8,7 +8,7 @@ module Liri
       DECOMPRESSED_FOLDER_NAME = 'decompressed'
       attr_reader :folder_path, :compressed_file_folder_path, :compressed_file_path, :decompressed_file_folder_path
 
-      def initialize(folder_path, compressed_file_folder_path, compression_class, unit_test_class)
+      def initialize(folder_path, compressed_file_folder_path, ignored_folders, compression_class, unit_test_class)
         @folder_path = folder_path
         @folder_name = @folder_path.split('/').last
         @compressed_file_folder_path = compressed_file_folder_path
@@ -17,7 +17,7 @@ module Liri
         # Inicializa un compresor acorde a compression_class, la siguiente línea en realidad hace lo siguiente:
         # @compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file)
         # compression_class en este caso es Zip pero podría ser otro si existiera la implementación, por ejemplo Rar
-        @compressor = Object.const_get(compression_class).new(@folder_path, @compressed_file_path)
+        @compressor = Object.const_get(compression_class).new(@folder_path, @compressed_file_path, ignored_folders)
         # Inicializa un ejecutor de pruebas acorde a unit_test_class, la siguiente línea en realidad hace lo siguiente:
         # @unit_test = Liri::Common::UnitTest::Rspec.new(source_code_folder_path)
         # unit_test_class en este caso es Rspec pero podría ser otro si existiera la implementación, por ejemplo UnitTest

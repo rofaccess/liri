@@ -50,6 +50,7 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   after(:all) do
     Liri.clear_setup
     Liri.delete_setup
+    delete_log_folder
   end
 end
 
@@ -63,4 +64,9 @@ end
 
 def delete_file(file_path)
   File.delete(file_path) if File.exist?(file_path)
+end
+
+def delete_log_folder
+  folder_path = Liri.logger.folder_path
+  FileUtils.rm_rf(folder_path) if Dir.exist?(folder_path)
 end

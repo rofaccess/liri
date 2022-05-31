@@ -14,6 +14,8 @@ module Liri
       FOLDER_PATH = File.join(Dir.pwd, "/#{FOLDER_NAME}")
       FILE_NAME = 'liri.log'
 
+      attr_reader :folder_path
+
       def initialize(shift_age, folder_path:, file_name:, stdout: true)
         @stdout = stdout
         @shift_age = shift_age

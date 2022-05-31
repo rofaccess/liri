@@ -20,7 +20,7 @@ module Liri
         Liri.logger.info("Press Ctrl + c to finish Agent process manually\n", true)
 
         decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
-        source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, Liri.compression_class, Liri.unit_test_class)
+        source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, "", Liri.compression_class, Liri.unit_test_class)
         runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
         tests_result = Common::TestsResult.new(agent_folder_path)
         agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result, agent_folder_path)

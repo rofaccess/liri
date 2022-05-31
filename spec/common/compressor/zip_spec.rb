@@ -1,6 +1,6 @@
 RSpec.describe Zip, '#compress' do
   it 'crea el archivo comprimido' do
-    compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file)
+    compressor = Liri::Common::Compressor::Zip.new(input_dir, output_file, "")
     compressor.compress
 
     expect(File.exist?(output_file)).to be true
@@ -13,7 +13,7 @@ end
 RSpec.describe Zip, '#descompress' do
   it 'descomprime un archivo zip' do
     dest= output_file.split('.zip').first
-    zip_file = Liri::Common::Compressor::Zip.new(input_dir, output_file)
+    zip_file = Liri::Common::Compressor::Zip.new(input_dir, output_file, "")
     zip_file.compress # genero el zip primero
     zip_file.decompress(output_file, dest)
     expect(Dir.exist?(dest)).to be true
