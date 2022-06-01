@@ -174,17 +174,16 @@ module Liri
       @semaphore = Mutex.new
 
       @tests_processing_bar = TTY::ProgressBar::Multi.new("Tests Running Progress")
-      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent |", total: @tests_files_count, width: 80)
-      @tests_runtime_bar = @tests_processing_bar.register("Tests files process runtime: :time")
+      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent | Time: :time", total: @tests_files_count, width: 80)
       @agents_bar = @tests_processing_bar.register("Agents: Connected: :connected, Working: :working")
       @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
 
-      @tests_processing_bar.start # Se inician la barra de progreso
+      @tests_processing_bar.start # Se inicia la multi barra de progreso
 
-      # Se establece el estado inicial de la barra de progreso
+      # Se establece el estado inicial de las barras
+      @tests_running_progress_bar.use(Common::TtyProgressbar::TimeFormatter) # Se configura el uso de un nuevo token llamado time para mostrar el tiempo de ejcución
       @tests_running_progress_bar.advance(0) # Esto obliga a que esta barra se muestre antes que los siguientes
-      @tests_runtime_bar.use(Common::TtyProgressbar::TimeFormatter)
-      @tests_runtime_bar.advance # Esto es importante para forzar que esta barra aparezca luego de la barra anterior
+      @tests_running_progress_bar.pause
 
       @agents_bar.advance(0, connected: "0", working: "0")
       @tests_result_bar.advance(0, examples: "0", passed: "0", failures: "0")
@@ -263,8 +262,9 @@ module Liri
               share_source_code_time_end = Time.now - share_source_code_time_start
 
               Liri.logger.info("Running unit tests. Agent: #{agent_ip_address}. Wait... ", false)
+
+              start_tests_running_progress_bar
               run_tests_batch_time_start = Time.now
-              start_tests_runtime_bar
               update_working_agents(agent_ip_address)
               tests_batch = tests_batch(agent_ip_address, hardware_specs, share_source_code_time_end)
 
@@ -416,7 +416,7 @@ module Liri
 
         @tests_running_progress_bar.advance(files_count)
         @tests_result_bar.advance(1, examples: @tests_result.examples.to_s, passed: @tests_result.passed.to_s, failures: @tests_result.failures.to_s)
-        @tests_runtime_bar.stop if @unfinished_tests_batches.zero?
+        @tests_running_progress_bar.stop if @unfinished_tests_batches.zero?
 
         @tests_batches[batch_num][:status] = status
         @tests_batches[batch_num][:files_status] = "#{files_count} #{status}"
@@ -603,14 +603,14 @@ module Liri
       end
     end
 
-    def start_tests_runtime_bar
+    def start_tests_running_progress_bar
       @semaphore.synchronize do
         # Es importante hacer un reset acá osino va a contar desde que se instancia y no desde que se inicia la ejecución
-        # del primer test
-        @tests_runtime_bar.reset
+        # del primer test. Solo se resetea si esta paused para evitar que al conectarse con cada Agent se vuelva a resetear
+        @tests_running_progress_bar.reset if @tests_running_progress_bar.paused?
         Thread.new do
-          while !@tests_runtime_bar.stopped?
-            @tests_runtime_bar.advance
+          while !@tests_running_progress_bar.stopped?
+            @tests_running_progress_bar.advance(0)
             sleep(0.1) # Es importante que las otras barras tambien tengan el mismo sleep para que sean mas consistentes en sus resultados
           end
         end
