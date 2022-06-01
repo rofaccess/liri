@@ -27,10 +27,12 @@ module Liri
 
           # Received string like this "rspec ./spec/failed_spec.rb:4 # Liri debería fallar a propósito" and
           # return string like this "/spec/failed_spec.rb:4"
+          # or for "rspec ./spec/system/management/budget_investments_spec.rb[1:3:1:3] # Budget Investments behaves like mappable At new_management_budget_investment_path Should create budget_investment with map"
+          # return "/spec/system/management/budget_investments_spec.rb[1:3:1:3]"
           def failed_example(failed_example_line)
             values = failed_example_line.to_s.match(/(\/.+.rb:\d+)/)
-            failed_example = values[1]
-            failed_example
+            values ||= failed_example_line.to_s.match(/(\/.+.rb.*\])/)
+            values[1] # failed_example
           end
 
           private

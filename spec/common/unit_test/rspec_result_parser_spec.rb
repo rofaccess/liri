@@ -55,5 +55,19 @@ RSpec.describe Liri::Common::UnitTest::RspecResultParser do
       expect(values[:pending]).to eq 9
     end
   end
+
+  describe "#failed_example" do
+    it "la linea contiene .rb:algun_numero" do
+      line = "rspec ./spec/system/budgets/budgets_spec.rb:326 # Budgets Index map Skip invalid map markers"
+      result = Liri::Common::UnitTest::RspecResultParser.failed_example(line)
+      expect(result).to eq "/spec/system/budgets/budgets_spec.rb:326"
+    end
+
+    it "la linea contiene .rb:[algun_numero, algun_numero]" do
+      line = "rspec ./spec/system/management/budget_investments_spec.rb[1:3:1:3] # Budget Investments behaves like mappable At new_management_budget_investment_path Should create budget_investment with map"
+      result = Liri::Common::UnitTest::RspecResultParser.failed_example(line)
+      expect(result).to eq "/spec/system/management/budget_investments_spec.rb[1:3:1:3]"
+    end
+  end
 end
 

@@ -19,11 +19,7 @@ module Liri
         Liri.logger.info("Agent process started", true)
         Liri.logger.info("Press Ctrl + c to finish Agent process manually\n", true)
 
-        decompressed_source_code_path = File.join(agent_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
-        source_code = Common::SourceCode.new(decompressed_source_code_path, agent_folder_path, "", Liri.compression_class, Liri.unit_test_class)
-        runner = Agent::Runner.new(Liri.unit_test_class, source_code.decompressed_file_folder_path)
-        tests_result = Common::TestsResult.new(agent_folder_path)
-        agent = Agent.new(Liri.udp_port, Liri.tcp_port, source_code, runner, tests_result, agent_folder_path)
+        agent = Agent.new(Liri.udp_port, Liri.tcp_port, agent_folder_path)
         threads = []
         threads << agent.start_server_socket_to_process_manager_connection_request # Esperar y procesar la petición de conexión del Manager
 
@@ -35,19 +31,14 @@ module Liri
       ensure
         # Siempre se ejecutan estos comandos, haya o no excepción
         Liri.kill(threads) if threads && threads.any?
-        Liri.clean_folder_content(agent_folder_path)
         Liri.logger.info("Agent process finished", true)
       end
     end
 
-    def initialize(udp_port, tcp_port, source_code, runner, tests_result, agent_folder_path)
+    def initialize(udp_port, tcp_port, agent_folder_path)
       @udp_port = udp_port
       @udp_socket = UDPSocket.new
       @tcp_port = tcp_port
-
-      @source_code = source_code
-      @runner = runner
-      @tests_result = tests_result
 
       @all_tests = {}
 
@@ -78,6 +69,8 @@ module Liri
           @manager_request = @udp_socket.recvfrom(1024)
           manager_ip_address = @manager_request.last.last
           manager_data = get_manager_data(JSON.parse(@manager_request.first))
+          # TODO: El cliente TCP debería inicicarse en otro hilo, de este modo se tendrá un cliente TCP para cada Manager
+          # y se evita que un mismo cliente procese la ejecución de varios Manager
           process_manager_connection_request(manager_ip_address, manager_data)
         end
       end
@@ -104,6 +97,7 @@ module Liri
         end
 
         if msg == 'proceed_get_source_code'
+          init_work_folders(manager_ip_address)
           result = get_source_code(manager_ip_address, manager_data)
           tcp_socket.puts({ msg: result }.to_json)
         end
@@ -111,12 +105,18 @@ module Liri
         if msg == 'process_tests'
           tests_batch = tcp_socket_data
           tests = get_tests(tests_batch, manager_ip_address)
-          raw_tests_result = @runner.run_tests(tests)
+
+          compressed_file_folder_path = @managers[manager_ip_address][:compressed_file_folder_path]
+          decompressed_file_folder_path = @managers[manager_ip_address][:decompressed_file_folder_path]
+
+          runner = Agent::Runner.new(Liri.unit_test_class, decompressed_file_folder_path)
+          raw_tests_result = runner.run_tests(tests)
           batch_num = tests_batch['batch_num']
-          tests_result_file_name = @tests_result.build_file_name(agent_ip_address, batch_num)
-          tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
+          tests_result = Common::TestsResult.new(compressed_file_folder_path)
+          tests_result_file_name = tests_result.build_file_name(agent_ip_address, batch_num)
+          tests_result_file_path = tests_result.save(tests_result_file_name, raw_tests_result)
           # TODO No se debería enviar el resultado si otro agente ya lo procesó, porque osinó reemplazaría el archivo de resultados
-          # ya procesado
+          # ya procesado. ACTUALIZACION: Puede que esto ya se haya arreglado
           send_tests_results_file(manager_ip_address, manager_data, tests_result_file_path)
           tests_result = { msg: 'processed_tests', batch_num: batch_num, tests_result_file_name: tests_result_file_name}
           tcp_socket.puts(tests_result.to_json) # Envía el número de lote y el nombre del archivo de resultados.
@@ -152,25 +152,29 @@ module Liri
 
     def get_source_code(manager_ip_address, manager_data)
       puts ''
+      compressed_file_folder_path = @managers[manager_ip_address][:compressed_file_folder_path]
+      decompressed_file_folder_path = @managers[manager_ip_address][:decompressed_file_folder_path]
+      source_code = Liri::Common::SourceCode.new(decompressed_file_folder_path,compressed_file_folder_path, "", Liri.compression_class, Liri.unit_test_class)
+
       Liri::Common::Benchmarking.start(start_msg: "Getting source code. Wait... ", stdout: true) do
         puts ''
         Net::SCP.start(manager_ip_address, manager_data.user, password: manager_data.password) do |scp|
-          scp.download!(manager_data.compressed_file_path, @source_code.compressed_file_folder_path)
+          scp.download!(manager_data.compressed_file_path, compressed_file_folder_path)
         end
       end
       puts ''
 
       downloaded_file_name = manager_data.compressed_file_path.split('/').last
-      downloaded_file_path = File.join(@source_code.compressed_file_folder_path, '/', downloaded_file_name)
+      downloaded_file_path = File.join(compressed_file_folder_path, '/', downloaded_file_name)
 
       Liri::Common::Benchmarking.start(start_msg: "Uncompressing source code. Wait... ", stdout: true) do
-        @source_code.decompress_file(downloaded_file_path)
-        @all_tests = @source_code.all_tests
+        source_code.decompress_file(downloaded_file_path)
+        @all_tests = source_code.all_tests
       end
       puts ''
 
       # Se cambia temporalmente la carpeta de trabajo a la carpeta de código fuente descomprimida
-      Dir.chdir(@source_code.decompressed_file_folder_path) do
+      Dir.chdir(decompressed_file_folder_path) do
         # Se borra el directorio .git para evitar el siguiente error al ejecutar las pruebas: fatal: not a git repository (or any of the parent directories): .git
         # Una mejor alternativa es no traer siquiera esa carpeta junto al código fuente excluyendo la carpeta .git al comprimir el código fuente.
         # Por cuestiones de tiempo se procede a borrar la carpeta .git por ahora, aunque al parecer el error mostrado no afecta la ejecución del Agent
@@ -256,12 +260,29 @@ module Liri
     end
 
     def register_manager(manager_ip_address)
-      @managers[manager_ip_address] = manager_ip_address
+      unless registered_manager?(manager_ip_address)
+        @managers[manager_ip_address] = {
+          manager_ip_address: @managers[manager_ip_address]
+        }
+      end
     end
 
     def unregister_manager(manager_ip_address)
       @managers.remove!(manager_ip_address)
       Liri.logger.info("Finish connection with Manager #{manager_ip_address} in TCP port: #{@tcp_port}")
+    end
+
+    def init_work_folders(manager_ip_address)
+      return if @managers[manager_ip_address][:compressed_file_folder_path]
+
+      compressed_file_folder_path = File.join(@agent_folder_path, '/', "#{DateTime.now.strftime("%d_%m_%y_%H_%M_%S")}_work")
+      Dir.mkdir(compressed_file_folder_path) unless Dir.exist?(compressed_file_folder_path)
+      decompressed_file_folder_path = File.join(compressed_file_folder_path, '/', Common::SourceCode::DECOMPRESSED_FOLDER_NAME)
+
+      @managers[manager_ip_address] = {
+        compressed_file_folder_path: compressed_file_folder_path,
+        decompressed_file_folder_path: decompressed_file_folder_path
+      }
     end
   end
 end
