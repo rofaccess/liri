@@ -12,6 +12,9 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   # acá se está procesando los resultados y comprobándolos, estas comprobaciones se deben hacer en sus
   # respectivos Tests. Esto nos dice que estos tests requieren refactorización
   it 'ejecuta 1 prueba unitaria' do
+    allow(Liri).to receive(:times_round).and_return(0)
+    allow(Liri).to receive(:times_round_type).and_return(:floor)
+
     all_tests = @unit_test.all_tests
     test_files = {}
     all_tests.keys[0..0].each { |key| test_files[key] = all_tests[key] } # Seleccionar el primer test del hash devuelto por all_tests
@@ -30,6 +33,9 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   end
 
   it 'ejecuta 2 pruebas unitarias' do
+    allow(Liri).to receive(:times_round).and_return(0)
+    allow(Liri).to receive(:times_round_type).and_return(:floor)
+
     all_tests = @unit_test.all_tests
     test_files = {}
     all_tests.keys[0..1].each { |key| test_files[key] = all_tests[key] } # Seleccionar los primeros dos test del hash devuelto por all_tests

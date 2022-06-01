@@ -6,7 +6,6 @@
 
 require 'all_libraries'
 require 'terminal-table'
-require "chronic_duration"
 
 module Liri
   class Manager
@@ -118,10 +117,10 @@ module Liri
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.ignored_folders_in_compress, Liri.compression_class, Liri.unit_test_class)
         #Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
-        Common::TtyProgressbar.start("Compressing source code |:bar| Time: :elapsed", total: nil, width: 80) do
+        Common::TtyProgressbar.start("Compressing source code |:bar| :percent | Time: :time", total: nil, width: 80) do
           source_code.compress_folder
         end
-        puts "\n\n"
+        puts "\n"
 
         source_code
       rescue SignalException => e
@@ -181,11 +180,12 @@ module Liri
       @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
 
       @tests_processing_bar.start # Se inician la barra de progreso
-      @tests_runtime_start = nil
 
       # Se establece el estado inicial de la barra de progreso
       @tests_running_progress_bar.advance(0) # Esto obliga a que esta barra se muestre antes que los siguientes
-      @tests_runtime_bar.advance(0, time: "0")
+      @tests_runtime_bar.use(Common::TtyProgressbar::TimeFormatter)
+      @tests_runtime_bar.advance # Esto es importante para forzar que esta barra aparezca luego de la barra anterior
+
       @agents_bar.advance(0, connected: "0", working: "0")
       @tests_result_bar.advance(0, examples: "0", passed: "0", failures: "0")
     end
@@ -578,9 +578,8 @@ module Liri
 
     def start_share_source_code_progress_bar(hardware_specs, msg)
       if msg == 'proceed_get_source_code' && Manager.show_share_source_code_progress_bar
-        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :elapsed", total: nil, width: 20)
-        share_source_code_progress_bar.start
-        share_source_code_progress_bar.advance(0, agent: hardware_specs)
+        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :time", total: nil, width: 20)
+        share_source_code_progress_bar.use(Common::TtyProgressbar::TimeFormatter)
         Thread.new do
           animation_count = 0
           while !share_source_code_progress_bar.stopped?
@@ -606,20 +605,20 @@ module Liri
 
     def start_tests_runtime_bar
       @semaphore.synchronize do
-        return if @tests_runtime_start
-
-        @tests_runtime_start = Time.now
+        # Es importante hacer un reset acá osino va a contar desde que se instancia y no desde que se inicia la ejecución
+        # del primer test
+        @tests_runtime_bar.reset
         Thread.new do
           while !@tests_runtime_bar.stopped?
-            @tests_runtime_bar.advance(1, time: to_duration(Time.now - @tests_runtime_start))
-            sleep(1)
+            @tests_runtime_bar.advance
+            sleep(0.1) # Es importante que las otras barras tambien tengan el mismo sleep para que sean mas consistentes en sus resultados
           end
         end
       end
     end
 
     def to_duration(value)
-      ChronicDuration.output(value.to_i, format: :short, keep_zero: true)
+      Common::Duration.humanize(value, times_round: Liri.times_round, times_round_type: Liri.times_round_type)
     end
   end
 end

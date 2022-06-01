@@ -3,12 +3,11 @@
 # @author Rodrigo Fernández
 #
 # == Módulo TtyProgressbar
-# Este módulo se encarga de mostrar una barra de progreso
-
 require "tty-progressbar"
 
 module Liri
   module Common
+    # Este módulo se encarga de mostrar una barra de progreso
     module TtyProgressbar
       ANIMATION = [
           "=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=---=-",
@@ -29,12 +28,13 @@ module Liri
         #     ...code
         #   end
         def start(format, params = {})
-          @progressing = true # posiblemente no debiera ser una variable global, tal vez meter dentro del thread
           params[:unknown] = ANIMATION[0]
           progressbar = TTY::ProgressBar.new(format, params)
+          progressbar.use(Common::TtyProgressbar::TimeFormatter)
+
           Thread.new do
             animation_count = 0
-            while @progressing
+            while !progressbar.stopped?
               progressbar.advance
 
               progressbar.update(unknown: ANIMATION[animation_count])
@@ -45,7 +45,20 @@ module Liri
             end
           end
           yield
-          @progressing = false
+          progressbar.update(total: 1) # Esto hace que la barra cambie a al estilo completado con un porcentaje del 100%
+          progressbar.finish
+          progressing = false
+        end
+      end
+
+      # From
+      class TimeFormatter
+        include TTY::ProgressBar::Formatter[/:time/i]
+
+        def call(value) # specify how display string is formatted
+          # access current progress bar instance to read start time
+          elapsed = Duration.humanize(Time.now - progress.start_time, times_round: Liri.times_round, times_round_type: Liri.times_round_type)
+          value.gsub(matcher, elapsed)   # replace :time token with a value
         end
       end
     end

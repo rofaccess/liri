@@ -5,7 +5,6 @@
 # @author Rodrigo Fernández
 
 require "benchmark"
-require "chronic_duration"
 
 module Liri
   module Common
@@ -18,7 +17,7 @@ module Liri
 
           seconds = Benchmark.realtime(&block)
 
-          Liri.logger.info("#{end_msg}#{ChronicDuration.output(seconds.to_i, format: :short, keep_zero: true)}", stdout)
+          Liri.logger.info("#{end_msg}#{Duration.humanize(seconds, times_round: Liri.times_round, times_round_type: Liri.times_round_type)}", stdout)
           seconds
         end
       end

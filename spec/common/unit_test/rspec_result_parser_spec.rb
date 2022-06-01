@@ -18,7 +18,7 @@ RSpec.describe Liri::Common::UnitTest::RspecResultParser do
       line = 'Finished in 1 hour 50 seconds (files took 1.24 minutes to load)'
       values = Liri::Common::UnitTest::RspecResultParser.finish_in_values(line)
       expect(values[:finish_in]).to eq 3650
-      expect(values[:files_load]).to eq 74.4
+      expect(values[:files_load].to_f).to eq 74.4
     end
   end
 

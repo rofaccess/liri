@@ -86,6 +86,14 @@ module Liri
       setup.general.ignored_folders_in_compress
     end
 
+    def times_round
+      setup.general.times_round
+    end
+
+    def times_round_type
+      setup.general.times_round_type.to_sym
+    end
+
     private
 
     # Inicializa el objeto que gestiona las configuraciones

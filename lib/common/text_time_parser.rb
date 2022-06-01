@@ -38,8 +38,12 @@ module Liri
           when 'minute', 'minutes' then time * 60
           when 'hour', 'hours' then time * 3600
           when 'day', 'days' then time * 86_400
-                            end
-          time_in_seconds.to_f
+          end
+
+          # time in seconds puede contener valores BigDecimal como este 0.744e2 que al hacerle to_f devuelve 74.4
+          # Aún así conviene mantener el valor en BigDecimal para las operaciones matematicas y solo cuando se va a mostrar
+          # los datos en pantalla se debe hacer el to_f
+          time_in_seconds
         end
       end
     end

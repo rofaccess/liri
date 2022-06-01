@@ -15,7 +15,7 @@ manager:
       # Configuración para imprimir un resumen del proceso realizado por los agentes
       summary: true
       # Configuración para imprimir un resumen detallado del proceso realizado por los agentes
-      detailed: true
+      detailed: false
     column:
       failed_files: true # Muestra los archivos fallados en la tabla
       files_load: true # Muestra el tiempo que tardó Rspec en cargar los archivos de tests
@@ -23,8 +23,8 @@ manager:
       batch_run: true # Muestra el tiempo que pasó desde que el Manager obtiene las pruebas a ejecutar, las envía y recibe los resultados
       share_source_code: true # Muestra el tiempo que tardan los Agents en obtener el código fuente y descomprimirlo
     failures:
-      summary: true # Muestra una tabla que resume los tiempos de ejecución por cada Agent
-      detailed: true  # Muestra una tabla detallada de los tiempo de ejecución de cada tanda enviada a los Agents
+      summary: false # Muestra una tabla que resume los tiempos de ejecución por cada Agent
+      detailed: false  # Muestra una tabla detallada de los tiempo de ejecución de cada tanda enviada a los Agents
 # Configuraciones compartidas entre Manager y Agent
 general:
   # Configuración del nombre del archivo de código fuente comprimido enviado a los agentes
@@ -33,6 +33,18 @@ general:
   # Define las carpetas que deben ignorarse en la compresión del código fuente. Debe ir separado por comas
   # y debe haber un espacio después de ignored_folders_in_compress:
   ignored_folders_in_compress: .git,liri,documents,installers,log,logs
+  # Define a cuantos digitos se van a redondear los tiempos mostrados en pantalla.
+  times_round: 0
+  # Define el tipo de redondeo a utilizar. floor para piso, roof para techo.
+  # El que da mejores resultados según las pruebas realizadas es usar times_round 0 y times_round_type floor
+  times_round_type: floor
+  # Ej.:
+  # Con times_round 0 y times_round_type floor, 3.5516 se convierte a 3s
+  # Con times_round 1 y times_round_type floor, 3.5516 se convierte a 3.5s
+  # Con times_round 2 y times_round_type floor, 3.5516 se convierte a 3.55s
+  # Con times_round 0 y times_round_type roof, 3.5516 se convierte a 4s
+  # Con times_round 1 y times_round_type roof, 3.5516 se convierte a 3.6s
+  # Con times_round 2 y times_round_type roof, 3.5516 se convierte a 3.55s
   # Configuraciones de logs
   log:
     # Configuración del log mostrado en la terminal
