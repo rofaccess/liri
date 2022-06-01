@@ -121,7 +121,8 @@ module Liri
           source_code.compress_folder
         end
         puts "\n"
-
+        Liri.logger.info("Batch Files: #{test_files_by_runner}", true)
+        puts "\n"
         source_code
       rescue SignalException => e
         # Se captura la excepción sólo para imprimir espacios despues de la barra de progreso
