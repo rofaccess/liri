@@ -117,7 +117,7 @@ module Liri
       def compress_source_code(source_code_folder_path, manager_folder_path)
         source_code = Common::SourceCode.new(source_code_folder_path, manager_folder_path, Liri.ignored_folders_in_compress, Liri.compression_class, Liri.unit_test_class)
         #Common::Progressbar.start(total: nil, length: 120, format: 'Compressing source code |%B| %a') do
-        Common::TtyProgressbar.start("Compressing source code |:bar| :percent | Time: :time", total: nil, width: 80) do
+        Common::TtyProgressbar.start("Compressing source code |:bar| :percent | Time: :time", total: nil, width: 80, bar_format: :box) do
           source_code.compress_folder
         end
         puts "\n"
@@ -174,7 +174,7 @@ module Liri
       @semaphore = Mutex.new
 
       @tests_processing_bar = TTY::ProgressBar::Multi.new("Tests Running Progress")
-      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent | Time: :time", total: @tests_files_count, width: 80)
+      @tests_running_progress_bar = @tests_processing_bar.register("Tests files processed :current/:total |:bar| :percent | Time: :time", total: @tests_files_count, width: 80, bar_format: :box)
       @agents_bar = @tests_processing_bar.register("Agents: Connected: :connected, Working: :working")
       @tests_result_bar = @tests_processing_bar.register("Examples: :examples, Passed: :passed, Failures: :failures")
 
@@ -578,7 +578,7 @@ module Liri
 
     def start_share_source_code_progress_bar(hardware_specs, msg)
       if msg == 'proceed_get_source_code' && Manager.show_share_source_code_progress_bar
-        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :time", total: nil, width: 20)
+        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :time", total: nil, width: 20, bar_format: :box)
         share_source_code_progress_bar.start
         share_source_code_progress_bar.use(Common::TtyProgressbar::TimeFormatter)
         Thread.new do
