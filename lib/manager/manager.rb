@@ -578,7 +578,7 @@ module Liri
 
     def start_share_source_code_progress_bar(hardware_specs, msg)
       if msg == 'proceed_get_source_code' && Manager.show_share_source_code_progress_bar
-        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code with Agent: [:agent ] |:bar| :percent | Time: :time", total: nil, width: 20, bar_format: :box)
+        share_source_code_progress_bar = @tests_processing_bar.register("Sharing source code |:bar| :percent | Time: :time | Agent: [:agent ]", total: nil, width: 20, bar_format: :box)
         share_source_code_progress_bar.start
         share_source_code_progress_bar.use(Common::TtyProgressbar::TimeFormatter)
         Thread.new do

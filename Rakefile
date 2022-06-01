@@ -47,6 +47,11 @@ task :install => [:build, :update_agent_installer, :compress_agent_installer] do
   system "gem install " + Liri::NAME + "-" + Liri::VERSION + ".gem"
 end
 
+# Borra la gema despues de llamar a la tarea install
+Rake::Task[:install].enhance do
+  Rake::Task[:clean].invoke
+end
+
 # Publica la gema después de compilar.
 # > rake publish
 task :publish => :build do
