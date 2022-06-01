@@ -30,6 +30,9 @@ module Liri
         def start(format, params = {})
           params[:unknown] = ANIMATION[0]
           progressbar = TTY::ProgressBar.new(format, params)
+          # Es importante iniciar la barra porque TimeFormatter.call accede a su start_time y si no se inició la barra
+          # entonces ocurre un error
+          progressbar.start
           progressbar.use(Common::TtyProgressbar::TimeFormatter)
 
           Thread.new do
@@ -46,8 +49,9 @@ module Liri
           end
           yield
           progressbar.update(total: 1) # Esto hace que la barra cambie a al estilo completado con un porcentaje del 100%
-          progressbar.finish
-          progressing = false
+          progressbar.stop
+        rescue TypeError
+          # Se captura la excepción solo para evitar un error en start_time mas abajo
         end
       end
 
