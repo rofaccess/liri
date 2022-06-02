@@ -1,0 +1,37 @@
+eslie@leslie:~/discourse$ liri m
+
+Manager process started
+Press Ctrl + c to finish Manager process manually
+
+Compressing source code |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 17s
+
+Batch Files: 100
+
+┌ Tests Running Progress
+├── Tests files processed 816/816 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 6m 57s
+├── Agents: Connected: 3, Working: 3
+├── Examples: 16341, Passed: 16333, Failures: 8
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 28s | Agent: [ Intel Core i7-6500U  7GB ]
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 31s | Agent: [ Intel Core i5-8250U  8GB ]
+└── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 26s | Agent: [ Intel Core i7-9750H  16GB ]
+
+x==============================================================================================================================================================================================================x
+|                                                                                                    Summary                                                                                                   |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   files_status  |   examples |   passed |   failures |   failed_files                      |   files_load |   finish_in |   batch_run |   share_source_code |   tests_runtime |   hardware_specs             |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   416 processed |   7813     |   7807   |   6        |   request_tracker_spec.rb:66        |   13s        |   6m 33s    |   6m 57s    |   26s               |   7m 24s        |    Intel Core i7-9750H  16GB |
+|                 |            |          |            |   request_tracker_spec.rb:55        |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:105       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:153       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:168       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   rate_limiter_spec.rb:115          |              |             |             |                     |                 |                              |
+|   200 processed |   4822     |   4820   |   2        |   distributed_mutex_spec.rb:88      |   11s        |   4m 16s    |   4m 33s    |   28s               |   5m 2s         |    Intel Core i7-6500U  7GB  |
+|                 |            |          |            |   clean_up_crawler_stats_spec.rb:17 |              |             |             |                     |                 |                              |
+|   200 processed |   3706     |   3706   |   0        |                                     |   8s         |   5m 47s    |   6m 3s     |   31s               |   6m 35s        |    Intel Core i5-8250U  8GB  |
+
+|   816 in total  |   16341    |   16333  |   8        |                                     |              |             |             |                     |                 |                              |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+Manager process finished
+
+Finalizado en: 7m 41s

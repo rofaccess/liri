@@ -1,0 +1,36 @@
+leslie@leslie:~/discourse$ liri m
+
+Manager process started
+Press Ctrl + c to finish Manager process manually
+
+Compressing source code |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 17s
+
+Batch Files: 30
+
+┌ Tests Running Progress
+├── Tests files processed 816/816 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 7m 14s
+├── Agents: Connected: 3, Working: 3
+├── Examples: 16341, Passed: 16333, Failures: 8
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 28s | Agent: [ Intel Core i7-6500U  7GB ]
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 34s | Agent: [ Intel Core i5-8250U  8GB ]
+└── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 38s | Agent: [ Intel Core i7-9750H  16GB ]
+
+x==============================================================================================================================================================================================================x
+|                                                                                                    Summary                                                                                                   |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   files_status  |   examples |   passed |   failures |   failed_files                      |   files_load |   finish_in |   batch_run |   share_source_code |   tests_runtime |   hardware_specs             |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   186 processed |   4192     |   4191   |   1        |   distributed_mutex_spec.rb:88      |   26s        |   6m 10s    |   6m 53s    |   28s               |   7m 22s        |    Intel Core i7-6500U  7GB  |
+|   270 processed |   4541     |   4540   |   1        |   rate_limiter_spec.rb:115          |   29s        |   6m 10s    |   7m 1s     |   34s               |   7m 36s        |    Intel Core i5-8250U  8GB  |
+|   360 processed |   7608     |   7602   |   6        |   request_tracker_spec.rb:66        |   29s        |   6m 11s    |   7m 5s     |   38s               |   7m 43s        |    Intel Core i7-9750H  16GB |
+|                 |            |          |            |   request_tracker_spec.rb:55        |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:105       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:168       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:153       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   clean_up_crawler_stats_spec.rb:17 |              |             |             |                     |                 |                              |
+
+|   816 in total  |   16341    |   16333  |   8        |                                     |              |             |             |                     |                 |                              |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+Manager process finished
+
+Finalizado en: 8m 0s

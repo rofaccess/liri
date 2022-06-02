@@ -1,0 +1,39 @@
+leslie@leslie:~/discourse$ liri m
+
+Manager process started
+Press Ctrl + c to finish Manager process manually
+
+Compressing source code |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 21s
+
+Batch Files: 50
+
+┌ Tests Running Progress
+├── Tests files processed 816/816 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% | Time: 4m 38s
+├── Agents: Connected: 4, Working: 4
+├── Examples: 16341, Passed: 16332, Failures: 9
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 30s | Agent: [ Intel Core i7-6500U  7GB ]
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 24s | Agent: [ AMD Ryzen 7 3700X  32GB ]
+├── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 33s | Agent: [ Intel Core i5-8250U  8GB ]
+└── Sharing source code |■■■■■■■■■■■■■■■■■■■■| 100% | Time: 28s | Agent: [ Intel Core i7-9750H  16GB ]
+
+x==============================================================================================================================================================================================================x
+|                                                                                                    Summary                                                                                                   |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   files_status  |   examples |   passed |   failures |   failed_files                      |   files_load |   finish_in |   batch_run |   share_source_code |   tests_runtime |   hardware_specs             |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+|   266 processed |   6221     |   6220   |   1        |   rate_limiter_spec.rb:115          |   15s        |   4m 9s     |   4m 38s    |   24s               |   5m 2s         |    AMD Ryzen 7 3700X  32GB   |
+|   250 processed |   4732     |   4730   |   2        |   web_crawler_request_spec.rb:13    |   12s        |   3m 53s    |   4m 15s    |   28s               |   4m 44s        |    Intel Core i7-9750H  16GB |
+|                 |            |          |            |   clean_up_crawler_stats_spec.rb:17 |              |             |             |                     |                 |                              |
+|   150 processed |   2748     |   2748   |   0        |                                     |   12s        |   4m 6s     |   4m 28s    |   30s               |   4m 58s        |    Intel Core i7-6500U  7GB  |
+|   150 processed |   2640     |   2634   |   6        |   request_tracker_spec.rb:66        |   11s        |   3m 40s    |   3m 59s    |   33s               |   4m 33s        |    Intel Core i5-8250U  8GB  |
+|                 |            |          |            |   request_tracker_spec.rb:105       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:55        |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:153       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   request_tracker_spec.rb:168       |              |             |             |                     |                 |                              |
+|                 |            |          |            |   distributed_mutex_spec.rb:88      |              |             |             |                     |                 |                              |
+
+|   816 in total  |   16341    |   16332  |   9        |                                     |              |             |             |                     |                 |                              |
+x=================x============x==========x============x=====================================x==============x=============x=============x=====================x=================x==============================x
+Manager process finished
+
+Finalizado en: 5m 24s
