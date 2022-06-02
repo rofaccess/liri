@@ -3,7 +3,7 @@
 # Este modulo contiene datos del programa que son reutilizados en otras partes de la aplicacion
 module Liri
   NAME = 'liri' # El gemspec requiere que el nombre este en minusculas
-  VERSION = '0.3.1'
+  VERSION = '0.4.0'
 
   class << self
     def set_setup(destination_folder_path, program, manager_tests_results_folder_time: nil)

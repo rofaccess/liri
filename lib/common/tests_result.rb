@@ -29,8 +29,8 @@ module Liri
         file_path
       end
 
-      def build_file_name(agent_ip_address, tests_batch_number)
-        "batch_#{tests_batch_number}_agent_#{agent_ip_address}_tests_results"
+      def build_file_name(agent_ip_address, batch_num)
+        "batch_#{batch_num}_agent_#{agent_ip_address}_tests_results"
       end
 
       # Procesa el resultado crudo de las pruebas unitarias y lo devuelve en formato hash manejable
@@ -39,6 +39,9 @@ module Liri
       #   failures_list: '', failed_examples: '' }
       def process(tests_result_file_name, files_processed)
         file_path = File.join(@folder_path, '/', tests_result_file_name)
+        # A veces no se encuentra el archivo de resultados, la siguiente condicional es para evitar errores relativos a esto
+        return {} unless File.exist?(file_path)
+
         result_hash = process_tests_result_file(file_path)
         result_hash[:files_processed] = files_processed
         update_partial_result(result_hash)
@@ -46,17 +49,17 @@ module Liri
       end
 
       def print_summary
-        puts "\n#{@examples} examples, #{@failures} failures, #{@pending} pending\n\n"
+        Liri.logger.info("\n#{@examples} examples, #{@failures} failures, #{@passed} passed, #{@pending} pending\n\n", true)
       end
 
       def print_failures_list
-        puts "\nFailures: " unless @failures_list.empty?
-        puts @failures_list
+        Liri.logger.info("\nFailures: ", true) unless @failures_list.empty?
+        Liri.logger.info(@failures_list, true)
       end
 
       def print_failed_examples
-        puts "\nFailed examples: " unless @failed_examples.empty?
-        puts @failed_examples
+        Liri.logger.info("\nFailed examples: ", true) unless @failed_examples.empty?
+        Liri.logger.info(@failed_examples, true)
       end
 
       private

@@ -31,6 +31,11 @@ module Liri
         else
           return nil, nil
         end
+      rescue Psych::SyntaxError
+        # Este error ocurre cuando se guardan caracteres raros en el archivo liri-credentials.yml
+        # en este caso se borra el archivo y se pide de nuevo la contraseña
+        delete_credentials
+        return nil, nil
       end
 
       def ask_credentials
@@ -41,6 +46,15 @@ module Liri
 
       def save_credentials(user, password)
         File.write(@file_path, "user: #{user}\npassword: #{password}")
+      end
+
+      def delete_credentials
+        if File.exist?(@file_path)
+          File.delete(@file_path)
+          File.exist?(@file_path) ? false : true
+        else
+          false
+        end
       end
     end
   end

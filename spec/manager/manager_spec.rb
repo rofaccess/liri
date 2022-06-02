@@ -44,7 +44,6 @@ RSpec.describe Liri::Manager, '#run' do
     @threads.each(&:join)
   end
 =end
-
   # El siguiente bloque es útil para debuguear
 =begin
   it 'run tests' do
