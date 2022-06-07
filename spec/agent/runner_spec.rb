@@ -12,6 +12,9 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   # acá se está procesando los resultados y comprobándolos, estas comprobaciones se deben hacer en sus
   # respectivos Tests. Esto nos dice que estos tests requieren refactorización
   it 'ejecuta 1 prueba unitaria' do
+    allow(Liri).to receive(:times_round).and_return(0)
+    allow(Liri).to receive(:times_round_type).and_return(:floor)
+
     all_tests = @unit_test.all_tests
     test_files = {}
     all_tests.keys[0..0].each { |key| test_files[key] = all_tests[key] } # Seleccionar el primer test del hash devuelto por all_tests
@@ -30,6 +33,9 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   end
 
   it 'ejecuta 2 pruebas unitarias' do
+    allow(Liri).to receive(:times_round).and_return(0)
+    allow(Liri).to receive(:times_round_type).and_return(:floor)
+
     all_tests = @unit_test.all_tests
     test_files = {}
     all_tests.keys[0..1].each { |key| test_files[key] = all_tests[key] } # Seleccionar los primeros dos test del hash devuelto por all_tests
@@ -50,6 +56,7 @@ RSpec.describe Liri::Agent::Runner, '#run_tests' do
   after(:all) do
     Liri.clear_setup
     Liri.delete_setup
+    delete_log_folder
   end
 end
 
@@ -57,10 +64,15 @@ def run_tests(test_files)
   raw_tests_result = @runner.run_tests(test_files.values)
   tests_result_file_name = @tests_result.build_file_name('0.0.0.0', 1)
   tests_result_file_path = @tests_result.save(tests_result_file_name, raw_tests_result)
-  tests_result = @tests_result.process(tests_result_file_name, test_files.size)
+  tests_result = @tests_result.process(tests_result_file_name)
   [tests_result_file_path, tests_result]
 end
 
 def delete_file(file_path)
   File.delete(file_path) if File.exist?(file_path)
+end
+
+def delete_log_folder
+  folder_path = Liri.logger.folder_path
+  FileUtils.rm_rf(folder_path) if Dir.exist?(folder_path)
 end

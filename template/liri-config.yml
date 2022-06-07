@@ -1,37 +1,75 @@
 # Este archivo .yml define ciertas configuraciones para la ejecución del sistema
-# Configuración del Nombre del archivo de código fuente comprimido enviado a los agentes
-# Obs.: Puede que no sea útil para el usuario poder cambiar este nombre
-compressed_file_name: compressed_source_code
-# Configuración de la cantidad de archivos de tests a ejecutar en cada tanda
-test_files_by_runner: 10
-# Configuración para imprimir la lista detallada de tests fallidos
-print_failures_list: false
-# Configuración para imprimir la lista resumida de tests fallidos
-print_failed_examples: false
-# Configuración para imprimir un resumen detallado del proceso realizado por los agentes
-print_agents_detailed_summary: false
-# Configuración para definir cada cuantos segundo el Manager enviará un broadcast UDP a la red para sondear agentes
-udp_request_delay: 3
-log:
-  stdout:
-    # Configuración que define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
-    # Por defecto siempre se imprimirá el log en un archivo dentro de la carpeta logs
-    # Si se pone a true, interfiere con la barra de progreso del Manager, mejor tenerlo en false
-    show: false
-    # Define los colores del texto del log. Puede ser none (no muestra colores), severity (colorea código de error),
-    # severity_date (colorea código de error y fecha), full (colorea el texto entero).
-    colorize: full
-  file:
-    colorize: full
-library:
-  # Configuración de la librería de compresión a utilizar para comprimir el código fuente
-  # Valores soportados: Sólo Zip hasta ahora
-  compression: Zip
-  # Configuración de la librería de pruebas unitarias a ejecutar
-  # Valores soportados: Sólo Rspec hasta ahora
-  unit_test: Rspec
-ports:
-  # Configuración del puerto a través del cual se realizará la primera comunicación entre Manager y Agent
-  udp: 2000
-  # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
-  tcp: 2500
+# Configuraciones exclusivas del Manager
+manager:
+  # Define cada cuantos segundo el Manager enviará un broadcast UDP a la red para sondear agentes
+  udp_request_delay: 3
+  # Cantidad de archivos de tests a ejecutar en cada tanda
+  test_files_by_runner: 30
+  # Configuraciones que definen que barras se muestran o no
+  bar:
+    # Mostrar o no el progreso de envío de código fuente a los agentes
+    share_source_code: true
+  # Configuraciones que definen que se imprimen al terminar la ejecución de las pruebas
+  print:
+    table:
+      # Configuración para imprimir un resumen del proceso realizado por los agentes
+      summary: true
+      # Configuración para imprimir un resumen detallado del proceso realizado por los agentes
+      detailed: false
+    column:
+      failed_files: true # Muestra los archivos fallados en la tabla
+      files_load: true # Muestra el tiempo que tardó Rspec en cargar los archivos de tests
+      finish_in: true # Muestra el tiempo que tardó el Agent en ejecutar los tests
+      batch_run: true # Muestra el tiempo que pasó desde que el Manager obtiene las pruebas a ejecutar, las envía y recibe los resultados
+      share_source_code: true # Muestra el tiempo que tardan los Agents en obtener el código fuente y descomprimirlo
+    failures:
+      summary: false # Muestra una tabla que resume los tiempos de ejecución por cada Agent
+      detailed: false  # Muestra una tabla detallada de los tiempo de ejecución de cada tanda enviada a los Agents
+# Configuraciones compartidas entre Manager y Agent
+general:
+  # Configuración del nombre del archivo de código fuente comprimido enviado a los agentes
+  # Obs.: Puede que NO sea útil para el usuario poder cambiar este nombre
+  compressed_file_name: compressed_source_code
+  # Define las carpetas que deben ignorarse en la compresión del código fuente. Debe ir separado por comas
+  # y debe haber un espacio después de ignored_folders_in_compress:
+  ignored_folders_in_compress: .git,liri,documents,installers,log,logs
+  # Define a cuantos digitos se van a redondear los tiempos mostrados en pantalla.
+  times_round: 0
+  # Define el tipo de redondeo a utilizar. floor para piso, roof para techo.
+  # El que da mejores resultados según las pruebas realizadas es usar times_round 0 y times_round_type floor
+  times_round_type: floor
+  # Ej.:
+  # Con times_round 0 y times_round_type floor, 3.5516 se convierte a 3s
+  # Con times_round 1 y times_round_type floor, 3.5516 se convierte a 3.5s
+  # Con times_round 2 y times_round_type floor, 3.5516 se convierte a 3.55s
+  # Con times_round 0 y times_round_type roof, 3.5516 se convierte a 4s
+  # Con times_round 1 y times_round_type roof, 3.5516 se convierte a 3.6s
+  # Con times_round 2 y times_round_type roof, 3.5516 se convierte a 3.55s
+  # Configuraciones de logs
+  log:
+    # Configuración del log mostrado en la terminal
+    stdout:
+      # Define si se muestra el log de ejecución del programa en línea de comando. Puede ser true o false.
+      # Por defecto siempre se imprimirá el log en un archivo dentro de la carpeta logs
+      # Si se pone a true, interfiere con la barra de progreso del Manager, mejor tenerlo en false
+      show: false
+      # Define los colores del texto del log. Puede ser none (no muestra colores), severity (colorea código de error),
+      # severity_date (colorea código de error y fecha), full (colorea el texto entero).
+      colorize: full
+    # Configuración del log guardado en los archivos .log
+    file:
+      # Puede ser none, severity o full
+      colorize: full
+  library:
+    # Configuración de la librería de compresión a utilizar para comprimir el código fuente
+    # Valores soportados: Sólo Zip hasta ahora
+    compression: Zip
+    # Configuración de la librería de pruebas unitarias a ejecutar
+    # Valores soportados: Sólo Rspec hasta ahora
+    unit_test: Rspec
+  # Configuración de puertos
+  ports:
+    # Configuración del puerto a través del cual se realizará la primera comunicación entre Manager y Agent
+    udp: 2000
+    # Configuración del puerto a través del cual el Agent y el Manager intercambiarán las pruebas a ejecutar y los resultados de esa ejecución
+    tcp: 2500

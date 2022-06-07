@@ -56,4 +56,11 @@ class Hash
     keys.flatten.each { |key| delete(key) }
     self
   end
+
+  # Retorna un nuevo hash con los elementos borrados según las claves indicadas
+  def remove(*keys)
+    cloned_hash = self.clone
+    keys.flatten.each { |key| cloned_hash.delete(key) }
+    cloned_hash
+  end
 end

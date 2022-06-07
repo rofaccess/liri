@@ -18,7 +18,7 @@ RSpec.describe Liri::Common::UnitTest::RspecResultParser do
       line = 'Finished in 1 hour 50 seconds (files took 1.24 minutes to load)'
       values = Liri::Common::UnitTest::RspecResultParser.finish_in_values(line)
       expect(values[:finish_in]).to eq 3650
-      expect(values[:files_load]).to eq 74.4
+      expect(values[:files_load].to_f).to eq 74.4
     end
   end
 
@@ -53,6 +53,20 @@ RSpec.describe Liri::Common::UnitTest::RspecResultParser do
       expect(values[:examples]).to eq 16_346
       expect(values[:failures]).to eq 1
       expect(values[:pending]).to eq 9
+    end
+  end
+
+  describe "#failed_example" do
+    it "la linea contiene .rb:algun_numero" do
+      line = "rspec ./spec/system/budgets/budgets_spec.rb:326 # Budgets Index map Skip invalid map markers"
+      result = Liri::Common::UnitTest::RspecResultParser.failed_example(line)
+      expect(result).to eq "/spec/system/budgets/budgets_spec.rb:326"
+    end
+
+    it "la linea contiene .rb:[algun_numero, algun_numero]" do
+      line = "rspec ./spec/system/management/budget_investments_spec.rb[1:3:1:3] # Budget Investments behaves like mappable At new_management_budget_investment_path Should create budget_investment with map"
+      result = Liri::Common::UnitTest::RspecResultParser.failed_example(line)
+      expect(result).to eq "/spec/system/management/budget_investments_spec.rb[1:3:1:3]"
     end
   end
 end

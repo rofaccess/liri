@@ -12,16 +12,16 @@ module Liri
     module Progressbar
       class << self
         def start(params = {})
-          @compressing = true
+          @progressing = true
           progressbar = ProgressBar.create(params)
           Thread.new do
-            while @compressing
+            while @progressing
               progressbar.increment
               sleep(0.1)
             end
           end
           yield
-          @compressing = false
+          @progressing = false
         end
       end
     end

@@ -8,7 +8,7 @@ module Liri
   module Common
     # Esta clase se encarga de guardar y procesar el archivo de resultados
     class TestsResult
-      attr_reader :examples, :failures, :pending, :passed, :files_processed
+      attr_reader :examples, :failures, :pending, :passed
 
       def initialize(folder_path)
         @folder_path = folder_path
@@ -18,9 +18,9 @@ module Liri
         @passed = 0
         @finish_in = 0
         @files_load = 0
-        @files_processed = 0
         @failures_list = ''
         @failed_examples = ''
+        @failed_files = ''
       end
 
       def save(file_name, raw_tests_result)
@@ -37,27 +37,26 @@ module Liri
       # Ejemplo del hash retornado:
       # { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
       #   failures_list: '', failed_examples: '' }
-      def process(tests_result_file_name, files_processed)
+      def process(tests_result_file_name)
         file_path = File.join(@folder_path, '/', tests_result_file_name)
         # A veces no se encuentra el archivo de resultados, la siguiente condicional es para evitar errores relativos a esto
         return {} unless File.exist?(file_path)
 
         result_hash = process_tests_result_file(file_path)
-        result_hash[:files_processed] = files_processed
         update_partial_result(result_hash)
         result_hash
       end
 
       def print_summary
-        Liri.logger.info("\n#{@examples} examples, #{@failures} failures, #{@passed} passed, #{@pending} pending\n\n", true)
+        Liri.logger.info("\n#{@examples} examples, #{@passed} passed, #{@failures} failures\n", true)
       end
 
-      def print_failures_list
+      def print_detailed_failures
         Liri.logger.info("\nFailures: ", true) unless @failures_list.empty?
         Liri.logger.info(@failures_list, true)
       end
 
-      def print_failed_examples
+      def print_summary_failures
         Liri.logger.info("\nFailed examples: ", true) unless @failed_examples.empty?
         Liri.logger.info(@failed_examples, true)
       end
@@ -70,7 +69,7 @@ module Liri
       # {result: '.F', failures: '', examples: 2, failures: 1, failed_examples: ''}
       def process_tests_result_file(file_path)
         result_hash = { examples: 0, failures: 0, pending: 0, passed: 0, finish_in: 0, files_load: 0,
-                        failures_list: '', failed_examples: '' }
+                        failures_list: '', failed_examples: '', failed_files: '' }
         flag = ''
         @failures_lists_count = @failures
         File.foreach(file_path) do |line|
@@ -109,7 +108,10 @@ module Liri
             result_hash[:pending] = values[:pending]
             flag = ''
           when 'Failed'
-            result_hash[:failed_examples] << line if line.strip.start_with?('rspec')
+            if line.strip.start_with?('rspec')
+              result_hash[:failed_examples] << line
+              result_hash[:failed_files] << "#{failed_example(line)}\n"
+            end
           end
         end
 
@@ -121,9 +123,9 @@ module Liri
         @failures += hash_result[:failures]
         @pending += hash_result[:pending]
         @passed += hash_result[:passed]
-        @files_processed += hash_result[:files_processed]
         @failures_list << hash_result[:failures_list]
         @failed_examples << hash_result[:failed_examples]
+        @failed_files << hash_result[:failed_files]
       end
 
       def finish_in_values(line)
@@ -132,6 +134,13 @@ module Liri
 
       def finished_summary_values(line)
         UnitTest::RspecResultParser.finished_summary_values(line)
+      end
+
+      def failed_example(line)
+        # get string like this "/spec/failed_spec.rb:4"
+        failed_example = UnitTest::RspecResultParser.failed_example(line)
+        # return "failed_spec.rb:4"
+        failed_example.split("/").last
       end
 
       def fix_failure_number(line)

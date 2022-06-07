@@ -30,6 +30,13 @@ def test_files_by_runner
   1
 end
 
+# En vez de crear este metodo para pasarle las carpetas a ignorar a las clases SourceCode o Zip, se pudo usar un Stub
+# sobre Liri.ignored_folders_in_compress, y llamar Liri.ignored_folders_in_compress directamente en la clase Zip
+# pero es mejora pasar como parámetro, así Zip se mantiene independiente y se puede reutilizar sin depender del módulo Liri
+def ignored_folders_in_compress
+  ".git,some_folder"
+end
+
 def spec_credentials_file_path
   File.expand_path('./spec_credentials.yml')
 end

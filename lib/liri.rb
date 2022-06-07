@@ -44,16 +44,13 @@ module Liri
       @setup_manager ? @setup_manager.delete_setup_folder : false
     end
 
-    def init_exit(stop, threads, program)
+    def init_exit(stop, threads)
       threads = threads.compact
       kill(threads) if stop
 
       # Con la siguiente línea se asegura que los hilos no mueran antes de que finalize el programa principal
       # Fuente: https://underc0de.org/foro/ruby/hilos-en-ruby/
       threads.each{|thread| thread.join}
-      #rescue SignalException => e
-      #puts "\nEjecución del #{program} terminada manualmente\n"
-      #kill(threads)
     end
 
     def kill(threads)
@@ -66,39 +63,35 @@ module Liri
     end
 
     def compression_class
-      "Liri::Common::Compressor::#{setup.library.compression}"
+      "Liri::Common::Compressor::#{setup.general.library.compression}"
     end
 
     def unit_test_class
-      "Liri::Common::UnitTest::#{setup.library.unit_test}"
+      "Liri::Common::UnitTest::#{setup.general.library.unit_test}"
     end
 
     def udp_port
-      setup.ports.udp
+      setup.general.ports.udp
     end
 
     def tcp_port
-      setup.ports.tcp
-    end
-
-    def print_failures_list
-      setup.print_failures_list
-    end
-
-    def print_failed_examples
-      setup.print_failed_examples
-    end
-
-    def print_agents_detailed_summary
-      setup.print_agents_detailed_summary
-    end
-
-    def udp_request_delay
-      setup.udp_request_delay
+      setup.general.ports.tcp
     end
 
     def current_folder_ruby_and_gemset
       "#{File.read('.ruby-version').strip}@#{File.read('.ruby-gemset').strip}"
+    end
+
+    def ignored_folders_in_compress
+      setup.general.ignored_folders_in_compress
+    end
+
+    def times_round
+      setup.general.times_round
+    end
+
+    def times_round_type
+      setup.general.times_round_type.to_sym
     end
 
     private
@@ -113,7 +106,7 @@ module Liri
 
     # Inicializa y configura la librería encargada de loguear
     def load_logger(folder_path = nil, file_name = nil)
-      log = Liri::Common::Log.new('daily', folder_path: folder_path, file_name: file_name, stdout: setup.log.stdout.show)
+      log = Liri::Common::Log.new('daily', folder_path: folder_path, file_name: file_name, stdout: setup.general.log.stdout.show)
       log
     end
   end
@@ -121,7 +114,14 @@ module Liri
   # EXCEPTIONS
   class FileNotFoundError < StandardError
     def initialize(file_path)
-      msg = "No se encuentra el archivo #{file_path}"
+      msg = "File not found #{file_path}"
+      super(msg)
+    end
+  end
+
+  class InxiCommandNotFoundError < StandardError
+    def initialize
+      msg = "Inxi command not found"
       super(msg)
     end
   end

@@ -70,7 +70,7 @@ check_requeriments () {
   elif [ "$OS_NAME" == "Ubuntu" ]; then
     echo "        > sudo apt-get update"
     echo "        > sudo apt update"
-    echo "        > sudo apt install openssh-server curl gcc make"
+    echo "        > sudo apt install openssh-server curl gcc make inxi"
     info_msg "Comandos probados en Ubuntu 21.10 (Impish Indri)"
 
   elif [ "$OS_NAME" == "Debian GNU/Linux" ]; then
@@ -104,6 +104,7 @@ check_requeriments () {
   check_command curl
   check_c_compilers
   check_command make
+  check_command inxi
 }
 
 install_gpg_keys () {

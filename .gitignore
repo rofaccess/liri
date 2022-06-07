@@ -10,3 +10,4 @@
 *.odt#
 
 spec_credentials.yml
+*.gem
