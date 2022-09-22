@@ -1,0 +1,13 @@
+/.idea
+/coverage
+/liri
+/logs
+/tmp
+
+*.log
+.rspec_status
+
+*.odt#
+
+spec_credentials.yml
+*.gem

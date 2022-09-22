@@ -1,0 +1,97 @@
+#!/usr/bin/env ruby
+# Este script de ruby permite ejecutar el comando liri en CLI (interface de línea de comandos)
+# From:
+# - https://robdodson.me/how-to-write-a-command-line-ruby-gem/
+# - https://medium.com/@stephenagrice/making-a-command-line-ruby-gem-write-build-and-push-aec24c6c49eb
+# - https://www.sitepoint.com/ruby-command-line-interface-gems/
+require 'rubygems'
+require 'commander/import'
+require 'liri'
+require 'manager/manager'
+require 'agent/agent'
+
+program :name, Liri::NAME
+program :version, Liri::VERSION
+program :description, 'Ejecuta pruebas unitarias usando un sistema distribuido'
+
+# Define el comando y los parámetros para el programa principal
+command :manager do |c|
+  c.syntax = 'liri manager [options]'
+  c.summary = 'Ejecuta pruebas unitarias'
+  c.description = 'Ejecuta el programa principal que se conecta con uno o más programas agentes para organizar la ejecución de pruebas unitarias'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri m'
+  c.example 'Ejecuta el programa principal mostrando el resultado en línea de comandos', 'liri manager'
+  c.example 'Ejecuta el programa principal guardando los resultados en un archivo .html', 'liri -o result.html'
+  c.option '-o', '--output [filename]', String, 'Especifica donde guardar los resultados de la ejecución de pruebas unitarias'
+  c.action do |args, options|
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder, :manager)
+    Liri::Common::Benchmarking.start(end_msg: "\nFinished in: ", stdout: true) do
+      # Metodo que se ejecuta al llamar al comando manager
+      Liri::Manager.run(current_folder)
+    end
+    puts ''
+  end
+end
+
+# Define el alias m para el comando manager
+alias_command :m, :manager
+# Define un texto vacío como alias lo que permite ejecutar el programa principal solamente usando el comando liri
+#alias_command '', :manager
+
+# Define el comando y los parámetros para el programa agente
+command :agent do |c|
+  c.syntax = 'Liri agent [options]'
+  c.summary = 'Ejecuta el programa agente'
+  c.description = 'Espera las ordenes del programa principal para ejecutar pruebas unitarias'
+  c.example 'Ejecuta el programa agente', 'liri a'
+  c.example 'Ejecuta el programa agente', 'liri agent'
+  c.action do |args, options|
+    # Método que se ejecuta al llamar al comando agent
+    current_folder = Dir.pwd
+    Liri::Agent.run(current_folder)
+  end
+end
+
+# Define el alias m para el comando agent
+alias_command :a, :agent
+
+# Define el comando y los parámetros para obtener los archivos de tests
+command :tests_files do |c|
+  c.syntax = 'Liri tests_files [options]'
+  c.summary = 'Retorna los archivos de tests'
+  c.description = 'Ejecuta el comando para obtener la cantidad total de tests del proyecto'
+  c.example 'Ejecuta el comando tests', 'liri tf'
+  c.example 'Ejecuta el comando tests', 'liri tests_files'
+  c.action do |args, options|
+    # Método que se ejecuta al llamar al comando tests
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder, :manager)
+    tests_count = Liri::Task.tests_files(current_folder)
+    puts tests_count
+  end
+end
+
+# Define el alias t para el comando tests
+alias_command :tf, :tests_files
+
+# Define el comando y los parámetros para obtener la cantidad de tests
+command :tests_count do |c|
+  c.syntax = 'Liri tests_count [options]'
+  c.summary = 'Retorna la cantidad total de tests'
+  c.description = 'Ejecuta el comando para obtener la cantidad total de tests del proyecto'
+  c.example 'Ejecuta el comando tests', 'liri tc'
+  c.example 'Ejecuta el comando tests', 'liri tests_count'
+  c.action do |args, options|
+    # Método que se ejecuta al llamar al comando tests
+    current_folder = Dir.pwd
+    Liri.set_setup(current_folder, :manager)
+    tests_count = Liri::Task.tests_count(current_folder)
+    puts tests_count
+  end
+end
+
+# Define el alias t para el comando tests
+alias_command :tc, :tests_count
+
